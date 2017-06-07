@@ -1,0 +1,28 @@
+prog -> statement prog_rest
+prog_rest -> statement prog_rest
+
+statement -> assignment | selection | whileLoop
+
+assignment -> id OP_ASSIGN exp
+selection -> IF cond THEN prog FI | IF cond THEN prog ELSE prog FI
+whileLoop -> WHILE cond DO prog OD
+
+OP_ASSIGN = '='
+
+IF -> 'if'
+THEN -> 'then'
+ELSE -> 'else'
+FI -> 'fi'
+
+WHILE -> 'while'
+DO -> 'DO'
+OD -> 'OD'
+
+exp -> term erest
+erest -> term erest | -term erest | eps
+term -> faktor trest
+trest -> * faktor trest | / faktor trest | eps
+faktor -> ID | ZAHL | ( exp )
+
+ID -> [A-Za-z][A-Za-z0-9]*
+ZAHL -> [1-9][0-9]*

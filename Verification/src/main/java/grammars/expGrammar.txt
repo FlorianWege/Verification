@@ -1,0 +1,5 @@
+exp -> term erest
+erest -> term erest | -term erest | eps
+term -> faktor trest
+trest -> * faktor trest | / faktor trest | eps
+faktor -> id | zahl | ( exp )
