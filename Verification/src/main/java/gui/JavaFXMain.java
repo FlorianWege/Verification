@@ -374,7 +374,6 @@ public class JavaFXMain extends Application implements Initializable {
 					
 					updateTree();
 				} catch (LexerException | NoRuleException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -400,13 +399,7 @@ public class JavaFXMain extends Application implements Initializable {
 				
 				try {
 					hoare.exec(HoareCondition.fromString("x<1"), HoareCondition.fromString("x>4"));
-				} catch (HoareException e) {
-					e.printStackTrace();
-				} catch (NoRuleException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (LexerException e) {
-					// TODO Auto-generated catch block
+				} catch (HoareException | NoRuleException | LexerException e) {
 					e.printStackTrace();
 				}
 			}

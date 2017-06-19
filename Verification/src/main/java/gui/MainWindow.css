@@ -1,0 +1,4 @@
+.list-cell:empty {
+	-fx-background-color: red;
+	-fx-cell-size: 5px;
+}
