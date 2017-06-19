@@ -1,12 +1,8 @@
 package grammars;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import core.Grammar;
 import core.LexerRule;
 import core.ParserRule;
-import core.ParserRulePattern;
 import core.PredictiveParserTable;
 
 public class ExpGrammar extends Grammar {
@@ -19,25 +15,26 @@ public class ExpGrammar extends Grammar {
 	public final LexerRule opDivRule;
 	public final LexerRule idRule;
 	
-	private final ParserRule expRule;
-	private final ParserRule erestRule;
-	private final ParserRule termRule;
-	private final ParserRule trestRule;
-	private final ParserRule faktorRule;
+	public final ParserRule expRule;
+	public final ParserRule erestRule;
+	public final ParserRule termRule;
+	public final ParserRule trestRule;
+	public final ParserRule faktorRule;
 	
 	public ExpGrammar() {
 		super();
 		
 		//lexer rules
 		zahlRule = createTokenInfo("ZAHL");
-		
+
 		zahlRule.addRuleRegEx("[1-9][0-9]*");
+		zahlRule.addRule("0");
 		
-		parenOpenRule = createTokenInfo("parenOpen");
+		parenOpenRule = createTokenInfo("PAREN_OPEN");
 		
 		parenOpenRule.addRule("(");
 		
-		parenCloseRule = createTokenInfo("parenClose");
+		parenCloseRule = createTokenInfo("PAREN_CLOSE");
 		
 		parenCloseRule.addRule(")");
 		
@@ -82,7 +79,7 @@ public class ExpGrammar extends Grammar {
 		
 		faktorRule.addRule(createRulePattern("ID"));
 		faktorRule.addRule(createRulePattern("ZAHL"));
-		faktorRule.addRule(createRulePattern("parenOpen exp parenClose"));
+		faktorRule.addRule(createRulePattern("PAREN_OPEN exp PAREN_CLOSE"));
 		
 		setStartParserRule(expRule);
 		

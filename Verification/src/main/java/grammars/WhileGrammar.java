@@ -1,12 +1,13 @@
 package grammars;
 
-import core.Grammar;
 import core.LexerRule;
 import core.ParserRule;
 import core.PredictiveParserTable;
 
-public class WhileGrammar extends ExpGrammar {
+public class WhileGrammar extends BoolExpGrammar {
 	public final LexerRule statementEndRule;
+	
+	public final LexerRule opSkipRule;
 	
 	public final LexerRule opAssignRule;
 	
@@ -21,6 +22,7 @@ public class WhileGrammar extends ExpGrammar {
 	
 	public final ParserRule progRule;
 	public final ParserRule prestRule;
+	public final ParserRule skipRule;
 	public final ParserRule assignRule;
 	public final ParserRule selectionRule;
 	public final ParserRule whileLoopRule;
@@ -31,6 +33,10 @@ public class WhileGrammar extends ExpGrammar {
 		statementEndRule = createTokenInfo("STATEMENT_END");
 		
 		statementEndRule.addRule(";");
+		
+		opSkipRule = createTokenInfo("OP_SKIP");
+		
+		opSkipRule.addRule("SKIP");
 		
 		opAssignRule = createTokenInfo("OP_ASSIGN");
 		
@@ -67,10 +73,12 @@ public class WhileGrammar extends ExpGrammar {
 		//parser rules
 		progRule = createParserRule("prog");
 		prestRule = createParserRule("prest");
+		skipRule = createParserRule("skip");
 		assignRule = createParserRule("assign");
 		selectionRule = createParserRule("selection");
 		whileLoopRule = createParserRule("whileLoop");
 		
+		progRule.addRule(createRulePattern("skip prest"));
 		progRule.addRule(createRulePattern("assign prest"));
 		progRule.addRule(createRulePattern("selection prest"));
 		progRule.addRule(createRulePattern("whileLoop prest"));
@@ -78,20 +86,24 @@ public class WhileGrammar extends ExpGrammar {
 		prestRule.addRule(createRulePattern("STATEMENT_END prog"));
 		prestRule.addRule(LexerRule.EPSILON);
 		
+		skipRule.addRule(createRulePattern("OP_SKIP"));
+		
 		assignRule.addRule(createRulePattern("ID OP_ASSIGN exp"));
 		
-		selectionRule.addRule(createRulePattern("IF exp THEN prog FI"));
+		//selectionRule.addRule(createRulePattern("IF boolExp THEN prog FI"));
+		selectionRule.addRule(createRulePattern("IF boolExp THEN prog ELSE prog FI"));
 		
-		whileLoopRule.addRule(createRulePattern("WHILE exp DO prog OD"));
+		whileLoopRule.addRule(createRulePattern("WHILE boolExp DO prog OD"));
 		
 		setStartParserRule(progRule);
 		
 		//predictive parser table
 		PredictiveParserTable ruleMap = getPredictiveParserTable();
 		
-		ruleMap.set(progRule, idRule, progRule.getRulePattern(0));
-		ruleMap.set(progRule, ifRule, progRule.getRulePattern(1));
-		ruleMap.set(progRule, whileRule, progRule.getRulePattern(2));
+		ruleMap.set(progRule, opSkipRule, progRule.getRulePattern(0));
+		ruleMap.set(progRule, idRule, progRule.getRulePattern(1));
+		ruleMap.set(progRule, ifRule, progRule.getRulePattern(2));
+		ruleMap.set(progRule, whileRule, progRule.getRulePattern(3));
 		
 		ruleMap.set(prestRule, statementEndRule, prestRule.getRulePattern(0));
 		ruleMap.set(prestRule, LexerRule.EPSILON, prestRule.getRulePattern(1));

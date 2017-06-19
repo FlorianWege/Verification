@@ -1,0 +1,13 @@
+IF a == 0 THEN
+	ret = b
+ELSE
+	WHILE b != 0 DO
+		IF a > b THEN
+			a=a-b
+		ELSE
+			b=b-a
+		FI
+	OD;
+	
+	ret = a
+FI

@@ -16,14 +16,19 @@ import util.IOUtil;
 
 public class FactorialParserTest {
 	@Test()
-	public FactorialParserTest() throws NoRuleException, LexerException, IOException, URISyntaxException {
+	public void test() throws LexerException, NoRuleException, IOException, URISyntaxException {
 		Grammar grammar = new WhileGrammar();
 		
 		//LexerResult lexerResult = new Lexer(grammar).tokenize("a=1;IF abc THEN var=1; FI");
-		LexerResult lexerResult = new Lexer(grammar).tokenize(IOUtil.getResourceAsString("Factorial.txt"));
+		
+		String inputS = IOUtil.getResourceAsString("Factorial.txt");
+		
+		System.out.println(inputS);
+		
+		LexerResult lexerResult = new Lexer(grammar).tokenize(inputS);
 		
 		lexerResult.print();
 
-		new Parser(grammar, grammar.getPredictiveParserTable()).parse(lexerResult.getTokens(), grammar.getStartParserRule());
+		new Parser(grammar).parse(lexerResult.getTokens());
 	}
 }

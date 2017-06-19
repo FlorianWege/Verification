@@ -1,7 +1,6 @@
 package core;
 
 import java.util.Vector;
-import java.util.regex.Pattern;
 
 /**
  * rule for the lexer (terminals, their key starting with an uppercase letter)
@@ -9,7 +8,6 @@ import java.util.regex.Pattern;
 public class LexerRule extends Rule {
 	public final static LexerRule EPSILON = new LexerRule("eps");
 	
-	public RuleKey _key;
 	public Vector<LexerRulePattern> _rulePatterns = new Vector<>();
 	public boolean _skip;
 	
@@ -18,7 +16,8 @@ public class LexerRule extends Rule {
 	}
 	
 	public LexerRule(RuleKey key, boolean skip) {
-		_key = key;
+		super(key);
+
 		_skip = skip;
 	}
 	

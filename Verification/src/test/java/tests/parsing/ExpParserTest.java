@@ -20,6 +20,6 @@ public class ExpParserTest {
 		
 		lexerResult.print();
 		
-		new Parser(expGrammar, expGrammar.getPredictiveParserTable()).parse(lexerResult.getTokens(), expGrammar.getStartParserRule());
+		new Parser(expGrammar).parse(lexerResult.getTokens());
 	}
 }

@@ -1,7 +1,7 @@
 n=10;
 ret=n;
 
-WHILE(n>1)DO
+WHILE n>1 DO
 	ret=ret*n;
 	n=n-1
 OD

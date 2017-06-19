@@ -1,15 +1,11 @@
 package core;
 
-import java.util.Vector;
-
 /**
  * rule for the parser (non-terminals, their key starting with a lowercase letter)
  */
 public class ParserRule extends Rule {
-	private RuleKey _key;
-	
 	public ParserRule(RuleKey key) {
-		_key = key;
+		super(key);
 	}
 	
 	@Override
@@ -28,7 +24,7 @@ public class ParserRule extends Rule {
 	}
 	
 	public void addRule(Rule rule) {
-		addRule(new ParserRulePattern(rule));
+		addRule(new ParserRulePatternAnd(new ParserRulePattern(rule)));
 	}
 	
 	/*public void addRule(String patternS) {

@@ -29,8 +29,16 @@ public class Token {
 		return _lineOffset;
 	}
 	
-	public Token(LexerRule info, LexerRulePattern rulePattern, String text, int line, int lineOffset) {
-		_rule = info;
+	public Token copy() {
+		return new Token(_rule, _rulePattern, _text, _line, _lineOffset);
+	}
+	
+	public void replaceText(String newText) {
+		_text = newText;
+	}
+	
+	public Token(LexerRule rule, LexerRulePattern rulePattern, String text, int line, int lineOffset) {
+		_rule = rule;
 		_rulePattern = rulePattern;
 		_text = text;
 		

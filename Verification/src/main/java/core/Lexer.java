@@ -134,28 +134,24 @@ public class Lexer {
 					rulePatterns.add(rulePattern);
 					
 					String ruleS = (curPos > 0) ? String.format("^.{%d}(%s)", curPos, rulePattern.getRegEx()) : String.format("^(%s)", rulePattern.getRegEx());
-					
-					try {
-						Pattern adjustedPattern = Pattern.compile(ruleS, Pattern.DOTALL);
-						
-						Matcher matcher = adjustedPattern.matcher(s);
-						
-						boolean foundA = matcher.find();
-						boolean foundB = foundA && (matcher.start(1) == curPos);
-						
-						boolean found = foundA && foundB;
-						
-						if (found) {
-							int newLen = (matcher.end(1) - 1) - matcher.start(1) + 1;
 
-							if (newLen > curLen && (curLen == 0)) {
-								curTokenInfo = tokenInfo;
-								curRulePattern = rulePattern;
-								curLen = newLen;
-							}
+					Pattern adjustedPattern = Pattern.compile(ruleS, Pattern.DOTALL);
+					
+					Matcher matcher = adjustedPattern.matcher(s);
+					
+					boolean foundA = matcher.find();
+					boolean foundB = foundA && (matcher.start(1) == curPos);
+					
+					boolean found = foundA && foundB;
+					
+					if (found) {
+						int newLen = (matcher.end(1) - 1) - matcher.start(1) + 1;
+
+						if (newLen > curLen) {
+							curTokenInfo = tokenInfo;
+							curRulePattern = rulePattern;
+							curLen = newLen;
 						}
-					} catch (Exception e) {
-						System.err.println(e.getMessage());
 					}
 				}
 			}
