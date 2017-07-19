@@ -1,4 +1,4 @@
-package core;
+package core.structures;
 
 import java.util.Arrays;
 import java.util.Vector;

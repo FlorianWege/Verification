@@ -1,7 +1,11 @@
-package core;
+package core.structures;
 
 import java.util.function.Predicate;
 
+import core.Lexer;
+import core.Parser;
+import core.SyntaxTree;
+import core.SyntaxTreeNode;
 import core.Lexer.LexerException;
 import core.Parser.NoRuleException;
 import grammars.BoolExpGrammar;

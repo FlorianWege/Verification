@@ -1,4 +1,8 @@
+.list-cell {
+	-fx-cell-size: 25px;
+}
+
 .list-cell:empty {
-	-fx-background-color: red;
-	-fx-cell-size: 5px;
+	-fx-cell-size: white;
+	-fx-cell-size: 0px;
 }

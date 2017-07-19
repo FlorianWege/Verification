@@ -39,7 +39,7 @@
                               <VBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                  <children>
                                     <CheckBox fx:id="_checkBox_synxtaxTree_filterEps" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Show epsilon branches" VBox.vgrow="ALWAYS" />
-                                    <TreeView fx:id="_treeView_syntaxTree" VBox.vgrow="ALWAYS" />
+                                    <TreeView fx:id="_treeView_syntaxTreeBase" VBox.vgrow="ALWAYS" />
                                  </children>
                               </VBox>
                            </children>

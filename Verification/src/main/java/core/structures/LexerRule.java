@@ -1,6 +1,9 @@
-package core;
+package core.structures;
 
 import java.util.Vector;
+
+import core.Rule;
+import core.RuleKey;
 
 /**
  * rule for the lexer (terminals, their key starting with an uppercase letter)

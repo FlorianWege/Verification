@@ -2,7 +2,12 @@ package core;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Map;
 
+import core.structures.LexerRule;
+import core.structures.ParserRule;
+import core.structures.ParserRulePattern;
+import core.structures.ParserRulePatternAnd;
 import util.StringUtil;
 
 /**
@@ -40,6 +45,14 @@ public class Parser {
 		} catch (Exception e) {
 			if (terminal == null) throw new RuntimeException("no more tokens but expected " + nonTerminal);
 
+			/*Map<LexerRule, ParserRulePattern> lex = _ruleMap.getSourceRuleMap(nonTerminal);
+			
+			for (Map.Entry<LexerRule, ParserRulePattern> lexEntry : lex.entrySet()) {
+				System.out.println(lexEntry.getKey().hashCode());
+			}
+			
+			System.out.println(terminal.getRule().hashCode());*/
+			
 			throw new NoRuleException(String.format("line %d.%d: unexpected '%s' (%s) (no rule in %s) ", terminal.getLine() + 1, terminal.getLineOffset() + 1, terminal.getText(), terminal.getRule().toString(), nonTerminal));
 		}
 	}
@@ -86,7 +99,9 @@ public class Parser {
 						continue;
 					}
 					
-					if (_token.getRule() != childRule) throw new RuntimeException("wrong token " + _token + " expected " + childRule);
+					if (!_token.getRule().equals(childRule)) {
+						throw new RuntimeException("wrong token " + _token + " expected " + childRule);
+					}
 					
 					if (_token == null) throw new RuntimeException("no more tokens while expecting " + ((LexerRule) childRule).getRulePatterns() + " (rule=" + rule + ")");
 					

@@ -1,11 +1,12 @@
 package grammars;
 
-import core.LexerRule;
-import core.ParserRule;
 import core.PredictiveParserTable;
+import core.structures.LexerRule;
+import core.structures.ParserRule;
+import core.structures.ParserRulePattern;
 
 public class WhileGrammar extends BoolExpGrammar {
-	public final LexerRule statementEndRule;
+	public final LexerRule statementSeparatorRule;
 	
 	public final LexerRule opSkipRule;
 	
@@ -25,14 +26,28 @@ public class WhileGrammar extends BoolExpGrammar {
 	public final ParserRule skipRule;
 	public final ParserRule assignRule;
 	public final ParserRule selectionRule;
+	public final ParserRule selectionElseRule;
 	public final ParserRule whileLoopRule;
+	
+	public final ParserRulePattern PATTERN_PROG_SKIP;
+	public final ParserRulePattern PATTERN_PROG_ASSIGN;
+	public final ParserRulePattern PATTERN_PROG_SELECTION;
+	public final ParserRulePattern PATTERN_PROG_LOOP;
+	
+	public final ParserRulePattern PATTERN_PREST_PROG;
+	public final ParserRulePattern PATTERN_SKIP;
+	public final ParserRulePattern PATTERN_ASSIGN;
+	public final ParserRulePattern PATTERN_SELECTION;
+	//public final ParserRulePattern PATTERN_SELECTION_SHORT;
+	public final ParserRulePattern PATTERN_SELECTION_ELSE;
+	public final ParserRulePattern PATTERN_LOOP;
 	
 	public WhileGrammar() {
 		super();
 		
-		statementEndRule = createTokenInfo("STATEMENT_END");
+		statementSeparatorRule = createTokenInfo("STATEMENT_SEPARATOR");
 		
-		statementEndRule.addRule(";");
+		statementSeparatorRule.addRule(";");
 		
 		opSkipRule = createTokenInfo("OP_SKIP");
 		
@@ -76,42 +91,68 @@ public class WhileGrammar extends BoolExpGrammar {
 		skipRule = createParserRule("skip");
 		assignRule = createParserRule("assign");
 		selectionRule = createParserRule("selection");
+		selectionElseRule = createParserRule("selectionElse");
 		whileLoopRule = createParserRule("whileLoop");
 		
-		progRule.addRule(createRulePattern("skip prest"));
-		progRule.addRule(createRulePattern("assign prest"));
-		progRule.addRule(createRulePattern("selection prest"));
-		progRule.addRule(createRulePattern("whileLoop prest"));
+		PATTERN_PROG_SKIP = createRulePattern("skip prest");
+		PATTERN_PROG_ASSIGN = createRulePattern("assign prest");
+		PATTERN_PROG_SELECTION = createRulePattern("selection prest");
+		PATTERN_PROG_LOOP = createRulePattern("whileLoop prest");
 		
-		prestRule.addRule(createRulePattern("STATEMENT_END prog"));
+		progRule.addRule(PATTERN_PROG_SKIP);
+		progRule.addRule(PATTERN_PROG_ASSIGN);
+		progRule.addRule(PATTERN_PROG_SELECTION);
+		progRule.addRule(PATTERN_PROG_LOOP);
+		
+		PATTERN_PREST_PROG = createRulePattern("STATEMENT_SEPARATOR prog");
+		
+		prestRule.addRule(PATTERN_PREST_PROG);
 		prestRule.addRule(LexerRule.EPSILON);
 		
-		skipRule.addRule(createRulePattern("OP_SKIP"));
+		PATTERN_SKIP = createRulePattern("OP_SKIP");
 		
-		assignRule.addRule(createRulePattern("ID OP_ASSIGN exp"));
+		skipRule.addRule(PATTERN_SKIP);
 		
-		//selectionRule.addRule(createRulePattern("IF boolExp THEN prog FI"));
-		selectionRule.addRule(createRulePattern("IF boolExp THEN prog ELSE prog FI"));
+		PATTERN_ASSIGN = createRulePattern("ID OP_ASSIGN exp");
 		
-		whileLoopRule.addRule(createRulePattern("WHILE boolExp DO prog OD"));
+		assignRule.addRule(PATTERN_ASSIGN);
+
+		PATTERN_SELECTION = createRulePattern("IF boolExp THEN prog selectionElse FI");
+		
+		selectionRule.addRule(PATTERN_SELECTION);
+		
+		selectionElseRule.addRule(LexerRule.EPSILON);
+		
+		PATTERN_SELECTION_ELSE = createRulePattern("ELSE prog");
+		
+		selectionElseRule.addRule(PATTERN_SELECTION_ELSE);
+		
+		PATTERN_LOOP = createRulePattern("WHILE boolExp DO prog OD");
+		
+		whileLoopRule.addRule(PATTERN_LOOP);
 		
 		setStartParserRule(progRule);
 		
 		//predictive parser table
 		PredictiveParserTable ruleMap = getPredictiveParserTable();
 		
-		ruleMap.set(progRule, opSkipRule, progRule.getRulePattern(0));
-		ruleMap.set(progRule, idRule, progRule.getRulePattern(1));
-		ruleMap.set(progRule, ifRule, progRule.getRulePattern(2));
-		ruleMap.set(progRule, whileRule, progRule.getRulePattern(3));
+		ruleMap.set(progRule, opSkipRule, PATTERN_PROG_SKIP);
+		ruleMap.set(progRule, idRule, PATTERN_PROG_ASSIGN);
+		ruleMap.set(progRule, ifRule, PATTERN_PROG_SELECTION);
+		ruleMap.set(progRule, whileRule, PATTERN_PROG_LOOP);
 		
-		ruleMap.set(prestRule, statementEndRule, prestRule.getRulePattern(0));
+		ruleMap.set(prestRule, statementSeparatorRule, PATTERN_PREST_PROG);
 		ruleMap.set(prestRule, LexerRule.EPSILON, prestRule.getRulePattern(1));
 		
-		ruleMap.set(assignRule, idRule, assignRule.getRulePattern(0));
+		ruleMap.set(skipRule, opSkipRule, PATTERN_SKIP);
 		
-		ruleMap.set(selectionRule, ifRule, selectionRule.getRulePattern(0));
+		ruleMap.set(assignRule, idRule, PATTERN_ASSIGN);
 		
-		ruleMap.set(whileLoopRule, whileRule, whileLoopRule.getRulePattern(0));
+		ruleMap.set(selectionRule, ifRule, PATTERN_SELECTION);
+
+		ruleMap.set(selectionElseRule, fiRule, selectionElseRule.getRulePattern(0));
+		ruleMap.set(selectionElseRule, elseRule, PATTERN_SELECTION_ELSE);
+		
+		ruleMap.set(whileLoopRule, whileRule, PATTERN_LOOP);
 	}
 }

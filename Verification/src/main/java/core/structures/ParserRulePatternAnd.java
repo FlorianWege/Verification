@@ -1,14 +1,21 @@
-package core;
+package core.structures;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
 public class ParserRulePatternAnd extends ParserRulePattern {
-	private Collection<ParserRulePattern> _children = null;
+	private ArrayList<ParserRulePattern> _children = null;
 	
 	public Collection<ParserRulePattern> getChildren() {
 		return _children;
+	}
+	
+	@Override
+	public boolean equals(Object other) {
+		if (_children.size() == 1) return _children.get(0).equals(other);
+		
+		return super.equals(other);
 	}
 	
 	@Override

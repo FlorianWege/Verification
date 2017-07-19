@@ -3,6 +3,8 @@ package core;
 import java.util.Vector;
 import java.util.function.UnaryOperator;
 
+import core.structures.LexerRule;
+import core.structures.ParserRulePattern;
 import grammars.ExpGrammar;
 
 public class SyntaxTreeNode {
@@ -10,6 +12,44 @@ public class SyntaxTreeNode {
 	
 	public Vector<SyntaxTreeNode> getChildren() {
 		return _children;
+	}
+	
+	public SyntaxTreeNode findChild(RuleKey ruleKey, int index) {
+		int c = 0;
+		System.err.println("find " + ruleKey + " " + _children.size());
+		for (SyntaxTreeNode child : _children) {
+			Rule rule = child.getRule();
+			System.err.println("rule " + rule + ";" + child);
+			if (rule == null) continue;
+			
+			SyntaxTreeNode found = null;
+			
+			if (rule.getKey().equals(ruleKey)) {
+				found = child;
+			} else {
+				found = child.findChild(ruleKey, 1);
+			}
+			
+			if (found != null) {
+				c++;
+				
+				if (c >= index) return found;
+			}
+		}
+		
+		return null;
+	}
+	
+	public SyntaxTreeNode findChild(String ruleKeyS, int index) {
+		return findChild(new RuleKey(ruleKeyS), index);
+	}
+	
+	public SyntaxTreeNode findChild(RuleKey ruleKey) {
+		return findChild(ruleKey, 1);
+	}
+	
+	public SyntaxTreeNode findChild(String ruleKeyS) {
+		return findChild(new RuleKey(ruleKeyS), 1);
 	}
 	
 	private Rule _rule;
@@ -27,21 +67,10 @@ public class SyntaxTreeNode {
 	@Override
 	public String toString() {
 		return _rule.toString();
-		/*if (_children.isEmpty()) return "eps";
-		
-		StringBuilder sb = new StringBuilder();
-		
-		sb.append("[");
-		
-		for (Node child : _children) {
-			if (sb.length() > 0) sb.append(";");
-			
-			sb.append(child.toString());
-		}
-		
-		sb.append("]");
-		
-		return sb.toString();*/
+	}
+
+	public String toStringVert() {
+		return _rule.toString();
 	}
 	
 	public String synthesize() {

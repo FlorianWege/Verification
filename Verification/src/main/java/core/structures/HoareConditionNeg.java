@@ -1,7 +1,9 @@
-package core;
+package core.structures;
 
 import java.util.Collection;
 import java.util.Vector;
+
+import core.SyntaxTreeNode;
 
 public class HoareConditionNeg extends HoareCondition {
 	private HoareCondition _base = null;

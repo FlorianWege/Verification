@@ -1,11 +1,13 @@
-package core;
+package core.structures;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Vector;
 
-public class HoareConditionAnd extends HoareCondition {
+import core.SyntaxTreeNode;
+
+public class HoareConditionOr extends HoareCondition {
 	private Collection<HoareCondition> _children = null;
 	
 	public Collection<HoareCondition> getChildren() {
@@ -33,7 +35,7 @@ public class HoareConditionAnd extends HoareCondition {
 			newChildren.add(condition.copy());
 		}
 		
-		return new HoareConditionAnd((HoareCondition[]) newChildren.toArray());
+		return new HoareConditionOr((HoareCondition[]) newChildren.toArray());
 	}
 	
 	@Override
@@ -47,7 +49,7 @@ public class HoareConditionAnd extends HoareCondition {
 		_children.add(condition);
 	}
 	
-	public HoareConditionAnd(HoareCondition... conditions) {
+	public HoareConditionOr(HoareCondition... conditions) {
 		super();
 		
 		_children = new ArrayList<>(Arrays.asList(conditions));		

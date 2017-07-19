@@ -1,4 +1,4 @@
-package core;
+package core.structures;
 
 import java.util.regex.Pattern;
 

@@ -1,4 +1,6 @@
-package core;
+package core.structures;
+
+import core.SyntaxTreeNode;
 
 public class HoareConditionBoolExpr extends HoareCondition {
 	private SyntaxTreeNode _base = null;

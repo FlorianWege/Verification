@@ -8,6 +8,11 @@ public abstract class Rule {
 	}
 	
 	@Override
+	public int hashCode() {
+		return _key.hashCode();
+	}
+	
+	@Override
 	public boolean equals(Object other) {
 		if (!(other instanceof Rule)) return false;
 		

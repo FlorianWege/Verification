@@ -4,9 +4,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
 
+import core.structures.LexerRule;
+import core.structures.ParserRule;
+import core.structures.ParserRulePattern;
+import core.structures.ParserRulePatternAnd;
+
 public class Grammar {
 	public Grammar() {
-		
 	}
 	
 	private PredictiveParserTable _predictiveParserTable = new PredictiveParserTable();
@@ -27,9 +31,13 @@ public class Grammar {
 	
 	private Map<RuleKey, Rule> _rules = new HashMap<>();
 	
+	public Map<RuleKey, Rule> getRules() {
+		return _rules;
+	}
+	
 	private Vector<LexerRule> _lexerRules = new Vector<>();
 	
-	public Vector<LexerRule> getTokenInfos() {
+	public Vector<LexerRule> getLexerRules() {
 		return _lexerRules;
 	}
 	
@@ -54,6 +62,10 @@ public class Grammar {
 	
 	private Vector<ParserRule> _parserRules = new Vector<>();
 	
+	public Vector<ParserRule> getParserRules() {
+		return _parserRules;
+	}
+	
 	public ParserRule createParserRule(RuleKey key) {
 		assert(!_rules.containsKey(key)) : "key " + key + " already exists";
 		
@@ -76,7 +88,7 @@ public class Grammar {
 		
 		for (String el : sArr) {
 			Rule rule = _rules.get(new RuleKey(el));
-			//System.out.println(el + ";" + rule);
+
 			if (rule == null) throw new RuntimeException("unknown rule " + el);
 			
 			if (rule instanceof LexerRule) {
@@ -88,5 +100,13 @@ public class Grammar {
 		}
 		
 		return andPattern;
+	}
+	
+	public void merge(Grammar other) {
+		_predictiveParserTable.merge(other.getPredictiveParserTable());
+		_lexerRules.addAll(other.getLexerRules());
+		_parserRules.addAll(other.getParserRules());
+		_rules.putAll(other.getRules());
+		//_startParserRule = other.getStartParserRule();
 	}
 }

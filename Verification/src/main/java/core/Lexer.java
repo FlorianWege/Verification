@@ -6,6 +6,9 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import core.structures.LexerRule;
+import core.structures.LexerRulePattern;
+
 /**
  * using a specified grammar, takes the lexer rules and converts a String into a list of tokens
  */
@@ -102,7 +105,7 @@ public class Lexer {
 			LexerRule curTokenInfo = null;
 			Collection<LexerRulePattern> rulePatterns = new Vector<>();
 			
-			_grammar.getTokenInfos().sort(new Comparator<LexerRule>() {
+			_grammar.getLexerRules().sort(new Comparator<LexerRule>() {
 				@Override
 				public int compare(LexerRule ruleA, LexerRule ruleB) {
 					if (ruleA.getRulePatterns().isEmpty()) return 0;
@@ -115,7 +118,7 @@ public class Lexer {
 				}
 			});
 			
-			Vector<LexerRule> tokenInfos = new Vector<>(_grammar.getTokenInfos());
+			Vector<LexerRule> tokenInfos = new Vector<>(_grammar.getLexerRules());
 			
 			LexerRule wsRule = new LexerRule(new RuleKey("WS"), true);
 			

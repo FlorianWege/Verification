@@ -1,9 +1,9 @@
 package grammars;
 
 import core.Grammar;
-import core.LexerRule;
-import core.ParserRule;
 import core.PredictiveParserTable;
+import core.structures.LexerRule;
+import core.structures.ParserRule;
 
 public class ExpGrammar extends Grammar {
 	public final LexerRule zahlRule;

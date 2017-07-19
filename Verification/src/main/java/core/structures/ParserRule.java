@@ -1,4 +1,7 @@
-package core;
+package core.structures;
+
+import core.Rule;
+import core.RuleKey;
 
 /**
  * rule for the parser (non-terminals, their key starting with a lowercase letter)

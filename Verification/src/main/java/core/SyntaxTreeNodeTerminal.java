@@ -1,5 +1,7 @@
 package core;
 
+import core.structures.LexerRule;
+
 public class SyntaxTreeNodeTerminal extends SyntaxTreeNode {
 	private Token _token;
 	
@@ -8,8 +10,18 @@ public class SyntaxTreeNodeTerminal extends SyntaxTreeNode {
 	}
 	
 	@Override
+	public Rule getRule() {
+		return (_token == null) ? LexerRule.EPSILON : _token.getRule();
+	}
+	
+	@Override
 	public String toString() {
-		return (_token != null) ? _token.toString() : "eps";
+		return (_token != null) ? _token.toString() : getRule().toString();
+	}
+	
+	@Override
+	public String toStringVert() {
+		return (_token != null) ? _token.toStringVert() : getRule().toString();
 	}
 	
 	@Override
