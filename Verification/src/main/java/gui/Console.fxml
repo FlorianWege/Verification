@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" xmlns="http://javafx.com/javafx/8.0.102" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <TextArea fx:id="_textArea_log" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" promptText="&lt;console&gt;" VBox.vgrow="ALWAYS">
+      </TextArea>
+   </children>
+</VBox>

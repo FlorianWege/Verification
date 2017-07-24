@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.TreeView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
+<?import org.fxmisc.richtext.CodeArea?>
+
+<AnchorPane prefHeight="500.0" prefWidth="750.0" stylesheets="@MainWindow.css" xmlns="http://javafx.com/javafx/8.0.102" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+		<SplitPane fx:id="_split_center" dividerPositions="0.33, 0.66" maxHeight="1.7976931348623157E308" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" VBox.vgrow="ALWAYS">
+	      <items>
+            <VBox fx:id="_pane_code" prefHeight="200.0" prefWidth="100.0">
+               <children>
+                  <Label alignment="CENTER" maxWidth="1.7976931348623157E308" text="Code" />
+      	         <CodeArea fx:id="_textArea_code" VBox.vgrow="ALWAYS" />
+               </children>
+            </VBox>
+            <VBox fx:id="_pane_tokens" prefHeight="200.0" prefWidth="100.0">
+               <children>
+                  <Label alignment="CENTER" maxWidth="1.7976931348623157E308" text="Tokens" />
+      	         <CodeArea fx:id="_textArea_tokens" VBox.vgrow="ALWAYS" />
+               </children>
+            </VBox>
+	         <VBox fx:id="_pane_syntaxTree">
+	            <children>
+                  <Label alignment="CENTER" maxWidth="1.7976931348623157E308" text="Syntax Tree" />
+	               <TreeView fx:id="_treeView_syntaxTreeBase" VBox.vgrow="ALWAYS" />
+	               <CheckBox fx:id="_checkBox_syntaxTree_filterEps" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Show epsilon branches" VBox.vgrow="ALWAYS" />
+	            </children>
+	         </VBox>
+	      </items>
+	   </SplitPane>
+   </children>
+</AnchorPane>
