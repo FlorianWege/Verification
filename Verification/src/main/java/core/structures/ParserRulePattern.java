@@ -20,9 +20,7 @@ public class ParserRulePattern {
 	@Override
 	public boolean equals(Object other) {
 		if (other instanceof Rule) {
-			System.out.println("ABC " + this + ";" + this.getClass() + ";" + _rule + ";" + other);
 			if (_rule != null) {
-				System.out.println("ABC " + _rule + ";" + other + ";" + _rule.equals(other));
 				return _rule.equals(other);
 			}
 		}

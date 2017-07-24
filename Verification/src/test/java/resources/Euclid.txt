@@ -3,9 +3,9 @@ IF a == 0 THEN
 ELSE
 	WHILE b != 0 DO
 		IF a > b THEN
-			a=a-b
+			a = a - b
 		ELSE
-			b=b-a
+			b  = b -a
 		FI
 	OD;
 	

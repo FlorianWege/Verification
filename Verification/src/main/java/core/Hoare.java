@@ -8,6 +8,7 @@ import javax.script.ScriptException;
 
 import core.Lexer.LexerException;
 import core.Parser.NoRuleException;
+import core.Parser.ParserException;
 import core.structures.HoareCondition;
 import core.structures.HoareConditionBoolExpr;
 import core.structures.HoareConditionOr;
@@ -25,6 +26,8 @@ public class Hoare {
 	private ObservableMap<SyntaxTreeNode, HoareCondition> _postCondMap;
 	
 	public static class HoareException extends Exception {
+		private static final long serialVersionUID = 1L;
+
 		public HoareException(String msg) {
 			super(msg);
 		}
@@ -49,7 +52,9 @@ public class Hoare {
 			SyntaxTreeNode firstChild = node.getChildren().firstElement();
 			SyntaxTreeNode lastChild = node.getChildren().lastElement(); 
 			
-			if (node.getChildrenPattern().equals(_grammar.PATTERN_PROG_SKIP)) {
+			ret = wlp(firstChild, wlp(lastChild, postCondition, nestDepth + 1), nestDepth + 1);
+			
+			/*if (node.getChildrenPattern().equals(_grammar.PATTERN_PROG_SKIP)) {
 				ret = wlp(firstChild, wlp(lastChild, postCondition, nestDepth + 1), nestDepth + 1);
 			}
 			if (node.getChildrenPattern().equals(_grammar.PATTERN_PROG_ASSIGN)) {
@@ -60,7 +65,7 @@ public class Hoare {
 			}
 			if (node.getChildrenPattern().equals(_grammar.PATTERN_PROG_LOOP)) {
 				ret = wlp(firstChild, wlp(lastChild, postCondition, nestDepth + 1), nestDepth + 1);
-			}
+			}*/
 		}
 		if (node.getRule().equals(_grammar.prestRule)) {
 			if (node.getChildrenPattern().equals(_grammar.PATTERN_PREST_PROG)) {
@@ -75,15 +80,14 @@ public class Hoare {
 		}
 		if (node.getRule().equals(_grammar.assignRule)) {
 			if (node.getChildrenPattern().equals(_grammar.PATTERN_ASSIGN)) {
-				System.err.println("find " + new RuleKey("ID") + " in " + node.synthesize());
 				SyntaxTreeNode idNode = node.findChild("ID");
-				System.err.println("--------------------------------------------");
+
 				SyntaxTreeNode expNode = node.findChild("exp");
 				
 				String var = idNode.synthesize();
 				SyntaxTreeNode exp = expNode;
 				
-				System.out.println("replace " + var + " in " + postCondition + " by " + exp.synthesize());
+				//System.out.println("replace " + var + " in " + postCondition + " by " + exp.synthesize());
 				
 				postCondition.replace(_grammar.idRule, var, exp);
 				
@@ -109,7 +113,7 @@ public class Hoare {
 			}
 		}
 		if (node.getRule().equals(_grammar.whileRule)) {
-			//
+			//TODO
 		}
 		
 		if (node.getRule().equals(_grammar.hoareBlockRule)) {
@@ -118,7 +122,7 @@ public class Hoare {
 		
 		if (ret == null) throw new HoareException("no wlp for " + node + " with pattern " + node.getChildrenPattern());
 		
-		System.out.println(StringUtil.repeat("\t", nestDepth) + "precond " + node.getRule() + " -> " + ret);
+		//System.out.println(StringUtil.repeat("\t", nestDepth) + "precond " + node.getRule() + " -> " + ret);
 		
 		_preCondMap.put(node, ret);
 		
@@ -139,10 +143,10 @@ public class Hoare {
 	}
 	
 	public interface ImplicationInterface {
-		public void result(boolean yes);
+		public void result(boolean yes) throws HoareException, LexerException, IOException, ParserException;
 	}
 	
-	private boolean implicates(HoareCondition a, HoareCondition b, ImplicationInterface callback) throws ScriptException, IOException {
+	private boolean implicates(HoareCondition a, HoareCondition b, ImplicationInterface callback) throws ScriptException, IOException, HoareException, LexerException, ParserException {
 		System.out.println("try implication " + a + "->" + b);
 		
 		//TODO implicit check
@@ -201,72 +205,80 @@ public class Hoare {
 	}
 	
 	private interface ExecInterface {
-		public void finished();
+		public void finished() throws HoareException, LexerException, IOException, ParserException;
 	}
 	
-	public void execDirect(HoareNode node, int nestDepth, ExecInterface callback) {
-		for (HoareNode child : node.getChildren()) {
-			exec(child, nestDepth + 1, callback);
+	private class Executer {
+		private HoareNode _node;
+		private int _nestDepth;
+		private ExecInterface _callback;
+		
+		private Vector<Executer> _execChain = new Vector<>();
+		private Iterator<Executer> _execChainIt;
+		
+		public void exec() throws IOException, HoareException, LexerException, ParserException {
+			SyntaxTreeNode preNode = _node._actualNode.findChild(new RuleKey("boolExp"));
+			SyntaxTreeNode postNode = _node._actualNode.findChild(new RuleKey("boolExp"));
+			
+			HoareCondition preCondition = HoareCondition.fromString(preNode.synthesize());
+			HoareCondition postCondition = HoareCondition.fromString(postNode.synthesize());
+			
+			System.err.println(StringUtil.repeat("\t", _nestDepth) + "checking " + preCondition + "->" + postCondition + " at " + _node);
+			
+			HoareCondition finalPreCondition = wlp(_node._actualNode, postCondition, 0);
+			
+			System.out.println("final preCondition: " + finalPreCondition);
+			
+			try {
+				implicates(preCondition, finalPreCondition, new ImplicationInterface() {
+					@Override
+					public void result(boolean yes) throws HoareException, LexerException, IOException, ParserException {
+						if (yes) {
+							System.out.println(preCondition + "->" + postCondition + " holds true (wlp: " + finalPreCondition + ")");
+						} else {
+							System.out.println(preCondition + "->" + postCondition + " failed (wlp: " + finalPreCondition + ")");
+						}
+						
+						_callback.finished();
+					}
+				});
+			} catch (ScriptException e) {
+				e.printStackTrace();
+			}
 		}
 		
-		SyntaxTreeNode preNode = node._actualNode.findChild(new RuleKey("boolExp"));
-		SyntaxTreeNode postNode = node._actualNode.findChild(new RuleKey("boolExp"));
+		public void start() throws IOException, HoareException, LexerException, ParserException {
+			_execChainIt.next().exec();
+		}
 		
-		HoareCondition preCondition = HoareCondition.fromString(preNode.synthesize());
-		HoareCondition postCondition = HoareCondition.fromString(postNode.synthesize());
-		
-		System.err.println(StringUtil.repeat("\t", nestDepth) + "checking " + preCondition + "->" + postCondition + " at " + node);
-		
-		HoareCondition finalPreCondition = wlp(node._actualNode, postCondition, 0);
-		
-		System.out.println("final preCondition: " + finalPreCondition);
-		
-		try {
-			ImplicationInterface callback = new ImplicationInterface() {
+		public Executer(HoareNode node, int nestDepth, ExecInterface callback) throws IOException, HoareException, NoRuleException, LexerException {
+			_node = node;
+			_nestDepth = nestDepth;
+			_callback = callback;
+			
+			ExecInterface childCallback = new ExecInterface() {
 				@Override
-				public void result(boolean yes) {
-					if (yes) {
-						System.out.println(preCondition + "->" + postCondition + " holds true (wlp=" + finalPreCondition + ")");
-					} else {
-						System.out.println(preCondition + "->" + postCondition + " failed (wlp=" + finalPreCondition + ")");
-					}
+				public void finished() throws HoareException, LexerException, IOException, ParserException {
+					Executer next = _execChainIt.next();
+
+					next.exec();
 				}
 			};
 			
-			implicates(preCondition, finalPreCondition, callback);
-		} catch (ScriptException e) {
-			e.printStackTrace();
+			for (HoareNode child : node.getChildren()) {
+				_execChain.add(new Executer(child, nestDepth + 1, childCallback));
+			}
+			
+			_execChain.add(this);
+			
+			_execChainIt = _execChain.iterator();
 		}
 	}
 	
-	public void exec(HoareNode node, int nestDepth, ExecInterface callback) throws HoareException, NoRuleException, LexerException, IOException {
-		Vector<HoareNode> execChain = new Vector<>();
-		
-		execChain.addAll(node.getChildren());
-		
-		execChain.add(node);
-		
-		Iterator<HoareNode> childrenIterator = execChain.iterator();
-		
-		HoareNode next = childrenIterator.next();
-		
-		ExecInterface childCallback = new ExecInterface() {
-			@Override
-			public void finished() {
-				HoareNode next = childrenIterator.next();
-				
-				if (next == null) {
-					execDirect(next, nestDepth + 1, callback);
-				} else {
-					execDirect(next, nestDepth + 1, childCallback);
-				}
-			}
-		};
-		
-		execDirect(next, nestDepth + 1, childCallback);
-	}
+	private Vector<Executer> _execChain;
+	private Iterator<Executer> _execChainIt;
 	
-	public void exec() throws HoareException, NoRuleException, LexerException, IOException {
+	public void exec() throws HoareException, LexerException, IOException, ParserException {
 		System.err.println("hoaring...");
 
 		Vector<HoareNode> children = collectChildren(_tree.getRoot());
@@ -274,15 +286,29 @@ public class Hoare {
 		if (children.isEmpty()) {
 			System.err.println("no hoareBlocks");
 		} else {
+			_execChain = new Vector<>();
+			
 			for (HoareNode child : children) {
-				System.out.println("iterate");
-				exec(child, 0, new ExecInterface() {
-					@Override
-					public void finished() {
-						System.err.println("hoaring finished");
-					}
-				});
+				if (children.lastElement().equals(child)) {
+					_execChain.add(new Executer(child, 0, new ExecInterface() {
+						@Override
+						public void finished() throws HoareException, NoRuleException, LexerException, IOException {
+							System.err.println("hoaring finished");
+						}
+					}));
+				} else {
+					_execChain.add(new Executer(child, 0, new ExecInterface() {
+						@Override
+						public void finished() throws IOException, HoareException, LexerException, ParserException {
+							_execChainIt.next().exec();
+						}
+					}));
+				}
 			}
+			
+			Iterator<Executer> execChainIt = _execChain.iterator();
+			
+			execChainIt.next().exec();
 		}
 	}
 	

@@ -2,6 +2,8 @@ package util;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -9,7 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import gui.JavaFXMain;
+import gui.MainWindow;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -26,7 +28,7 @@ public class IOUtil {
 	}
 	
 	public static Scene inflateFXML(File file, Object controller) throws IOException {
-		URL url = JavaFXMain.class.getResource(file.toString());
+		URL url = MainWindow.class.getResource(file.toString());
 		
 		if (url == null) throw new IOException(file.toString() + " not found");
 		
@@ -34,7 +36,21 @@ public class IOUtil {
 		
 		loader.setController(controller);
 		
-		loader.load();
+		PrintStream errStream = System.err;
+		
+		try {
+			System.setErr(new PrintStream(new OutputStream() {
+				@Override
+				public void write(int arg0) throws IOException {
+				}
+			}));
+			
+			loader.load();
+		} catch (Exception e) {
+			throw e;
+		} finally {
+			System.setErr(errStream);
+		}
 		
 		Parent root = loader.getRoot();
 		

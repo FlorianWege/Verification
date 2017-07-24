@@ -9,11 +9,12 @@ import core.Lexer;
 import core.Lexer.LexerResult;
 import core.Parser;
 import core.Parser.NoRuleException;
+import core.Parser.ParserException;
 import grammars.ExpGrammar;
 
 public class ExpParserTest {
 	@Test()
-	public void test() throws IOException, Lexer.LexerException, NoRuleException {
+	public void test() throws IOException, Lexer.LexerException, ParserException {
 		Grammar expGrammar = new ExpGrammar();
 		
 		LexerResult lexerResult = new Lexer(expGrammar).tokenize("4+4");

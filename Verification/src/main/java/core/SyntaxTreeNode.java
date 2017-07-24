@@ -16,10 +16,10 @@ public class SyntaxTreeNode {
 	
 	public SyntaxTreeNode findChild(RuleKey ruleKey, int index) {
 		int c = 0;
-		System.err.println("find " + ruleKey + " " + _children.size());
+		//System.err.println("find " + ruleKey + " " + _children.size());
 		for (SyntaxTreeNode child : _children) {
 			Rule rule = child.getRule();
-			System.err.println("rule " + rule + ";" + child);
+			//System.err.println("rule " + rule + ";" + child);
 			if (rule == null) continue;
 			
 			SyntaxTreeNode found = null;
@@ -124,6 +124,7 @@ public class SyntaxTreeNode {
 	
 	public void print(int nestDepth) {
 		System.out.println(new String(new char[nestDepth]).replace('\0', '\t') + _rule);
+		
 		if (_children.isEmpty()) {
 			System.out.println(new String(new char[nestDepth + 1]).replace('\0', '\t') + "eps");
 		} else {

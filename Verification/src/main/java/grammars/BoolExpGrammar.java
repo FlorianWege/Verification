@@ -3,6 +3,7 @@ package grammars;
 import core.PredictiveParserTable;
 import core.structures.LexerRule;
 import core.structures.ParserRule;
+import core.structures.ParserRulePattern;
 
 public class BoolExpGrammar extends ExpGrammar {
 	public final LexerRule boolLiteralRule;
@@ -12,10 +13,19 @@ public class BoolExpGrammar extends ExpGrammar {
 	public final LexerRule opCompareRule;
 	
 	public final ParserRule boolExpRule;
-	public final ParserRule boolExpRestRule;
+	public final ParserRule boolOrRestRule;
 	public final ParserRule boolOrRule;
 	public final ParserRule boolAndRule;
+	public final ParserRule boolAndRestRule;
 	public final ParserRule boolElementaryRule;
+	
+	public final ParserRulePattern PATTERN_BOOL_AND_BOOL_OR_REST;
+	public final ParserRulePattern PATTERN_BOOL_OR;
+	public final ParserRulePattern PATTERN_OP_OR_BOOL_OR;
+	public final ParserRulePattern PATTERN_BOOL_ELEMENTARY_BOOL_AND_REST;
+	public final ParserRulePattern PATTERN_OP_AND_BOOL_AND;
+	public final ParserRulePattern PATTERN_EXP_OP_COMPARE_EXP;
+	public final ParserRulePattern PATTERN_BOOL_LITERAL;
 	
 	public BoolExpGrammar() {
 		//lexer rules
@@ -47,51 +57,65 @@ public class BoolExpGrammar extends ExpGrammar {
 		
 		//parser rules
 		boolExpRule = createParserRule("boolExp");
-		boolExpRestRule = createParserRule("boolExp_rest");
-		boolElementaryRule = createParserRule("boolElementary");
 		boolOrRule = createParserRule("boolOr");
+		boolOrRestRule = createParserRule("boolOrRest");
 		boolAndRule = createParserRule("boolAnd");
+		boolAndRestRule = createParserRule("boolAndRest");
+		boolElementaryRule = createParserRule("boolElementary");
 
-		boolExpRule.addRule(createRulePattern("OP_NEGATE boolExp"));
-		boolExpRule.addRule(createRulePattern("boolElementary boolExp_rest"));
+		PATTERN_BOOL_OR = createRulePattern("boolOr");
 
-		boolExpRestRule.addRule(LexerRule.EPSILON);
-		boolExpRestRule.addRule(createRulePattern("OP_OR boolOr"));
+		boolExpRule.addRule(PATTERN_BOOL_OR);
 
-		boolOrRule.addRule(createRulePattern("OP_AND boolAnd"));
-		boolOrRule.addRule(createRulePattern("boolExp"));
+		PATTERN_BOOL_AND_BOOL_OR_REST = createRulePattern("boolAnd boolOrRest");
 
-		boolAndRule.addRule(createRulePattern("boolExp"));
+		boolOrRule.addRule(PATTERN_BOOL_AND_BOOL_OR_REST);
 
-		//boolExpRule.addRule(createRulePattern("PAREN_OPEN boolExp PAREN_CLOSE"));
+		PATTERN_OP_OR_BOOL_OR = createRulePattern("OP_OR boolOr");
+		
+		boolOrRestRule.addRule(PATTERN_OP_OR_BOOL_OR);
+		boolOrRestRule.addRule(LexerRule.EPSILON);
+		
+		PATTERN_BOOL_ELEMENTARY_BOOL_AND_REST = createRulePattern("boolElementary boolAndRest");
 
-		boolElementaryRule.addRule(createRulePattern("exp OP_COMPARE exp"));
-		boolElementaryRule.addRule(createRulePattern("BOOL_LITERAL"));
+		boolAndRule.addRule(PATTERN_BOOL_ELEMENTARY_BOOL_AND_REST);
+
+		PATTERN_OP_AND_BOOL_AND = createRulePattern("OP_AND boolAnd");
+
+		boolAndRestRule.addRule(PATTERN_OP_AND_BOOL_AND);
+		boolAndRestRule.addRule(LexerRule.EPSILON);
+
+		PATTERN_EXP_OP_COMPARE_EXP = createRulePattern("exp OP_COMPARE exp");
+		PATTERN_BOOL_LITERAL = createRulePattern("BOOL_LITERAL");
+
+		boolElementaryRule.addRule(PATTERN_EXP_OP_COMPARE_EXP);
+		boolElementaryRule.addRule(PATTERN_BOOL_LITERAL);
 
 		setStartParserRule(boolExpRule);
 
 		//predictive parser table
 		PredictiveParserTable ruleMap = getPredictiveParserTable();
 
-		ruleMap.set(boolExpRule, opNegateRule, boolExpRule.getRulePattern(0));
-		ruleMap.set(boolExpRule, zahlRule, boolExpRule.getRulePattern(1));
-		ruleMap.set(boolExpRule, idRule, boolExpRule.getRulePattern(1));
-		//ruleMap.set(boolExpRule, parenOpenRule, boolExpRule.getRulePattern(3));
-		
-		ruleMap.set(boolExpRestRule, LexerRule.EPSILON, boolExpRestRule.getRulePattern(0));
-		ruleMap.set(boolExpRestRule, opOrRule, boolExpRestRule.getRulePattern(1));
-		
-		ruleMap.set(boolOrRule, opAndRule, boolOrRule.getRulePattern(0));
-		ruleMap.set(boolOrRule, opNegateRule, boolOrRule.getRulePattern(1));
-		ruleMap.set(boolOrRule, zahlRule, boolOrRule.getRulePattern(1));
-		ruleMap.set(boolOrRule, idRule, boolOrRule.getRulePattern(1));
-		
-		ruleMap.set(boolAndRule, opNegateRule, boolAndRule.getRulePattern(0));
-		ruleMap.set(boolAndRule, zahlRule, boolAndRule.getRulePattern(0));
-		ruleMap.set(boolAndRule, idRule, boolAndRule.getRulePattern(0));
-		
-		ruleMap.set(boolElementaryRule, zahlRule, boolElementaryRule.getRulePattern(0));
-		ruleMap.set(boolElementaryRule, idRule, boolElementaryRule.getRulePattern(0));
-		ruleMap.set(boolElementaryRule, boolLiteralRule, boolElementaryRule.getRulePattern(1));
+		ruleMap.set(boolExpRule, opNegateRule, PATTERN_BOOL_OR);
+		ruleMap.set(boolExpRule, zahlRule, PATTERN_BOOL_OR);
+		ruleMap.set(boolExpRule, idRule, PATTERN_BOOL_OR);
+
+		ruleMap.set(boolOrRule, opNegateRule, PATTERN_BOOL_AND_BOOL_OR_REST);
+		ruleMap.set(boolOrRule, zahlRule, PATTERN_BOOL_AND_BOOL_OR_REST);
+		ruleMap.set(boolOrRule, idRule, PATTERN_BOOL_AND_BOOL_OR_REST);
+
+		ruleMap.set(boolOrRestRule, opOrRule, PATTERN_OP_OR_BOOL_OR);
+		ruleMap.set(boolOrRestRule, LexerRule.EPSILON, boolOrRestRule.getRulePattern(1));
+
+		ruleMap.set(boolAndRule, opNegateRule, PATTERN_BOOL_ELEMENTARY_BOOL_AND_REST);
+		ruleMap.set(boolAndRule, zahlRule, PATTERN_BOOL_ELEMENTARY_BOOL_AND_REST);
+		ruleMap.set(boolAndRule, idRule, PATTERN_BOOL_ELEMENTARY_BOOL_AND_REST);
+
+		ruleMap.set(boolAndRestRule, opAndRule, PATTERN_OP_AND_BOOL_AND);
+		ruleMap.set(boolAndRestRule, LexerRule.EPSILON, boolAndRestRule.getRulePattern(1));
+
+		ruleMap.set(boolElementaryRule, zahlRule, PATTERN_EXP_OP_COMPARE_EXP);
+		ruleMap.set(boolElementaryRule, idRule, PATTERN_EXP_OP_COMPARE_EXP);
+		ruleMap.set(boolElementaryRule, boolLiteralRule, PATTERN_BOOL_LITERAL);
 	}
 }

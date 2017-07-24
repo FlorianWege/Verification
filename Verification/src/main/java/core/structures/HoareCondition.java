@@ -8,6 +8,7 @@ import core.SyntaxTree;
 import core.SyntaxTreeNode;
 import core.Lexer.LexerException;
 import core.Parser.NoRuleException;
+import core.Parser.ParserException;
 import grammars.BoolExpGrammar;
 
 public abstract class HoareCondition {
@@ -26,7 +27,7 @@ public abstract class HoareCondition {
 		
 	}
 	
-	public static HoareCondition fromString(String s) throws NoRuleException, LexerException {
+	public static HoareCondition fromString(String s) throws LexerException, ParserException {
 		BoolExpGrammar boolExpGrammar = new BoolExpGrammar();
 		
 		Parser parser = new Parser(boolExpGrammar);

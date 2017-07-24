@@ -77,14 +77,6 @@ public class Lexer {
 		
 		System.out.println("tokenizing...");
 		
-		int c = 1;
-		
-		for (String line : s.split(System.lineSeparator())) {
-			System.out.println(c + ":" + line);
-			c++;
-		}
-		System.out.println("//////////////////////////////");
-		
 		int curPos = 0;
 		Vector<Token> tokens = new Vector<>();
 		int x = 0;
