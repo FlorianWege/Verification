@@ -1,4 +1,4 @@
-package core.structures;
+package core.structures.hoareCond;
 
 import java.util.function.Predicate;
 
@@ -9,9 +9,10 @@ import core.SyntaxTreeNode;
 import core.Lexer.LexerException;
 import core.Parser.NoRuleException;
 import core.Parser.ParserException;
+import core.structures.Terminal;
 import grammars.BoolExpGrammar;
 
-public abstract class HoareCondition {
+public abstract class HoareCond {
 	private Predicate<Object> _predicate = new Predicate<Object>() {
 		@Override
 		public boolean test(Object arg0) {
@@ -20,20 +21,28 @@ public abstract class HoareCondition {
 		
 	};
 	
-	public abstract HoareCondition copy();
-	public abstract void replace(LexerRule lexerRule, String var, SyntaxTreeNode exp);
+	public String toStringEx(String replacement) {
+		return (replacement == null) ? "{" + this + "}" : "{" + this + "[" + replacement + "]" + "}";
+	}
 	
-	public HoareCondition() {
+	public String toStringEx() {
+		return toStringEx(null);
+	}
+	
+	public abstract HoareCond copy();
+	public abstract void replace(Terminal lexerRule, String var, SyntaxTreeNode exp);
+	
+	public HoareCond() {
 		
 	}
 	
-	public static HoareCondition fromString(String s) throws LexerException, ParserException {
+	public static HoareCond fromString(String s) throws LexerException, ParserException {
 		BoolExpGrammar boolExpGrammar = new BoolExpGrammar();
 		
 		Parser parser = new Parser(boolExpGrammar);
 		
 		SyntaxTree tree = parser.parse(new Lexer(boolExpGrammar).tokenize(s).getTokens());
 		
-		return new HoareConditionBoolExpr(tree.getRoot());
+		return new HoareCondBoolExpr(tree.getRoot());
 	}
 }

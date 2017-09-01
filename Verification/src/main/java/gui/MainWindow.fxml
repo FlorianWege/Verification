@@ -72,6 +72,13 @@
                            </accelerator></CheckMenuItem>
                   </items>
                 </Menu>
+                  <Menu mnemonicParsing="false" text="Tools">
+                    <items>
+                      <MenuItem fx:id="_menu_parse" mnemonicParsing="false" text="Parse" />
+                        <CheckMenuItem fx:id="_menu_parse_auto" mnemonicParsing="false" text="Auto Parse" />
+                        <MenuItem fx:id="_menu_hoare" mnemonicParsing="false" text="Hoare" />
+                    </items>
+                  </Menu>
               </menus>
             </MenuBar>
             <SplitPane fx:id="_split_main" maxHeight="1.7976931348623157E308" orientation="VERTICAL" VBox.vgrow="ALWAYS">

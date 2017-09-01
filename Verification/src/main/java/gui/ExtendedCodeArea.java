@@ -2,7 +2,8 @@ package gui;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Vector;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.function.IntFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -14,7 +15,7 @@ import org.fxmisc.richtext.StyleSpansBuilder;
 
 import core.Grammar;
 import core.structures.LexerRule;
-import core.structures.LexerRulePattern;
+import core.structures.Terminal;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.EventHandler;
@@ -109,17 +110,27 @@ public class ExtendedCodeArea {
 			@Override
 			public void changed(ObservableValue<? extends String> obs, String oldVal, String newVal) {
 				highlight();
+				
+				setErrorPos(null);
 			}
 		});
 	}
 	
+	private Integer _errorPos = null;
+	
+	public void setErrorPos(Integer pos) {
+		_errorPos = pos;
+		
+		highlight();
+	}
+	
 	private void highlight() {
-		Vector<String> keywords = new Vector<>();
+		Set<String> keywords = new LinkedHashSet<>();
 
-		for (LexerRule rule : _grammar.getLexerRules()) {
-			for (LexerRulePattern pattern : rule.getRulePatterns()) {
+		for (Terminal rule : _grammar.getTerminals()) {
+			for (LexerRule pattern : rule.getRules()) {
 				if (!pattern.isRegEx()) {
-					keywords.addElement(Pattern.quote(pattern.toString()));
+					keywords.add(Pattern.quote(pattern.toString()));
 					
 					break;
 				}
@@ -144,13 +155,19 @@ public class ExtendedCodeArea {
 			
 			last = matcher.end();
 		}
-
+		
+		_textArea.clearStyle(0, _textArea.getText().length());
+		
 		if (c > 0) {
 			StyleSpans<Collection<String>> spans = spansBuilder.create();
 			
 			if (spans.getSpanCount() > 0) {
 				_textArea.setStyleSpans(0, spans);
 			}
+		}
+		
+		if (_errorPos != null) {
+			_textArea.setStyle(_errorPos, _textArea.getText().length(), Collections.singleton("error"));
 		}
 	}
 }

@@ -41,7 +41,7 @@ public class IOUtil {
 		try {
 			System.setErr(new PrintStream(new OutputStream() {
 				@Override
-				public void write(int arg0) throws IOException {
+				public void write(int b) throws IOException {
 				}
 			}));
 			

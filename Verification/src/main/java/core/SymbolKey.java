@@ -3,7 +3,7 @@ package core;
 /**
  * left side of a rule
  */
-public class RuleKey {
+public class SymbolKey {
 	private String _name;
 	
 	@Override
@@ -13,9 +13,11 @@ public class RuleKey {
 	
 	@Override
 	public boolean equals(Object other) {
-		if (!(other instanceof RuleKey)) return false;
+		if (other instanceof String) other = new SymbolKey((String) other);
 		
-		return _name.equals(((RuleKey) other)._name);
+		if (!(other instanceof SymbolKey)) return false;
+		
+		return _name.equals(((SymbolKey) other)._name);
 	}
 	
 	@Override
@@ -23,7 +25,7 @@ public class RuleKey {
 		return _name;
 	}
 	
-	public RuleKey(String name) {
+	public SymbolKey(String name) {
 		_name = name;
 	}
 }

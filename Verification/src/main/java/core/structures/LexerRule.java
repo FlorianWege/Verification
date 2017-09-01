@@ -1,47 +1,35 @@
 package core.structures;
 
-import java.util.Vector;
-
-import core.Rule;
-import core.RuleKey;
+import java.util.regex.Pattern;
 
 /**
- * rule for the lexer (terminals, their key starting with an uppercase letter)
+ * right side (one option) of a rule
  */
-public class LexerRule extends Rule {
-	public final static LexerRule EPSILON = new LexerRule("eps");
-	
-	public Vector<LexerRulePattern> _rulePatterns = new Vector<>();
-	public boolean _skip;
-	
-	public Vector<LexerRulePattern> getRulePatterns() {
-		return _rulePatterns;
-	}
-	
-	public LexerRule(RuleKey key, boolean skip) {
-		super(key);
-
-		_skip = skip;
-	}
-	
-	public LexerRule(String keyS) {
-		this(new RuleKey(keyS), false);
-	}
+public class LexerRule {
+	private String _text;
 	
 	@Override
 	public String toString() {
-		return _key.toString();
+		return _text;
 	}
 	
-	public void addRule(LexerRulePattern pattern) {
-		_rulePatterns.add(pattern);
-	}
-
-	public void addRuleRegEx(String patternS) {
-		addRule(new LexerRulePattern(patternS, true));
+	private String _regEx;
+	
+	public String getRegEx() {
+		return _regEx;
 	}
 	
-	public void addRule(String patternS) {
-		addRule(new LexerRulePattern(patternS, false));
+	private boolean _isRegEx;
+	
+	public boolean isRegEx() {
+		return _isRegEx;
+	}
+	
+	public LexerRule(String text, boolean isRegEx) {
+		_text = text;
+		
+		_regEx = (isRegEx) ? _text : Pattern.quote(_text);
+		
+		_isRegEx = isRegEx;
 	}
 }

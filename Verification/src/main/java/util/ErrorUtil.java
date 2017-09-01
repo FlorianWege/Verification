@@ -13,8 +13,12 @@ public class ErrorUtil {
 		System.err.println(msg);
 	}
 	
+	public static void logE(Exception e) {
+		e.printStackTrace();
+	}
+	
 	public static void logEFX(Exception e) {
-		logE(e.getMessage());
+		logE(e);
 		
 		ErrorDialog diag = new ErrorDialog(e);
 		

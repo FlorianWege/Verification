@@ -1,6 +1,6 @@
 package core;
 
-import core.structures.LexerRule;
+import core.structures.Terminal;
 
 public class SyntaxTreeNodeTerminal extends SyntaxTreeNode {
 	private Token _token;
@@ -10,18 +10,18 @@ public class SyntaxTreeNodeTerminal extends SyntaxTreeNode {
 	}
 	
 	@Override
-	public Rule getRule() {
-		return (_token == null) ? LexerRule.EPSILON : _token.getRule();
+	public Symbol getSymbol() {
+		return (_token == null) ? Terminal.EPSILON : _token.getTerminal();
 	}
 	
 	@Override
 	public String toString() {
-		return (_token != null) ? _token.toString() : getRule().toString();
+		return (_token != null) ? _token.toString() : getSymbol().toString();
 	}
 	
 	@Override
 	public String toStringVert() {
-		return (_token != null) ? _token.toStringVert() : getRule().toString();
+		return (_token != null) ? _token.toStringVert() : getSymbol().toString();
 	}
 	
 	@Override
@@ -34,8 +34,12 @@ public class SyntaxTreeNodeTerminal extends SyntaxTreeNode {
 		return new SyntaxTreeNodeTerminal((_token == null) ? null : _token.copy());
 	}
 	
+	public SyntaxTreeNodeTerminal(Terminal terminal) {
+		super(terminal, null);
+	}
+	
 	public SyntaxTreeNodeTerminal(Token token) {
-		super(null, null);
+		this((token == null) ? Terminal.EPSILON : token.getTerminal());
 
 		_token = token;
 	}

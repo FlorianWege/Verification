@@ -1,36 +1,77 @@
 package core.structures;
 
-import core.Rule;
-import core.RuleKey;
+import java.util.Arrays;
+import java.util.Vector;
 
-/**
- * rule for the parser (non-terminals, their key starting with a lowercase letter)
- */
-public class ParserRule extends Rule {
-	public ParserRule(RuleKey key) {
-		super(key);
+import core.Symbol;
+
+public class ParserRule {
+	private NonTerminal _nonTerminal;
+	private Vector<Symbol> _symbols = new Vector<>();
+	
+	public ParserRule(NonTerminal nonTerminal) {
+		_nonTerminal = nonTerminal;
+	}
+
+	public ParserRule(NonTerminal nonTerminal, Vector<Symbol> symbols) {
+		this(nonTerminal);
+		
+		if (symbols.isEmpty()) throw new RuntimeException("no symbols");
+		
+		_symbols = new Vector<>(symbols);
+	}
+	
+	public ParserRule(NonTerminal nonTerminal, Symbol... symbols) {
+		this(nonTerminal, new Vector<Symbol>(Arrays.asList(symbols)));
+		
+		_symbols = new Vector<>(Arrays.asList(symbols));		
+	}
+	
+	/*	@Override
+	public String toString() {
+		return _rule.toString();
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		if (other instanceof Symbol) {
+			if (_rule != null) {
+				return _rule.equals(other);
+			}
+		}
+		
+		return super.equals(other);
+	}*/
+	
+	public NonTerminal getNonTerminal() {
+		return _nonTerminal;
+	}
+	
+	public Vector<Symbol> getSymbols() {
+		return new Vector<>(_symbols);
+	}
+	
+	@Override
+	public boolean equals(Object other) {
+		if (_symbols.size() == 1) return _symbols.get(0).equals(other);
+		
+		return super.equals(other);
 	}
 	
 	@Override
 	public String toString() {
-		return _key.toString();
+		StringBuilder sb = new StringBuilder();
+		
+		for (Symbol child : _symbols) {
+			if (sb.length() > 0) sb.append(" ");
+
+			sb.append(child.toString());
+		}
+		
+		return sb.toString();
 	}
 	
-	private ParserRulePatternOr _rulePattern = new ParserRulePatternOr();
-	
-	public ParserRulePattern getRulePattern(int index) {
-		return _rulePattern.getChild(index);
+	public void addSymbol(Symbol symbol) {
+		_symbols.add(symbol);
 	}
-	
-	public void addRule(ParserRulePattern pattern) {
-		_rulePattern.addPattern(pattern);
-	}
-	
-	public void addRule(Rule rule) {
-		addRule(new ParserRulePatternAnd(new ParserRulePattern(rule)));
-	}
-	
-	/*public void addRule(String patternS) {
-		addRule(new ParserRulePattern(patternS));
-	}*/
 }

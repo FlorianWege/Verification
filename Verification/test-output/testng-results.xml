@@ -2,16 +2,16 @@
 <testng-results skipped="0" failed="0" ignored="0" total="1" passed="1">
   <reporter-output>
   </reporter-output>
-  <suite name="Default suite" duration-ms="538" started-at="2017-06-07T14:16:35Z" finished-at="2017-06-07T14:16:36Z">
+  <suite name="Default suite" duration-ms="144" started-at="2017-08-29T15:25:06Z" finished-at="2017-08-29T15:25:07Z">
     <groups>
     </groups>
-    <test name="Default test" duration-ms="538" started-at="2017-06-07T14:16:35Z" finished-at="2017-06-07T14:16:36Z">
-      <class name="tests.parsing.FactorialParserTest">
-        <test-method status="PASS" signature="test()[pri:0, instance:tests.parsing.FactorialParserTest@7c0e2abd]" name="test" duration-ms="453" started-at="2017-06-07T16:16:35Z" finished-at="2017-06-07T16:16:36Z">
+    <test name="Default test" duration-ms="144" started-at="2017-08-29T15:25:06Z" finished-at="2017-08-29T15:25:07Z">
+      <class name="logic.KNFTest">
+        <test-method status="PASS" signature="test()[pri:0, instance:logic.KNFTest@50c87b21]" name="test" duration-ms="111" started-at="2017-08-29T17:25:06Z" finished-at="2017-08-29T17:25:07Z">
           <reporter-output>
           </reporter-output>
         </test-method> <!-- test -->
-      </class> <!-- tests.parsing.FactorialParserTest -->
+      </class> <!-- logic.KNFTest -->
     </test> <!-- Default test -->
   </suite> <!-- Default suite -->
 </testng-results>

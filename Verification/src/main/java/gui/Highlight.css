@@ -2,3 +2,8 @@
 	-fx-fill: purple;
 	-fx-font-weight: bold;
 }
+
+.error {
+	-fx-fill: red;
+	-fx-font-weight: bold;
+}

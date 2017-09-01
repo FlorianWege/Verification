@@ -6,8 +6,8 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import core.structures.Terminal;
 import core.structures.LexerRule;
-import core.structures.LexerRulePattern;
 
 /**
  * using a specified grammar, takes the lexer rules and converts a String into a list of tokens
@@ -19,20 +19,51 @@ public class Lexer {
 		_grammar = grammar;
 	}
 	
-	private Token createToken(LexerRule info, LexerRulePattern rulePattern, String text, int line, int lineOffset) {
-		Token token = new Token(info, rulePattern, text, line, lineOffset);
+	private Token createToken(Terminal terminal, LexerRule rule, String text, int line, int lineOffset, int pos) {
+		Token token = new Token(terminal, rule, text, line, lineOffset, pos);
 		
 		return token;
 	}
 	
 	public class LexerException extends Exception {
-		/**
-		 * 
-		 */
 		private static final long serialVersionUID = 1L;
-
-		public LexerException(String text) {
-			super(text);
+		
+		private int _y;
+		
+		public int getLine() {
+			return _y;
+		}
+		
+		private int _x;
+		
+		public int getLineOffset() {
+			return _x;
+		}
+		
+		private int _curPos;
+		
+		public int getCurPos() {
+			return _curPos;
+		}
+		
+		private String _inputString;
+		
+		public String getInputString() {
+			return _inputString;
+		}
+		
+		@Override
+		public String getMessage() {
+			return String.format("cannot find token at pos %d.%d (%d): >>%s<<", _y + 1, _x + 1, _curPos, _inputString.substring(_curPos));
+		}
+		
+		public LexerException(int y, int x, int curPos, String inputString) {
+			super();
+			
+			_y = y;
+			_x = x;
+			_curPos = curPos;
+			_inputString = inputString;
 		}
 	}
 	
@@ -63,101 +94,77 @@ public class Lexer {
 			System.out.println("tokens:");
 			
 			for (int i = 0; i < getTokens().size(); i++) {
-				System.out.println("#" + i + ": " + getTokens().get(i)._rule._key + "->" + getTokens().get(i)._text);
+				System.out.println("#" + i + ": " + getTokens().get(i).getTerminal().getKey() + "->" + getTokens().get(i)._text);
 			}
 		}
 		
 		public LexerResult(Vector<Token> tokens) {
-			_tokens = tokens;
+			_tokens = new Vector<>(tokens);
 		}
 	}
 	
 	public LexerResult tokenize(String s) throws LexerException {
 		s = removeComments(s);
 		
-		System.out.println("tokenizing...");
+		Vector<Terminal> terminals = new Vector<>(_grammar.getTerminals());
 		
-		int curPos = 0;
-		Vector<Token> tokens = new Vector<>();
-		int x = 0;
-		int y = 0;
+		terminals.sort(new Comparator<Terminal>() {
+			private boolean isRegEx(Terminal terminal) {
+				for (LexerRule rule : terminal.getRules()) if (rule.isRegEx()) return true;
+				
+				return false;
+			}
+			
+			@Override
+			public int compare(Terminal terminalA, Terminal terminalB) {
+				if (terminalA.getRules().isEmpty() || terminalB.getRules().isEmpty()) return 0;
+				
+				if (isRegEx(terminalA)) return 1;
+				if (isRegEx(terminalB)) return -1;
+				
+				return 0;
+			}
+		});
+		
+		Terminal wsRule = new Terminal(new SymbolKey("WS"), true);
+		
+		wsRule.addRule(new LexerRule("\\s+", true));
+		
+		terminals.add(wsRule);
+		
+		int curPos = 0; Vector<Token> tokens = new Vector<>(); int x = 0; int y = 0;
 		
 		while (curPos < s.length()) {
 			if ((s.length() - curPos >= System.lineSeparator().length()) && s.substring(curPos, curPos + System.lineSeparator().length()).equals(System.lineSeparator())) {
-				curPos += System.lineSeparator().length();
-				
-				x = 0;
-				y++;
+				curPos += System.lineSeparator().length(); x = 0; y++;
 				
 				continue;
 			}
 			
-			int curLen = 0;
-			LexerRulePattern curRulePattern = null;
-			LexerRule curTokenInfo = null;
-			Collection<LexerRulePattern> rulePatterns = new Vector<>();
+			int curLen = 0;	LexerRule curRule = null; Terminal curTerminal = null;
 			
-			_grammar.getLexerRules().sort(new Comparator<LexerRule>() {
-				@Override
-				public int compare(LexerRule ruleA, LexerRule ruleB) {
-					if (ruleA.getRulePatterns().isEmpty()) return 0;
-					if (ruleB.getRulePatterns().isEmpty()) return 0;
-					
-					if (ruleA.getRulePatterns().get(0).isRegEx()) return 1;
-					if (ruleB.getRulePatterns().get(0).isRegEx()) return -1;
-					
-					return 0;
-				}
-			});
-			
-			Vector<LexerRule> tokenInfos = new Vector<>(_grammar.getLexerRules());
-			
-			LexerRule wsRule = new LexerRule(new RuleKey("WS"), true);
-			
-			wsRule.addRule(new LexerRulePattern("\\s+", true));
-			
-			tokenInfos.add(wsRule);
-			
-			for (int i = 0; i < tokenInfos.size(); i++) {
-				LexerRule tokenInfo = tokenInfos.get(i);
+			for (int i = 0; i < terminals.size(); i++) {
+				Terminal terminal = terminals.get(i);
 				
-				Vector<LexerRulePattern> patterns = new Vector<>(tokenInfo._rulePatterns);
-				
-				for (int j = 0; j < patterns.size(); j++) {
-					LexerRulePattern rulePattern = patterns.get(j);
-					
-					rulePatterns.add(rulePattern);
-					
-					String ruleS = (curPos > 0) ? String.format("^.{%d}(%s)", curPos, rulePattern.getRegEx()) : String.format("^(%s)", rulePattern.getRegEx());
+				for (LexerRule rule : terminal.getRules()) {
+					String ruleS = (curPos > 0) ? String.format("^.{%d}(%s)", curPos, rule.getRegEx()) : String.format("^(%s)", rule.getRegEx());
 
 					Pattern adjustedPattern = Pattern.compile(ruleS, Pattern.DOTALL);
 					
 					Matcher matcher = adjustedPattern.matcher(s);
 					
-					boolean foundA = matcher.find();
-					boolean foundB = foundA && (matcher.start(1) == curPos);
-					
-					boolean found = foundA && foundB;
-					
-					if (found) {
+					if (matcher.find() && (matcher.start(1) == curPos)) {
 						int newLen = (matcher.end(1) - 1) - matcher.start(1) + 1;
 
 						if (newLen > curLen) {
-							curTokenInfo = tokenInfo;
-							curRulePattern = rulePattern;
-							curLen = newLen;
+							curTerminal = terminal;	curRule = rule;	curLen = newLen;
 						}
 					}
 				}
 			}
 			
-			if (curRulePattern == null) {
-				//System.out.println("TRIED RULES PATTERNS:");
-				
-				//for (LexerRulePattern rulePattern : rulePatterns) System.out.println(rulePattern);
-				
-				throw new LexerException(String.format("cannot find token at pos %d.%d (%d): >>%s<<", y + 1, x + 1, curPos, s.substring(curPos)));
-			} else {
+			if (curRule == null) throw new LexerException(y, x, curPos, s);
+			else {
 				String text = s.substring(curPos, curPos + curLen);
 				
 				for (int i = 0; i < text.length();) {
@@ -168,9 +175,9 @@ public class Lexer {
 					}
 				}
 				
-				Token token = createToken(curTokenInfo, curRulePattern, text, y, x);
-				//System.out.println("TOKEN: " + token._info._key);
-				if (!token._rule._skip) tokens.add(token);
+				Token token = createToken(curTerminal, curRule, text, y, x, curPos);
+
+				if (!token.getTerminal().isSkipped()) tokens.add(token);
 				
 				curPos += curLen;
 				x += curLen;

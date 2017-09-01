@@ -1,19 +1,21 @@
 package core;
 
+import java.util.Vector;
+
+import core.structures.Terminal;
 import core.structures.LexerRule;
-import core.structures.LexerRulePattern;
 
 /**
  * token as gained by the lexer
  * a token is a concatenation of text to a lexer rule abiding entity, storing the lexer rule and the collected text 
  */
 public class Token {
+	public Terminal _terminal;
 	public LexerRule _rule;
-	public LexerRulePattern _rulePattern;
 	public String _text;
 	
-	public LexerRule getRule() {
-		return _rule;
+	public Terminal getTerminal() {
+		return _terminal;
 	}
 	
 	public String getText() {
@@ -32,29 +34,40 @@ public class Token {
 		return _lineOffset;
 	}
 	
+	private int _pos;
+	
+	public int getPos() {
+		return _pos;
+	}
+	
 	public Token copy() {
-		return new Token(_rule, _rulePattern, _text, _line, _lineOffset);
+		return new Token(_terminal, _rule, _text, _line, _lineOffset, _pos);
 	}
 	
 	public void replaceText(String newText) {
 		_text = newText;
 	}
 	
-	public Token(LexerRule rule, LexerRulePattern rulePattern, String text, int line, int lineOffset) {
+	public Token(Terminal terminal, LexerRule rule, String text, int line, int lineOffset, int pos) {
+		_terminal = terminal;
 		_rule = rule;
-		_rulePattern = rulePattern;
 		_text = text;
 		
 		_line = line;
 		_lineOffset = lineOffset;
+		_pos = pos;
+	}
+	
+	public static Token createTerminator(Vector<Token> tokens) {
+		return new Token(Terminal.TERMINATOR, null, null, tokens.lastElement() == null ? 0 : tokens.lastElement().getLine(), tokens.lastElement() == null ? 0 : tokens.lastElement().getLineOffset() + 1, tokens.lastElement() == null ? 0 : tokens.lastElement().getPos() + 1);
 	}
 	
 	@Override
 	public String toString() {
-		return String.format("%s (%s)", _rule.toString(), _text);
+		return String.format("%s (%s)", _terminal.toString(), _text);
 	}
 	
 	public String toStringVert() {
-		return String.format("%s%s(%s)", _rule.toString(), System.lineSeparator(), _text);
+		return String.format("%s%s(%s)", _terminal.toString(), System.lineSeparator(), _text);
 	}
 }

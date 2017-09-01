@@ -1,113 +1,100 @@
 package grammars;
 
 import core.Grammar;
-import core.PredictiveParserTable;
-import core.structures.LexerRule;
-import core.structures.ParserRule;
+import core.structures.NonTerminal;
+import core.structures.Terminal;
 
 public class ExpGrammar extends Grammar {
-	public final LexerRule zahlRule;
-	public final LexerRule parenOpenRule;
-	public final LexerRule parenCloseRule;
-	public final LexerRule opPlusRule;
-	public final LexerRule opMinusRule;
-	public final LexerRule opMultRule;
-	public final LexerRule opDivRule;
-	public final LexerRule idRule;
+	public final Terminal TERMINAL_NUM;
+	public final Terminal TERMINAL_PAREN_OPEN;
+	public final Terminal TERMINAL_PAREN_CLOSE;
+	public final Terminal TERMINAL_OP_PLUS;
+	public final Terminal TERMINAL_OP_MINUS;
+	public final Terminal TERMINAL_OP_MULT;
+	public final Terminal TERMINAL_OP_DIV;
+	public final Terminal TERMINAL_OP_POW;
+	public final Terminal TERMINAL_OP_FACTORIAL;
+	public final Terminal TERMINAL_ID;
 	
-	public final ParserRule expRule;
-	public final ParserRule erestRule;
-	public final ParserRule termRule;
-	public final ParserRule trestRule;
-	public final ParserRule faktorRule;
+	public final NonTerminal NON_TERMINAL_EXP;
+	public final NonTerminal NON_TERMINAL_EXP_;
+	public final NonTerminal NON_TERMINAL_FACTOR;
+	public final NonTerminal NON_TERMINAL_FACTOR_;
+	public final NonTerminal NON_TERMINAL_POW;
+	public final NonTerminal NON_TERMINAL_POW_;
+	public final NonTerminal NON_TERMINAL_FACTORIAL;
+	public final NonTerminal NON_TERMINAL_FACTORIAL_;
+	public final NonTerminal NON_TERMINAL_EXP_ELEMENTARY;
 	
 	public ExpGrammar() {
 		super();
 		
 		//lexer rules
-		zahlRule = createTokenInfo("ZAHL");
+		TERMINAL_NUM = createTerminal("NUM");
+		TERMINAL_PAREN_OPEN = createTerminal("PAREN_OPEN");
+		TERMINAL_PAREN_CLOSE = createTerminal("PAREN_CLOSE");
+		TERMINAL_OP_PLUS = createTerminal("OP_PLUS");
+		TERMINAL_OP_MINUS = createTerminal("OP_MINUS");
+		TERMINAL_OP_MULT = createTerminal("OP_MULT");
+		TERMINAL_OP_DIV = createTerminal("OP_DIV");
+		TERMINAL_OP_POW = createTerminal("OP_POW");
+		TERMINAL_OP_FACTORIAL = createTerminal("OP_FACTORIAL");
+		TERMINAL_ID = createTerminal("ID");
 
-		zahlRule.addRuleRegEx("[1-9][0-9]*");
-		zahlRule.addRule("0");
+		TERMINAL_NUM.addRuleRegEx("[1-9][0-9]*");
+		TERMINAL_NUM.addRuleRegEx("0");
 		
-		parenOpenRule = createTokenInfo("PAREN_OPEN");
+		TERMINAL_PAREN_OPEN.addRule("(");
+		TERMINAL_PAREN_CLOSE.addRule(")");
+		TERMINAL_OP_PLUS.addRule("+");
+		TERMINAL_OP_MINUS.addRule("-");
+		TERMINAL_OP_MULT.addRule("*");
+		TERMINAL_OP_DIV.addRule("/");
+		TERMINAL_OP_POW.addRule("^");
+		TERMINAL_OP_FACTORIAL.addRule("!");
 		
-		parenOpenRule.addRule("(");
-		
-		parenCloseRule = createTokenInfo("PAREN_CLOSE");
-		
-		parenCloseRule.addRule(")");
-		
-		opPlusRule = createTokenInfo("opPlus");
-		
-		opPlusRule.addRule("+");
-		
-		opMinusRule = createTokenInfo("opMinus");
-		
-		opMinusRule.addRule("-");
-
-		opMultRule = createTokenInfo("opMult");
-		
-		opMultRule.addRule("*");
-		
-		opDivRule = createTokenInfo("opDiv");
-		
-		opDivRule.addRule("/");
-		
-		idRule = createTokenInfo("ID");
-		
-		idRule.addRuleRegEx("[a-zA-Z][a-zA-Z0-9]*");
+		TERMINAL_ID.addRuleRegEx("[a-zA-Z][a-zA-Z0-9]*");
 		
 		//parser rules
-		expRule = createParserRule("exp");
-		erestRule = createParserRule("erest");
-		termRule = createParserRule("term");
-		trestRule = createParserRule("trest");
-		faktorRule = createParserRule("faktor");
+		NON_TERMINAL_EXP = createNonTerminal("exp");
+		NON_TERMINAL_EXP_ = createNonTerminal("exp'");
+		NON_TERMINAL_FACTOR = createNonTerminal("factor");
+		NON_TERMINAL_FACTOR_ = createNonTerminal("factor'");
+		NON_TERMINAL_POW = createNonTerminal("pow");
+		NON_TERMINAL_POW_ = createNonTerminal("pow'");
+		NON_TERMINAL_FACTORIAL = createNonTerminal("factorial");
+		NON_TERMINAL_FACTORIAL_ = createNonTerminal("factorial'");
+		NON_TERMINAL_EXP_ELEMENTARY = createNonTerminal("exp_elem");
 		
-		expRule.addRule(createRulePattern("term erest"));
+		createRule(NON_TERMINAL_EXP, "factor exp'");
 		
-		erestRule.addRule(createRulePattern("opPlus term erest"));
-		erestRule.addRule(createRulePattern("opMinus term erest"));
-		erestRule.addRule(LexerRule.EPSILON);
+		createRule(NON_TERMINAL_EXP_, "OP_PLUS factor exp'");
+		createRule(NON_TERMINAL_EXP_, "OP_MINUS factor exp'");
+		createRule(NON_TERMINAL_EXP_, Terminal.EPSILON);
 		
-		termRule.addRule(createRulePattern("faktor trest"));
+		createRule(NON_TERMINAL_FACTOR, "pow factor'");
 		
-		trestRule.addRule(createRulePattern("opMult faktor trest"));
-		trestRule.addRule(createRulePattern("opDiv faktor trest"));
-		trestRule.addRule(LexerRule.EPSILON);
+		createRule(NON_TERMINAL_FACTOR_, "OP_MULT pow factor'");
+		createRule(NON_TERMINAL_FACTOR_, "OP_DIV pow factor'");
+		createRule(NON_TERMINAL_FACTOR_, Terminal.EPSILON);
 		
-		faktorRule.addRule(createRulePattern("ID"));
-		faktorRule.addRule(createRulePattern("ZAHL"));
-		faktorRule.addRule(createRulePattern("PAREN_OPEN exp PAREN_CLOSE"));
+		createRule(NON_TERMINAL_POW, "factorial pow'");
 		
-		setStartParserRule(expRule);
+		createRule(NON_TERMINAL_POW_, "OP_POW pow");
+		createRule(NON_TERMINAL_POW_, Terminal.EPSILON);
 		
-		//predictive parser table
-		PredictiveParserTable ruleMap = getPredictiveParserTable();
+		createRule(NON_TERMINAL_FACTORIAL, "exp_elem factorial'");
 		
-		ruleMap.set(expRule, zahlRule, expRule.getRulePattern(0));
-		ruleMap.set(expRule, idRule, expRule.getRulePattern(0));
-		ruleMap.set(expRule, parenOpenRule, expRule.getRulePattern(0));
+		createRule(NON_TERMINAL_FACTORIAL_, "OP_FACTORIAL");
+		createRule(NON_TERMINAL_FACTORIAL_, Terminal.EPSILON);
 		
-		ruleMap.set(erestRule, opPlusRule, erestRule.getRulePattern(0));
-		ruleMap.set(erestRule, opMinusRule, erestRule.getRulePattern(1));
-		ruleMap.set(erestRule, parenCloseRule, erestRule.getRulePattern(2));
-		ruleMap.set(erestRule, LexerRule.EPSILON, erestRule.getRulePattern(2));
+		createRule(NON_TERMINAL_EXP_ELEMENTARY, "ID");
+		createRule(NON_TERMINAL_EXP_ELEMENTARY, "NUM");
+		createRule(NON_TERMINAL_EXP_ELEMENTARY, "PAREN_OPEN exp PAREN_CLOSE");
 		
-		ruleMap.set(termRule, zahlRule, termRule.getRulePattern(0));
-		ruleMap.set(termRule, idRule, termRule.getRulePattern(0));
-		ruleMap.set(termRule, parenOpenRule, termRule.getRulePattern(0));
+		//finalize
+		setStartSymbol(NON_TERMINAL_EXP);
 		
-		ruleMap.set(trestRule, opPlusRule, trestRule.getRulePattern(2));
-		ruleMap.set(trestRule, opMinusRule, trestRule.getRulePattern(2));
-		ruleMap.set(trestRule, opMultRule, trestRule.getRulePattern(0));
-		ruleMap.set(trestRule, opDivRule, trestRule.getRulePattern(1));
-		ruleMap.set(trestRule, parenCloseRule, trestRule.getRulePattern(2));
-		ruleMap.set(trestRule, LexerRule.EPSILON, erestRule.getRulePattern(2));
-		
-		ruleMap.set(faktorRule, zahlRule, faktorRule.getRulePattern(1));
-		ruleMap.set(faktorRule, idRule, faktorRule.getRulePattern(0));
-		ruleMap.set(faktorRule, parenOpenRule, faktorRule.getRulePattern(2));
+		updatePredictiveParserTable();
 	}
 }

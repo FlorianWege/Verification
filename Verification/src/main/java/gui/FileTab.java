@@ -8,6 +8,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
 
@@ -22,14 +23,16 @@ import core.Lexer.LexerResult;
 import core.Parser;
 import core.Parser.NoRuleException;
 import core.Parser.ParserException;
+import core.structures.hoareCond.HoareCond;
 import core.SyntaxTree;
 import core.SyntaxTreeNode;
 import core.Token;
-import core.structures.HoareCondition;
 import grammars.HoareWhileGrammar;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableMap;
 import javafx.fxml.FXML;
@@ -42,6 +45,7 @@ import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.Tooltip;
 import javafx.scene.control.TreeView;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.Pane;
 import util.ErrorUtil;
 import util.IOUtil;
@@ -68,9 +72,10 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 	private SyntaxTreeView _syntaxTreeView;
 	private ObjectProperty<SyntaxTree> _syntaxTree = new SimpleObjectProperty<>();
 	
-	private ObjectProperty<ObservableMap<SyntaxTreeNode, HoareCondition>> _preCondMap = new SimpleObjectProperty<>();
-	private ObjectProperty<ObservableMap<SyntaxTreeNode, HoareCondition>> _postCondMap = new SimpleObjectProperty<>();
+	private ObjectProperty<ObservableMap<SyntaxTreeNode, HoareCond>> _preCondMap = new SimpleObjectProperty<>();
+	private ObjectProperty<ObservableMap<SyntaxTreeNode, HoareCond>> _postCondMap = new SimpleObjectProperty<>();
 	private SyntaxChart _syntaxChart;
+	private Map<KeyCombination, Runnable> _accelerators;
 	
 	private Parent _root;
 	
@@ -79,6 +84,7 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 	}
 	
 	public interface ActionListener {
+		public void isSavedChanged();
 		public void isParsedChanged();
 		public void isHoaredChanged();
 		public void throwException(Exception e);
@@ -88,6 +94,24 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 	
 	public void addActionListener(ActionListener listener) {
 		_actionListeners.add(listener);
+	}
+	
+	private boolean _isSaved = true;
+
+	public boolean isSaved() {
+		return _isSaved;
+	}
+	
+	public void setSaved(boolean flag) {
+		if (flag == _isSaved) return;
+
+		_isSaved = flag;
+		
+		for (ActionListener listener : _actionListeners) {
+			listener.isSavedChanged();
+		}
+		
+		updateText();
 	}
 	
 	private boolean _isParsed = false;
@@ -122,10 +146,54 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 		}
 	}
 	
+	public class AutoParseException extends Exception {
+		private static final long serialVersionUID = 1L;
+
+		public AutoParseException(Exception e) {
+			super(e);
+		}
+	}
+	
 	public void throwException(Exception e) {
 		for (ActionListener listener : _actionListeners) {
 			listener.throwException(e);
 		}
+	}
+	
+	private void updateText() {
+		StringBuilder text_sb = new StringBuilder();
+		StringBuilder tooltip_sb = new StringBuilder();
+		
+		if (!_isSaved) {
+			text_sb.append("*");
+		}
+		
+		if (_name != null) {
+			text_sb.append(_name);
+			tooltip_sb.append(_name);
+		} else if (_file != null) {
+			text_sb.append(_file.getName());
+			tooltip_sb.append(_file.toString());
+		}
+		
+		if (!_isSaved) {
+			tooltip_sb.append(" (edited)");
+		}
+		
+		setText(text_sb.toString());
+		setTooltip(new Tooltip(tooltip_sb.toString()));
+	}
+
+	private String _name = null;
+
+	public String getName() {
+		return _name;
+	}
+	
+	public void setName(String val) {
+		_name = val;
+
+		updateText();
 	}
 	
 	private Grammar _grammar = new HoareWhileGrammar();
@@ -148,11 +216,7 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 		_file = file;
 		_isInternalFile = isInternalFile;
 		
-		if (_file == null) {
-		} else {
-			setText(_file.getName());
-			setTooltip(new Tooltip(_file.toString()));
-		}
+		updateText();
 	}
 	
 	public void save(File file) throws IOException {
@@ -163,11 +227,21 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 		writer.close();
 
 		setFile(file, false);
+		
+		setSaved(true);
 	}
 	
-	public FileTab(File file, boolean isInternalFile) throws IOException {
+	private MainWindow _mainWindow;
+	
+	public void setMainWindow(MainWindow mainWindow) {
+		_mainWindow = mainWindow;
+	}
+	
+	public FileTab(File file, boolean isInternalFile, Map<KeyCombination, Runnable> accelerators) throws IOException {
 		super();
 
+		_accelerators = accelerators;
+		
 		setFile(file, isInternalFile);
 		
 		Scene scene = IOUtil.inflateFXML(new File("FileTab.fxml"), this);
@@ -177,8 +251,8 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 		setContent(_root);
 	}
 
-	public FileTab() throws IOException {
-		this(null, false);
+	public FileTab(Map<KeyCombination, Runnable> accelerators) throws IOException {
+		this(null, false, accelerators);
 	}
 	
 	@Override
@@ -211,18 +285,31 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 				}
 			}
 			
+			_textArea_code.textProperty().addListener(new ChangeListener<String>() {
+				@Override
+				public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+					setSaved(false);
+					setParsed(false);
+					setHoared(false);
+					
+					if (_mainWindow != null && _mainWindow.getMenuParseAuto().isSelected()) {
+						try {
+							parse();
+						} catch (Exception e) {
+							throwException(new AutoParseException(e));
+						}
+					}
+				}
+			});
+			
 			_tokenArea = new ExtendedCodeAreaToken(_textArea_tokens, _grammar);
 			
 			_syntaxTreeView = new SyntaxTreeView(_treeView_syntaxTreeBase, _checkBox_syntaxTree_filterEps, _syntaxTree);
+
+			_preCondMap.set(FXCollections.observableHashMap());
+			_postCondMap.set(FXCollections.observableHashMap());
 			
-			try {
-				_preCondMap.set(FXCollections.observableHashMap());
-				_postCondMap.set(FXCollections.observableHashMap());
-				
-				_syntaxChart = new SyntaxChart(_syntaxTree, _preCondMap, _postCondMap);
-			} catch (IOException e) {
-				ErrorUtil.logEFX(e);
-			}
+			_syntaxChart = new SyntaxChart(_syntaxTree, _preCondMap, _postCondMap, _accelerators);
 			
 			updateVisibility();
 		} catch (Exception e) {
@@ -303,7 +390,6 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 		try {
 			LexerResult lexerResult = new Lexer(_grammar).tokenize(codeS);
 
-			//lexerResult.print();
 			StringBuilder sb = new StringBuilder();
 			
 			int lastX = 0;
@@ -324,7 +410,7 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 					sb.append(StringUtil.repeat(" ", x - lastX));
 				}
 				
-				String tokenS = token.getRule().getKey().toString();
+				String tokenS = token.getTerminal().getKey().toString();
 				
 				lastX = x + tokenS.length();
 				
@@ -334,6 +420,7 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 			}
 
 			_textArea_tokens.replaceText(sb.toString());
+			_textArea_tokens.positionCaret(0);
 
 			Platform.runLater(new Runnable() {
 				@Override
@@ -344,7 +431,19 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 						try {
 							_syntaxTree.set(parser.parse(lexerResult.getTokens()));
 						} catch (ParserException e) {
+							
+							System.err.println("PARSER EXCP");
+							
 							setParsed(false);
+							
+							Token token = e.getToken();
+							
+							int pos = (token != null) ? token.getPos() : 0;
+							
+							_textArea_code.positionCaret(pos);
+							_textArea_code.requestFocus();
+							
+							_codeArea.setErrorPos(pos);
 							
 							throw e;
 						}
@@ -355,6 +454,11 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 			});
 		} catch (LexerException e) {
 			setParsed(false);
+			
+			_textArea_code.positionCaret(e.getCurPos());
+			_textArea_code.requestFocus();
+			
+			_codeArea.setErrorPos(e.getCurPos());
 			
 			throw e;
 		}

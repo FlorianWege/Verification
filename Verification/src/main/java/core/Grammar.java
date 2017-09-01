@@ -1,112 +1,173 @@
 package core;
 
-import java.util.HashMap;
+import java.io.PrintStream;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.Vector;
 
 import core.structures.LexerRule;
+import core.structures.NonTerminal;
 import core.structures.ParserRule;
-import core.structures.ParserRulePattern;
-import core.structures.ParserRulePatternAnd;
+import core.structures.Terminal;
+import util.StringUtil;
 
 public class Grammar {
 	public Grammar() {
 	}
 	
-	private PredictiveParserTable _predictiveParserTable = new PredictiveParserTable();
+	private PredictiveParserTable _predictiveParserTable;
 	
 	public PredictiveParserTable getPredictiveParserTable() {
 		return _predictiveParserTable;
 	}
 	
-	private ParserRule _startParserRule;
-	
-	public ParserRule getStartParserRule() {
-		return _startParserRule;
+	public void updatePredictiveParserTable() {
+		_predictiveParserTable = new PredictiveParserTable(this);
 	}
 	
-	public void setStartParserRule(ParserRule val) {
-		_startParserRule = val;
+	private NonTerminal _startSymbol;
+	
+	public NonTerminal getStartSymbol() {
+		return _startSymbol;
 	}
 	
-	private Map<RuleKey, Rule> _rules = new HashMap<>();
-	
-	public Map<RuleKey, Rule> getRules() {
-		return _rules;
+	public void setStartSymbol(NonTerminal val) {
+		_startSymbol = val;
 	}
 	
-	private Vector<LexerRule> _lexerRules = new Vector<>();
+	private Map<SymbolKey, Symbol> _symbols = new LinkedHashMap<>();
 	
-	public Vector<LexerRule> getLexerRules() {
-		return _lexerRules;
+	public Map<SymbolKey, Symbol> getSymbols() {
+		return _symbols;
 	}
 	
-	public LexerRule createTokenAssign(RuleKey key, boolean skip) {
-		assert(!_rules.containsKey(key)) : "key " + key + " already exists";
+	private Set<Terminal> _terminals = new LinkedHashSet<>();
+	
+	public Set<Terminal> getTerminals() {
+		return _terminals;
+	}
+	
+	public Terminal createTerminal(SymbolKey key) {
+		assert(!_symbols.containsKey(key)) : "key " + key + " already exists";
+
+		Terminal terminal = new Terminal(key);
+
+		_symbols.put(key, terminal);
+		_terminals.add(terminal);
 		
-		LexerRule rule = new LexerRule(key, skip);
+		return terminal;
+	}
+	
+	public Terminal createTerminal(String keyS) {
+		return createTerminal(new SymbolKey(keyS));
+	}
+	
+	private Set<NonTerminal> _nonTerminals = new LinkedHashSet<>();
+	
+	public Set<NonTerminal> getNonTerminals() {
+		return _nonTerminals;
+	}
+	
+	public NonTerminal createNonTerminal(SymbolKey key) {
+		assert(!_symbols.containsKey(key)) : "key " + key + " already exists";
 		
-		_rules.put(key, rule);
-		_lexerRules.add(rule);
+		NonTerminal nonTerminal = new NonTerminal(key);
 		
-		return rule;
-	}
-	
-	public LexerRule createTokenInfo(RuleKey key) {
-		return createTokenAssign(key, false);
-	}
-	
-	public LexerRule createTokenInfo(String keyS) {
-		return createTokenInfo(new RuleKey(keyS));
-	}
-	
-	private Vector<ParserRule> _parserRules = new Vector<>();
-	
-	public Vector<ParserRule> getParserRules() {
-		return _parserRules;
-	}
-	
-	public ParserRule createParserRule(RuleKey key) {
-		assert(!_rules.containsKey(key)) : "key " + key + " already exists";
+		_symbols.put(key, nonTerminal);
+		_nonTerminals.add(nonTerminal);
 		
-		ParserRule rule = new ParserRule(key);
-		
-		_rules.put(key, rule);
-		_parserRules.add(rule);
-		
-		return rule;
+		return nonTerminal;
 	}
 	
-	public ParserRule createParserRule(String keyS) {
-		return createParserRule(new RuleKey(keyS));
+	public NonTerminal createNonTerminal(String keyS) {
+		return createNonTerminal(new SymbolKey(keyS));
+	}
+
+	public ParserRule createRule(NonTerminal nonTerminal, Symbol... symbols) {
+		return nonTerminal.createRule(symbols);
 	}
 	
-	public ParserRulePattern createRulePattern(String s) {
+	public ParserRule createRule(NonTerminal nonTerminal, String s) {
 		String[] sArr = s.split("\\s+");
 		
-		ParserRulePatternAnd andPattern = new ParserRulePatternAnd();
+		Vector<Symbol> symbols = new Vector<>();
 		
 		for (String el : sArr) {
-			Rule rule = _rules.get(new RuleKey(el));
+			Symbol rule = _symbols.get(new SymbolKey(el));
 
 			if (rule == null) throw new RuntimeException("unknown rule " + el);
 			
-			if (rule instanceof LexerRule) {
-				andPattern.addPattern(new ParserRulePattern((LexerRule) rule));
-			}
-			if (rule instanceof ParserRule) {
-				andPattern.addPattern(new ParserRulePattern((ParserRule) rule));
-			}
+			symbols.add(rule);
 		}
 		
-		return andPattern;
+		return nonTerminal.createRule(symbols);
+	}
+	
+	public void printLatex(PrintStream outStream) {
+		for (Symbol sym : _symbols.values()) {
+			if (sym instanceof NonTerminal) {
+				NonTerminal nonTerminal = (NonTerminal) sym;
+				
+				Set<ParserRule> rules = nonTerminal.getRules();
+				
+				outStream.print("<" + (nonTerminal.equals(getStartSymbol()) ? "*" : "") + StringUtil.latexify(nonTerminal.toString()) + ">");
+				
+				outStream.print(" ::= ");
+				
+				int c = 0;
+				
+				for (ParserRule rule : rules) {
+					if (c > 0) outStream.print("\\alt ");
+					
+					for (Symbol symbol : rule.getSymbols()) {
+						if (symbol instanceof Terminal) {
+							if (symbol.equals(Terminal.EPSILON)) {
+								outStream.print("\\straightepsilon{} ");
+							} else {
+								outStream.print("\\lit{" + StringUtil.latexify(symbol.toLatexString()) + "} ");
+							}
+						} else if (symbol instanceof NonTerminal) {
+							outStream.print("<" + StringUtil.latexify(symbol.toString()) + "> ");
+						}
+					}
+					
+					outStream.println();
+					c++;
+				}
+				
+				outStream.println();
+			} else if (sym instanceof Terminal) {
+				Terminal terminal = (Terminal) sym;
+				
+				if (!terminal.hasRegexRule()) continue;
+				
+				outStream.print("<" + StringUtil.latexify(terminal.toString()) + ">");
+				
+				outStream.print(" ::= ");
+				
+				int c = 0;
+				
+				for (LexerRule rule : terminal.getRules()) {
+					if (c > 0) outStream.print("\\alt ");
+					
+					if (rule.isRegEx()) outStream.print(StringUtil.latexify(rule.toString())); else outStream.print("\\lit{" + StringUtil.latexify(rule.toString()) + "}");
+					
+					outStream.println();
+					c++;
+				}
+				
+				outStream.println();
+			}
+		}
 	}
 	
 	public void merge(Grammar other) {
 		_predictiveParserTable.merge(other.getPredictiveParserTable());
-		_lexerRules.addAll(other.getLexerRules());
-		_parserRules.addAll(other.getParserRules());
-		_rules.putAll(other.getRules());
+		_terminals.addAll(other.getTerminals());
+		_nonTerminals.addAll(other.getNonTerminals());
+		_symbols.putAll(other.getSymbols());
 		//_startParserRule = other.getStartParserRule();
 	}
 }

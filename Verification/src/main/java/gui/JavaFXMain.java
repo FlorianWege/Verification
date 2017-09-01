@@ -98,6 +98,15 @@ public class JavaFXMain extends Application {
 	
 	private MainWindow _mainWindow = null;
 	
+	public interface StopInterface {
+		public void onStop();
+	}
+	
+	@Override
+	public void stop() {
+		_mainWindow.onStop();
+	}
+	
 	@Override
 	public void start(Stage primaryStage) throws IOException {
 		wrapPrintStreams();

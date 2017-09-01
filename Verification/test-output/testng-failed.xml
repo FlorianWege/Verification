@@ -3,11 +3,11 @@
 <suite guice-stage="DEVELOPMENT" name="Failed suite [Default suite]">
   <test name="Default test(failed)">
     <classes>
-      <class name="tests.parsing.FactorialParserTest">
+      <class name="logic.KNFTest">
         <methods>
           <include name="test"/>
         </methods>
-      </class> <!-- tests.parsing.FactorialParserTest -->
+      </class> <!-- logic.KNFTest -->
     </classes>
   </test> <!-- Default test(failed) -->
 </suite> <!-- Failed suite [Default suite] -->

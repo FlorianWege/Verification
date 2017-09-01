@@ -1,37 +1,34 @@
 package grammars;
 
 import core.PredictiveParserTable;
-import core.structures.LexerRule;
-import core.structures.ParserRule;
+import core.structures.Terminal;
+import core.structures.NonTerminal;
 
 public class HoareExpGrammar extends BoolExpGrammar {
-	public final LexerRule curlyOpenRule;
-	public final LexerRule curlyCloseRule;
+	public final Terminal terminal_curly_open;
+	public final Terminal terminal_curly_close;
 	
-	public final ParserRule hoareExpRule;
+	public final NonTerminal hoareExpRule;
 	
 	public HoareExpGrammar() {
 		super();
 		
 		//lexer rules
-		curlyOpenRule = createTokenInfo("CURLY_OPEN");
+		terminal_curly_open = createTerminal("CURLY_OPEN");
+		terminal_curly_close = createTerminal("CURLY_CLOSE");
 		
-		curlyOpenRule.addRule("{");
+		terminal_curly_open.addRule("{");
 		
-		curlyCloseRule = createTokenInfo("CURLY_CLOSE");
-		
-		curlyCloseRule.addRule("}");
+		terminal_curly_close.addRule("}");
 		
 		//parser rules
-		hoareExpRule = createParserRule("hoareExp");
+		hoareExpRule = createNonTerminal("hoare_exp");
 		
-		hoareExpRule.addRule(createRulePattern("CURLY_OPEN boolExp CURLY_CLOSE"));
+		createRule(hoareExpRule, "CURLY_OPEN bool_exp CURLY_CLOSE");
 		
-		setStartParserRule(boolExpRule);
+		//finalize
+		setStartSymbol(NON_TERMINAL_BOOL_EXP);
 
-		//predictive parser table
-		PredictiveParserTable ruleMap = getPredictiveParserTable();
-		
-		ruleMap.set(hoareExpRule, curlyOpenRule, hoareExpRule.getRulePattern(0));
+		updatePredictiveParserTable();
 	}
 }

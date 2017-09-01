@@ -2,7 +2,8 @@ package gui;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Vector;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.function.IntFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -14,15 +15,11 @@ import org.fxmisc.richtext.StyleSpansBuilder;
 
 import core.Grammar;
 import core.structures.LexerRule;
-import core.structures.LexerRulePattern;
+import core.structures.Terminal;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.event.EventHandler;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.IndexRange;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 
 public class ExtendedCodeAreaToken {
@@ -52,19 +49,19 @@ public class ExtendedCodeAreaToken {
 	}
 	
 	private void highlight() {
-		Vector<String> keywords = new Vector<>();
+		Set<String> keywords = new LinkedHashSet<>();
 
-		for (LexerRule rule : _grammar.getLexerRules()) {
+		for (Terminal rule : _grammar.getTerminals()) {
 			boolean found = true;
 			
-			for (LexerRulePattern pattern : rule.getRulePatterns()) {
+			for (LexerRule pattern : rule.getRules()) {
 				if (pattern.isRegEx()) {
 					found = false;
 				}
 			}
 			
 			if (found) {
-				keywords.addElement(rule.getKey().toString());
+				keywords.add(rule.getKey().toString());
 			}
 		}
 

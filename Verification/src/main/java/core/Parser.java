@@ -1,13 +1,11 @@
 package core;
 
-import java.util.Collection;
 import java.util.Iterator;
+import java.util.Vector;
 
-import core.structures.LexerRule;
+import core.structures.Terminal;
+import core.structures.NonTerminal;
 import core.structures.ParserRule;
-import core.structures.ParserRulePattern;
-import core.structures.ParserRulePatternAnd;
-import util.StringUtil;
 
 /**
  * using a grammar, takes the parser rules and converts a given String into a tree consisting of parser rules
@@ -15,116 +13,158 @@ import util.StringUtil;
 public class Parser {
 	private Grammar _grammar;
 	
-	private Collection<Token> _tokens;
+	private Vector<Token> _tokens;
 	private Iterator<Token> _tokensItr;
+	private Token _token;
 	
 	private PredictiveParserTable _ruleMap;
 	
 	public static class ParserException extends Exception {
 		private static final long serialVersionUID = 1L;
-
-		public ParserException(String msg) {
-			super(msg);
+		
+		private Token _token;
+		
+		public Token getToken() {
+			return _token;
+		}
+		
+		@Override
+		public String getMessage() {
+			return "parserException: " + _token;
+			
+		}
+		
+		public ParserException(Token token) {
+			_token = token;
 		}
 	}
 	
 	public static class NoRuleException extends ParserException {
 		private static final long serialVersionUID = 1L;
 
-		public NoRuleException(String msg) {
-			super(msg);
+		private NonTerminal _rule;
+		
+		@Override
+		public String getMessage() {			
+			return String.format("line %d.%d: unexpected '%s' (%s) (no rule in %s) ", getToken().getLine() + 1, getToken().getLineOffset() + 1, getToken().getText(), getToken().getTerminal().toString(), _rule);
+		}
+		
+		public NoRuleException(Token token, NonTerminal rule) {
+			super(token);
+			
+			_rule = rule;
 		}
 	}
 	
-	private ParserRulePattern selectRulePattern(ParserRule nonTerminal, Token terminal) throws ParserException {
-		try {
-			ParserRulePattern rulePattern = _ruleMap.get(nonTerminal, (terminal != null) ? terminal.getRule() : LexerRule.EPSILON);
-			
-			if (rulePattern == null) {
-				rulePattern = _ruleMap.get(nonTerminal, LexerRule.EPSILON);
-				
-				if (rulePattern == null) throw new Exception();
+	public static class NoMoreTokensException extends ParserException {
+		private static final long serialVersionUID = 1L;
+		
+		private NonTerminal _nonTerminal;
+		private Terminal _terminal;
+		
+		@Override
+		public String getMessage() {
+			if (_terminal != null) {
+				return "no more tokens while expecting " + (_terminal).getRules() + " (nonTerminal=" + _nonTerminal + ")";
 			}
 			
-			return rulePattern;
-		} catch (Exception e) {
-			if (terminal == null) throw new ParserException("no more tokens but expected " + nonTerminal);
+			return "no more tokens but expected " + _nonTerminal;
+		}
+		
+		public NoMoreTokensException(NonTerminal nonTerminal) {
+			super(null);
 			
-			throw new NoRuleException(String.format("line %d.%d: unexpected '%s' (%s) (no rule in %s) ", terminal.getLine() + 1, terminal.getLineOffset() + 1, terminal.getText(), terminal.getRule().toString(), nonTerminal));
+			_nonTerminal = nonTerminal;
+		}
+		
+		public NoMoreTokensException(NonTerminal nonTerminal, Terminal terminal) {
+			this(nonTerminal);
+			
+			_terminal = terminal;
 		}
 	}
 	
-	private Token _token;
+	public static class SuperfluousTokenException extends ParserException {
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public String getMessage() {
+			return "superfluous input " + getToken();
+		}
+		
+		public SuperfluousTokenException(Token token) {
+			super(token);
+		}
+	}
 	
-	private SyntaxTreeNode tree(ParserRule rule, int nestDepth) throws ParserException {
-		Token token = _token;
+	public static class WrongTokenException extends ParserException {
+		private static final long serialVersionUID = 1L;
+
+		private NonTerminal _rule;
+		private Symbol _childRule;
 		
-		//System.err.println(StringUtil.repeat("\t", nestDepth) + "tree " + rule + " token is " + token);
+		@Override
+		public String getMessage() {
+			return String.format("line %d.%d: wrong token %s expected %s (in rule %s)", getToken().getLine(), getToken().getLineOffset(), getToken(), _childRule, _rule);
+		}
 		
-		ParserRulePattern nextRulePattern = selectRulePattern(rule, token);
+		public WrongTokenException(Token token, NonTerminal rule, Symbol childRule) {
+			super(token);
+
+			_rule = rule;
+			_childRule = childRule;
+		}
+	}
+	
+	private ParserRule selectRule(NonTerminal nonTerminal, Token token) throws ParserException {
+		ParserRule rule = _ruleMap.get(nonTerminal, token.getTerminal());
+
+		if (rule == null) throw new NoRuleException(token, nonTerminal);
 		
-		SyntaxTreeNode thisNode = new SyntaxTreeNode(rule, nextRulePattern);
-		
-		//System.err.println("select " + nextRulePattern);
-		
-		//System.err.println(new String(new char[nestDepth]).replace('\0', '\t') + "select " + nextRulePattern);
-		
-		if (nextRulePattern instanceof ParserRulePatternAnd) {
-			ParserRulePatternAnd andPattern = (ParserRulePatternAnd) nextRulePattern;
+		return rule;
+	}
+	
+	private SyntaxTreeNode getNode(NonTerminal nonTerminal) throws ParserException {
+		ParserRule nextRule = selectRule(nonTerminal, _token);
+
+		SyntaxTreeNode node = new SyntaxTreeNode(nonTerminal, nextRule);
+
+		for (Symbol symbol : nextRule.getSymbols()) {
+			SyntaxTreeNode child = null;
 			
-			/*for (ParserRulePattern childPattern : andPattern.getChildren()) {
-				Rule childRule = childPattern.getRule();
+			if (symbol instanceof NonTerminal) {
+				child = getNode((NonTerminal) symbol);
+			} else if (symbol.equals(Terminal.EPSILON)) {
+				child = new SyntaxTreeNodeTerminal(Terminal.EPSILON);
+			} else {
+				if (_token == null) throw new NoMoreTokensException(nonTerminal, (Terminal) symbol);
+				if (!_token.getTerminal().equals(symbol)) throw new WrongTokenException(_token, nonTerminal, symbol);
 				
-				System.err.println(StringUtil.repeat("\t", nestDepth) + "prechild " + childRule);				
-			}*/
-			
-			for (ParserRulePattern childPattern : andPattern.getChildren()) {
-				Rule childRule = childPattern.getRule();
+				child = new SyntaxTreeNodeTerminal(_token);
 				
-				//System.err.println(StringUtil.repeat("\t", nestDepth) + "child " + childRule + ";" + childRule.getClass());
-				
-				if (childRule instanceof ParserRule) {
-					thisNode.addChild(tree((ParserRule) childRule, nestDepth + 1));
-				} else {
-					if (childRule.equals(LexerRule.EPSILON)) {
-						thisNode.addChild(new SyntaxTreeNodeTerminal(null));
-						
-						continue;
-					}
-					
-					if (!_token.getRule().equals(childRule)) {
-						throw new ParserException(String.format("line %d.%d: wrong token %s expected %s (in rule %s)", _token.getLine(), _token.getLineOffset(), _token, childRule, rule));
-					}
-					
-					if (_token == null) throw new ParserException("no more tokens while expecting " + ((LexerRule) childRule).getRulePatterns() + " (rule=" + rule + ")");
-					
-					thisNode.addChild(new SyntaxTreeNodeTerminal(_token));
-					
-					//System.err.println(StringUtil.repeat("\t", nestDepth) + "add token " + _token);
-					Token childToken = _tokensItr.hasNext() ? _tokensItr.next() : null;
-					
-					_token = childToken;
-					//System.err.println(StringUtil.repeat("\t", nestDepth) + "new token " + childToken);
-				}
+				_token = _tokensItr.hasNext() ? _tokensItr.next() : null;
 			}
+			
+			node.addChild(child);
 		}
 		
-		return thisNode;
+		return node;
 	}
 	
-	public SyntaxTree parse(Collection<Token> tokens) throws ParserException {
-		System.out.println("parsing...");
+	public SyntaxTree parse(Vector<Token> tokens) throws ParserException {
 		_tokens = tokens;
 		
-		if (_tokens.isEmpty()) throw new ParserException("no tokens");
+		if (_tokens.isEmpty()) throw new NoMoreTokensException(_grammar.getStartSymbol());
+		
+		_tokens.add(Token.createTerminator(tokens));
 		
 		_tokensItr = _tokens.iterator();
 		
 		_token = _tokensItr.next();
 
-		SyntaxTreeNode root = tree(_grammar.getStartParserRule(), 0);
+		SyntaxTreeNode root = getNode(_grammar.getStartSymbol());
 		
-		if (_token != null) throw new ParserException("superfluous input " + _token);
+		if (!_token.getTerminal().equals(Terminal.TERMINATOR)) throw new SuperfluousTokenException(_token);
 		
 		return new SyntaxTree(_grammar, root);
 	}

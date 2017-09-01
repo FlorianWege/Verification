@@ -1,18 +1,15 @@
 package grammars;
 
-import core.Grammar;
-import core.PredictiveParserTable;
-import core.structures.LexerRule;
-import core.structures.ParserRule;
-import core.structures.ParserRulePattern;
+import core.structures.Terminal;
+import core.structures.NonTerminal;
 
 public class HoareWhileGrammar extends WhileGrammar {
-	public final LexerRule preLexRule;
-	public final LexerRule postLexRule;
+	public final Terminal terminal_hoare_pre;
+	public final Terminal terminal_hoare_post;
 	
-	public final ParserRule hoareBlockRule;
-	public final ParserRule preRule;
-	public final ParserRule postRule;
+	public final NonTerminal nonTerminal_hoare_block;
+	public final NonTerminal nonTerminal_hoare_pre;
+	public final NonTerminal nonTerminal_hoare_post;
 	
 	public final HoareExpGrammar _hoareExpGrammar;
 	
@@ -24,39 +21,28 @@ public class HoareWhileGrammar extends WhileGrammar {
 		merge(_hoareExpGrammar);
 		
 		//lexer rules
-		preLexRule = createTokenInfo("PRE");
+		terminal_hoare_pre = createTerminal("HOARE_PRE");
+		terminal_hoare_post = createTerminal("HOARE_POST");
 
-		preLexRule.addRule("PRE");
+		terminal_hoare_pre.addRule("PRE");
 
-		postLexRule = createTokenInfo("POST");
-
-		postLexRule.addRule("POST");
+		terminal_hoare_post.addRule("POST");
 
 		//parser rules
-		preRule = createParserRule("pre");
+		nonTerminal_hoare_pre = createNonTerminal("hoare_pre");
+		nonTerminal_hoare_post = createNonTerminal("hoare_post");
+		nonTerminal_hoare_block = createNonTerminal("hoare_block");
 		
-		preRule.addRule(createRulePattern("PRE hoareExp"));
+		createRule(nonTerminal_hoare_pre, "HOARE_PRE hoare_exp");
 		
-		postRule = createParserRule("post");
-		
-		postRule.addRule(createRulePattern("POST hoareExp"));
-		
-		hoareBlockRule = createParserRule("hoareBlock");
+		createRule(nonTerminal_hoare_post, "HOARE_POST hoare_exp");
 
-		hoareBlockRule.addRule(createRulePattern("pre prog post"));
+		createRule(nonTerminal_hoare_block, "hoare_pre prog hoare_post");
 		
 		//extend while
-		ParserRulePattern progHoareBlockPattern = createRulePattern("hoareBlock prest");
+		createRule(NON_TERMINAL_PROG, "hoare_block prog'");
 		
-		progRule.addRule(progHoareBlockPattern);
-		
-		//predictive parser table
-		PredictiveParserTable ruleMap = getPredictiveParserTable();
-		
-		//extend while
-		ruleMap.set(progRule, preLexRule, progHoareBlockPattern);
-		ruleMap.set(hoareBlockRule, preLexRule, hoareBlockRule.getRulePattern(0));
-		ruleMap.set(preRule, preLexRule, preRule.getRulePattern(0));
-		ruleMap.set(postRule, postLexRule, postRule.getRulePattern(0));
+		//finalize
+		updatePredictiveParserTable();
 	}
 }

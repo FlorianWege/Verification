@@ -1,13 +1,14 @@
-IF a == 0 THEN
-	ret = b
-ELSE
-	WHILE b != 0 DO
-		IF a > b THEN
-			a = a - b
-		ELSE
-			b  = b -a
-		FI
-	OD;
+{x0>0 && y0>0}
+	x=x0;
+	y=y0;
 	
-	ret = a
-FI
+	WHILE x != y DO
+		IF x<y THEN
+			z=x;
+			x=y;
+			y=z
+		FI;
+		
+		x=x-y
+	OD
+{x==y && x==gcd(x0,y0)}

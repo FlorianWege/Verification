@@ -3,8 +3,10 @@ package core;
 import java.util.Vector;
 import java.util.function.UnaryOperator;
 
-import core.structures.LexerRule;
-import core.structures.ParserRulePattern;
+import javax.swing.plaf.synth.SynthSpinnerUI;
+
+import core.structures.Terminal;
+import core.structures.ParserRule;
 import grammars.ExpGrammar;
 
 public class SyntaxTreeNode {
@@ -14,20 +16,20 @@ public class SyntaxTreeNode {
 		return _children;
 	}
 	
-	public SyntaxTreeNode findChild(RuleKey ruleKey, int index) {
+	public SyntaxTreeNode findChild(SymbolKey symbolKey, int index) {
 		int c = 0;
-		//System.err.println("find " + ruleKey + " " + _children.size());
+
 		for (SyntaxTreeNode child : _children) {
-			Rule rule = child.getRule();
-			//System.err.println("rule " + rule + ";" + child);
-			if (rule == null) continue;
+			Symbol childSymbol = child.getSymbol();
+
+			if (childSymbol == null) continue;
 			
 			SyntaxTreeNode found = null;
 			
-			if (rule.getKey().equals(ruleKey)) {
+			if (childSymbol.getKey().equals(symbolKey)) {
 				found = child;
 			} else {
-				found = child.findChild(ruleKey, 1);
+				found = child.findChild(symbolKey, 1);
 			}
 			
 			if (found != null) {
@@ -39,38 +41,38 @@ public class SyntaxTreeNode {
 		
 		return null;
 	}
-	
-	public SyntaxTreeNode findChild(String ruleKeyS, int index) {
-		return findChild(new RuleKey(ruleKeyS), index);
+
+	public SyntaxTreeNode findChild(Symbol symbol, int index) {
+		return findChild(symbol.getKey(), index);
 	}
 	
-	public SyntaxTreeNode findChild(RuleKey ruleKey) {
-		return findChild(ruleKey, 1);
+	public SyntaxTreeNode findChild(SymbolKey symbolKey) {
+		return findChild(symbolKey, 1);
 	}
 	
-	public SyntaxTreeNode findChild(String ruleKeyS) {
-		return findChild(new RuleKey(ruleKeyS), 1);
+	public SyntaxTreeNode findChild(Symbol symbol) {
+		return findChild(symbol, 1);
 	}
 	
-	private Rule _rule;
+	private Symbol _symbol;
 	
-	public Rule getRule() {
-		return _rule;
+	public Symbol getSymbol() {
+		return _symbol;
 	}
 	
-	private ParserRulePattern _childrenPattern;
+	private ParserRule _subRule;
 	
-	public ParserRulePattern getChildrenPattern() {
-		return _childrenPattern;
+	public ParserRule getSubRule() {
+		return _subRule;
 	}
 	
 	@Override
 	public String toString() {
-		return _rule.toString();
+		return _symbol.toString();
 	}
 
 	public String toStringVert() {
-		return _rule.toString();
+		return _symbol.toString();
 	}
 	
 	public String synthesize() {
@@ -85,14 +87,32 @@ public class SyntaxTreeNode {
 		StringBuilder sb = new StringBuilder();
 		
 		for (SyntaxTreeNode child : getChildren()) {
+			boolean addParentheses = false;
+			
+			if (child.getSymbol().equals("exp")) {
+				SyntaxTreeNode erest_child = child.getChildren().get(1);
+				
+				if (erest_child.getChildren().size() > 1) {
+					SyntaxTreeNode opChild = erest_child.getChildren().get(0);
+
+					if (opChild.getSymbol().equals("opMinus") || opChild.getSymbol().equals("opDiv")) {
+						addParentheses = true;
+					}
+				}
+			}
+			
+			if (addParentheses) sb.append("(");
+			
 			sb.append(child.synthesize());
+			
+			if (addParentheses) sb.append(")");
 		}
 		
 		return sb.toString();
 	}
 	
 	public SyntaxTreeNode copy() {
-		SyntaxTreeNode ret = new SyntaxTreeNode(_rule, _childrenPattern);
+		SyntaxTreeNode ret = new SyntaxTreeNode(_symbol, _subRule);
 		
 		for (SyntaxTreeNode child : _children) {
 			ret.addChild(child.copy());
@@ -101,9 +121,9 @@ public class SyntaxTreeNode {
 		return ret;
 	}
 	
-	public void replace(LexerRule lexerRule, String var, SyntaxTreeNode exp) {
+	public void replace(Terminal terminal, String var, SyntaxTreeNode exp) {
 		for (SyntaxTreeNode child : _children) {
-			child.replace(lexerRule, var, exp);
+			child.replace(terminal, var, exp);
 		}
 		
 		_children.replaceAll(new UnaryOperator<SyntaxTreeNode>() {
@@ -112,7 +132,7 @@ public class SyntaxTreeNode {
 				if (child instanceof SyntaxTreeNodeTerminal) {
 					Token token = ((SyntaxTreeNodeTerminal) child).getToken();
 
-					if ((token != null) && token.getRule().equals(lexerRule) && token.getText().equals(var)) {
+					if ((token != null) && token.getTerminal().equals(terminal) && token.getText().equals(var)) {
 						return exp.copy();
 					}
 				}
@@ -123,10 +143,10 @@ public class SyntaxTreeNode {
 	}
 	
 	public void print(int nestDepth) {
-		System.out.println(new String(new char[nestDepth]).replace('\0', '\t') + _rule);
+		System.out.println(new String(new char[nestDepth]).replace('\0', '\t') + _symbol);
 		
 		if (_children.isEmpty()) {
-			System.out.println(new String(new char[nestDepth + 1]).replace('\0', '\t') + "eps");
+			System.out.println(new String(new char[nestDepth + 1]).replace('\0', '\t') + Terminal.EPSILON);
 		} else {
 			for (SyntaxTreeNode child : _children) {
 				child.print(nestDepth + 1);
@@ -138,8 +158,8 @@ public class SyntaxTreeNode {
 		_children.add(child);
 	}
 	
-	public SyntaxTreeNode(Rule rule, ParserRulePattern childrenPattern) {
-		_rule = rule;
-		_childrenPattern = childrenPattern;
+	public SyntaxTreeNode(Symbol symbol, ParserRule subRule) {
+		_symbol = symbol;
+		_subRule = subRule;
 	}
 }
