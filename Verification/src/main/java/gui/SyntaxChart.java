@@ -322,9 +322,15 @@ public class SyntaxChart implements Initializable {
 			
 			update();
 		}
-		
+
+		private boolean isEmptyComposite(SyntaxTreeNode node) {
+			if (!node.getSymbol().equals(_hoareGrammar.NON_TERMINAL_PROG_)) return false;
+
+			return (calcChildren(node).size() < 2);
+		}
+
 		private List<SyntaxTreeNode> calcChildren(SyntaxTreeNode refNode) {
-			//System.out.println("calc");
+			//System.out.println("calc " + refNode);
 			List<SyntaxTreeNode> ret = new ArrayList<>();
 			
 			if (refNode instanceof SyntaxTreeNodeTerminal) return ret;
@@ -332,7 +338,7 @@ public class SyntaxChart implements Initializable {
 			for (SyntaxTreeNode child : refNode.getChildren()) {
 				List<SyntaxTreeNode> sub = calcChildren(child);
 
-				if (_includedNonTerminals.contains(child.getSymbol())) {
+				if (_includedNonTerminals.contains(child.getSymbol()) && !isEmptyComposite(child)) {
 					if (!child.synthesize().isEmpty()) ret.add(child);
 				} else {
 					sub.removeIf(new Predicate<SyntaxTreeNode>() {
