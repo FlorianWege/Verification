@@ -9,12 +9,13 @@
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.effect.Lighting?>
 <?import javafx.scene.input.KeyCodeCombination?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane prefHeight="500.0" prefWidth="750.0" stylesheets="@MainWindow.css" xmlns="http://javafx.com/javafx/8.0.102" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane prefHeight="500.0" prefWidth="750.0" stylesheets="@MainWindow.css" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <VBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <children>
@@ -76,7 +77,8 @@
                     <items>
                       <MenuItem fx:id="_menu_parse" mnemonicParsing="false" text="Parse" />
                         <CheckMenuItem fx:id="_menu_parse_auto" mnemonicParsing="false" text="Auto Parse" />
-                        <MenuItem fx:id="_menu_hoare" mnemonicParsing="false" text="Hoare" />
+                        <MenuItem fx:id="_menu_hoare" mnemonicParsing="false" text="Verify" />
+                        <MenuItem fx:id="_menu_hoare_abort" mnemonicParsing="false" text="Abort Verification" />
                     </items>
                   </Menu>
               </menus>
@@ -89,6 +91,21 @@
                           <items>
                             <Button fx:id="_button_parse" mnemonicParsing="false" prefHeight="25.0" prefWidth="25.0" text="P" />
                               <Button fx:id="_button_hoare" mnemonicParsing="false" prefHeight="25.0" prefWidth="25.0" text="H" />
+                              <Button fx:id="_button_hoare_abort" mnemonicParsing="false" prefHeight="25.0" prefWidth="25.0" text="H">
+                                 <effect>
+                                    <Lighting diffuseConstant="2.0" specularConstant="0.25" specularExponent="21.86">
+                                       <bumpInput>
+                                          <Lighting bumpInput="$null">
+                                             <light>
+                                                <Light.Distant />
+                                             </light>
+                                          </Lighting>
+                                       </bumpInput>
+                                       <light>
+                                          <Light.Distant color="RED" />
+                                       </light>
+                                    </Lighting>
+                                 </effect></Button>
                           </items>
                         </ToolBar>
                         <TabPane fx:id="_tabPane_files" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" tabClosingPolicy="UNAVAILABLE" HBox.hgrow="ALWAYS" />

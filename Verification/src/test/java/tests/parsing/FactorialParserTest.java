@@ -10,7 +10,6 @@ import core.Lexer;
 import core.Lexer.LexerException;
 import core.Lexer.LexerResult;
 import core.Parser;
-import core.Parser.NoRuleException;
 import core.Parser.ParserException;
 import grammars.WhileGrammar;
 import util.IOUtil;
@@ -22,7 +21,7 @@ public class FactorialParserTest {
 		
 		//LexerResult lexerResult = new Lexer(grammar).tokenize("a=1;IF abc THEN var=1; FI");
 		
-		String inputS = IOUtil.getResourceAsString("Factorial.txt");
+		String inputS = IOUtil.getResourceAsString("resources/src/res/Factorial.txt");
 		
 		System.out.println(inputS);
 		

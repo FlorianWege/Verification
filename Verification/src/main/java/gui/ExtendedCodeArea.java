@@ -3,7 +3,9 @@ package gui;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -12,10 +14,15 @@ import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.LineNumberFactory;
 import org.fxmisc.richtext.StyleSpans;
 import org.fxmisc.richtext.StyleSpansBuilder;
+import org.reactfx.value.Val;
 
 import core.Grammar;
+import core.SyntaxTreeNode;
+import core.Token;
 import core.structures.LexerRule;
 import core.structures.Terminal;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.EventHandler;
@@ -25,6 +32,8 @@ import javafx.scene.control.IndexRange;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Polygon;
 
 public class ExtendedCodeArea {
 	private CodeArea _textArea;
@@ -169,5 +178,56 @@ public class ExtendedCodeArea {
 		if (_errorPos != null) {
 			_textArea.setStyle(_errorPos, _textArea.getText().length(), Collections.singleton("error"));
 		}
+		
+		final ObjectProperty<Integer> lineP = new SimpleObjectProperty<>();
+		
+		lineP.set(2);
+		
+		IntFunction<Node> numFactory = LineNumberFactory.get(_textArea);
+		IntFunction<Node> arrowFactory = new IntFunction<Node>() {
+			@Override
+			public Node apply(int line) {
+				Polygon triangle = new Polygon(0D, 0D, 10D, 5D, 0D, 10D);
+				
+				triangle.setFill(Color.RED);
+				
+				ObservableValue<Boolean> vis = Val.map(_currentNodeP, new Function<SyntaxTreeNode, Boolean>() {
+					@Override
+					public Boolean apply(SyntaxTreeNode node) {
+						if (node == null) return false;
+						
+						List<Token> tokens = node.tokenize();
+						
+						Token firstToken = tokens.get(0);
+						Token lastToken = tokens.get(tokens.size() - 1);
+						
+						return (line >= firstToken.getLine() && line <= lastToken.getLine());
+					}
+				});
+				
+				triangle.visibleProperty().bind(vis);
+				
+				return triangle;
+			}
+		};
+		
+		_textArea.setParagraphGraphicFactory(new IntFunction<Node>() {
+			@Override
+			public Node apply(int line) {
+				HBox box = new HBox(numFactory.apply(line), arrowFactory.apply(line));
+				
+				box.setAlignment(Pos.CENTER_LEFT);
+				
+				return box;
+			}
+		});
+
+		//_textArea.setStyle(0, _textArea.getText().length() - 1, Collections.singleton("styled-text-area"));
+	}
+	
+	private ObjectProperty<SyntaxTreeNode> _currentNodeP = new SimpleObjectProperty<>();
+	
+	public void setCurrentNode(SyntaxTreeNode node) {
+		_currentNodeP.set(node);
 	}
 }

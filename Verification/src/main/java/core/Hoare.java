@@ -5,31 +5,43 @@ import java.util.Iterator;
 import java.util.Vector;
 
 import javax.script.ScriptException;
-import javax.swing.plaf.synth.SynthSpinnerUI;
 
 import core.Hoare.HoareException;
 import core.Lexer.LexerException;
 import core.Parser.NoRuleException;
 import core.Parser.ParserException;
+import core.structures.BoolExp;
 import core.structures.Exp;
 import core.structures.Terminal;
 import core.structures.hoareCond.HoareCond;
 import core.structures.hoareCond.HoareCondAnd;
-import core.structures.hoareCond.HoareCondBoolExpr;
+import core.structures.hoareCond.HoareCondBoolExp;
 import core.structures.hoareCond.HoareCondNeg;
-import core.structures.hoareCond.HoareCondOr;
 import grammars.HoareWhileGrammar;
-import gui.ImplicationDialog;
-import gui.InvariantDialog;
+import gui.CompositionMidDialog;
 import javafx.beans.property.ObjectProperty;
 import javafx.collections.ObservableMap;
 import util.StringUtil;
 
 public class Hoare {
 	private HoareWhileGrammar _grammar;
-	private SyntaxTree _tree;
-	private ObservableMap<SyntaxTreeNode, HoareCond> _preCondMap;
-	private ObservableMap<SyntaxTreeNode, HoareCond> _postCondMap;
+	private ObjectProperty<SyntaxTree> _syntaxTreeP;
+	private ObservableMap<SyntaxTreeNode, HoareCond> _preCondMapP;
+	private ObservableMap<SyntaxTreeNode, HoareCond> _postCondMapP;
+	private ObjectProperty<SyntaxTreeNode> _currentNodeP;
+	private ObjectProperty<SyntaxTreeNode> _currentHoareNodeP;
+	private ActionInterface _actionInterface;
+	
+	public interface ActionInterface {
+		void finished(SyntaxTreeNode node, HoareCond preCond, HoareCond postCond, boolean yes) throws IOException;
+		void requestSkipDialog(SyntaxTreeNode node, HoareCond preCond, HoareCond postCond, Hoare.Executer.SkipInterface callback) throws IOException, HoareException, LexerException, ParserException;
+		void requestAssignDialog(SyntaxTreeNode node, HoareCond preCond, HoareCond postCond, Hoare.Executer.AssignInterface callback, String var, Exp exp) throws IOException, HoareException, LexerException, ParserException;
+		void requestCompositionStartDialog(SyntaxTreeNode node, HoareCond postCond, Hoare.Executer.CompositionStartInterface callback, SyntaxTreeNode firstNode, SyntaxTreeNode secondNode) throws IOException, HoareException, LexerException, ParserException;
+		void requestCompositionMidDialog(SyntaxTreeNode node, HoareCond postCond, Hoare.Executer.CompositionMidInterface callback, SyntaxTreeNode firstNode, SyntaxTreeNode secondNode, HoareCond secondPreCond) throws IOException, HoareException, LexerException, ParserException;
+		void requestCompositionEndDialog(SyntaxTreeNode node, HoareCond preCond, HoareCond postCond, Hoare.Executer.CompositionEndInterface callback, SyntaxTreeNode firstNode, SyntaxTreeNode secondNode, HoareCond secondPreCond, HoareCond firstPreCond) throws IOException, HoareException, LexerException, ParserException;
+		void requestImplicationDialog(HoareCond a, HoareCond b, Hoare.Executer.ImplicationInterface callback, boolean equal) throws IOException;
+		void requestInvariantDialog(SyntaxTreeNode node, HoareCond postCond, Hoare.Executer.InvariantInterface callback) throws IOException;
+	}
 	
 	public static class HoareException extends Exception {
 		private static final long serialVersionUID = 1L;
@@ -39,16 +51,12 @@ public class Hoare {
 		}
 	}
 	
-	public HoareCond boolExprToHoareCondition(SyntaxTreeNode node) {
-		Symbol rule = node.getSymbol();
-		
-		if (!rule.equals(_grammar.NON_TERMINAL_BOOL_EXP)) throw new RuntimeException("not a boolExpr");
-		
-		return new HoareCondBoolExpr(node);
-	}
-	
 	private class HoareNode {
-		private SyntaxTreeNode _actualNode;
+		private SyntaxTreeNode _refNode;
+		
+		public SyntaxTreeNode getRefNode() {
+			return _refNode;
+		}
 
 		private Vector<HoareNode> _children = new Vector<>();
 
@@ -61,7 +69,7 @@ public class Hoare {
 		}
 		
 		public HoareNode(SyntaxTreeNode actualNode) {
-			_actualNode = actualNode;
+			_refNode = actualNode;
 		}
 	}
 	
@@ -74,7 +82,7 @@ public class Hoare {
 			ret.addAll(hoareChildren);
 		}
 		
-		if ((node.getSymbol() != null) && node.getSymbol().equals(_grammar.nonTerminal_hoare_block)) {
+		if ((node.getSymbol() != null) && node.getSymbol().equals(_grammar.NON_TERMINAL_HOARE_BLOCK)) {
 			HoareNode selfNode = new HoareNode(node);
 			
 			for (HoareNode child : ret) {
@@ -99,17 +107,40 @@ public class Hoare {
 		private HoareWhileGrammar _grammar;
 		private ObservableMap<SyntaxTreeNode, HoareCond> _preCondMap;
 		private ObservableMap<SyntaxTreeNode, HoareCond> _postCondMap;
+		private ObjectProperty<SyntaxTreeNode> _currentNodeP;
+		private ObjectProperty<SyntaxTreeNode> _currentHoareNodeP;
+		private ActionInterface _actionInterface;
 		private ExecInterface _callback;
 		
 		private Vector<Executer> _execChain = new Vector<>();
 		private Iterator<Executer> _execChainIt;
 		
+		public interface SkipInterface {
+			void result() throws IOException, HoareException, LexerException, ParserException;
+		}
+
+		public interface AssignInterface {
+			void result() throws IOException, HoareException, LexerException, ParserException;
+		}
+
+		public interface CompositionStartInterface {
+			void result() throws IOException, HoareException, LexerException, ParserException;
+		}
+
+		public interface CompositionMidInterface {
+			void result() throws IOException, HoareException, LexerException, ParserException;
+		}
+
+		public interface CompositionEndInterface {
+			void result() throws IOException, HoareException, LexerException, ParserException;
+		}
+		
 		public interface ImplicationInterface {
-			public void result(boolean yes) throws HoareException, LexerException, IOException, ParserException;
+			void result(boolean yes) throws HoareException, LexerException, IOException, ParserException;
 		}
 		
 		public interface InvariantInterface {
-			public void result(HoareCond invariant) throws HoareException, LexerException, IOException, ParserException;
+			void result(HoareCond invariant) throws HoareException, LexerException, IOException, ParserException;
 		}
 		
 		private boolean check(HoareCond a) throws ScriptException {
@@ -133,7 +164,7 @@ public class Hoare {
 			if (checkSuccess) {
 				callback.result(checkResult);
 			} else {
-				new ImplicationDialog(a, b, callback, false).show();
+				_actionInterface.requestImplicationDialog(a, b, callback, false);
 			}
 			
 			return !check(a) || check(b);
@@ -155,86 +186,152 @@ public class Hoare {
 		}
 		
 		private interface wlp_callback {
-			public void result(HoareCond cond) throws IOException, HoareException, LexerException, ParserException;
+			public void result(SyntaxTreeNode node, HoareCond preCond, HoareCond postCond) throws IOException, HoareException, LexerException, ParserException;
 		}
 		
-		private void wlp_assign(HoareCond postCond, String var, SyntaxTreeNode valNode, wlp_callback callback) throws IOException, HoareException {
-			println_begin();
+		private void wlp_skip(SyntaxTreeNode node, HoareCond postCond, wlp_callback callback) throws IOException, HoareException, LexerException, ParserException {
+			HoareCond preCond = postCond;
 			
-			HoareCond preCond = postCond.copy();
-
-			try {
-				Exp val = Exp.fromString(valNode.synthesize());
-				
-				preCond.replace(_grammar.TERMINAL_ID, var, val.getBaseEx());
-				
-				println("apply assignment rule:");
-				println("\t" + postCond.toStringEx(var + ":=" + valNode.synthesize()) + " " + var + "=" + valNode.synthesize() + " " + postCond.toStringEx());
-				println("\t->" + preCond.toStringEx() + " " + var + "=" + valNode.synthesize() + " " + postCond.toStringEx());
-			
-				println_end();
-
-				callback.result(preCond);
-			} catch (ParserException | LexerException e) {
-				throw new RuntimeException(e);
-			}
-		}
-		
-		private void wlp_composite(HoareCond postCond, SyntaxTreeNode first, SyntaxTreeNode second, wlp_callback callback) throws HoareException, IOException, LexerException, ParserException {
-			println_begin();
-			
-			println("applying composition rule...");
-			
-			wlp(second, postCond, new wlp_callback() {
+			_actionInterface.requestSkipDialog(node, preCond, postCond, new SkipInterface() {
 				@Override
-				public void result(HoareCond midCond) throws IOException, HoareException, LexerException, ParserException {
-					wlp(first, midCond, new wlp_callback() {
-						@Override
-						public void result(HoareCond preCond) throws IOException, HoareException, LexerException, ParserException {
-							String firstS = first.synthesize().replaceAll("\n", "");
-							String secondS = second.synthesize().replaceAll("\n", "");
-							
-							//System.out.println("{" + postCondition + "}" + " -> " + "{" + midCondition + "}" + " -> " + "{" + ret + "}");
-							println("apply composition rule:");
-							println("\t" + preCond.toStringEx() + " " + firstS + " " + midCond.toStringEx() + ", " + midCond.toStringEx() + " " + secondS + " " + postCond.toStringEx());
-							println("\t" + "->");
-							println("\t" + preCond.toStringEx() + " " + firstS + "; " + secondS + " " + postCond.toStringEx());
-							
-							println_end();
-							
-							callback.result(preCond);
-						}
-					});
+				public void result() throws IOException, HoareException, LexerException, ParserException {
+					callback.result(node, postCond, postCond);
 				}
 			});
 		}
 		
-		private void wlp_alt(HoareCond postCond, HoareCondBoolExpr altCond, SyntaxTreeNode first, SyntaxTreeNode second, wlp_callback callback) throws IOException, HoareException, LexerException, ParserException {
-			println_begin();
+		private void wlp_assign(SyntaxTreeNode node, HoareCond postCond, wlp_callback callback) throws IOException, HoareException, ParserException, LexerException {
+			SyntaxTreeNode idNode = node.findChild(_grammar.TERMINAL_ID);
+			SyntaxTreeNode expNode = node.findChild(_grammar.NON_TERMINAL_EXP);
+			
+			String var = idNode.synthesize();
 			
 			HoareCond preCond = postCond.copy();
 
-			String firstS = first.synthesize().replaceAll("\n", "");
-			String secondS = second.synthesize().replaceAll("\n", "");
+			Exp exp = Exp.fromString(expNode.synthesize());
 			
-			//TODO
-			println("apply alternative rule:");
-			println("\t" + new HoareCondAnd(preCond, altCond).toStringEx() + " " + firstS + " " + postCond.toStringEx() + ", " + new HoareCondAnd(preCond, new HoareCondNeg(altCond)).toStringEx() + " " + secondS + " " + postCond.toStringEx());
-			println("\t" + "->");
-			println("\t" + preCond.toStringEx() + " if " + "(" + altCond + ")" + "{" + firstS + "}" + " else " + "{" + secondS + "}" + postCond.toStringEx());
-			
-			println_end();
-			
-			callback.result(preCond);
+			preCond.replace(_grammar.TERMINAL_ID, var, exp.getBaseEx());
+
+			_actionInterface.requestAssignDialog(node, preCond, postCond, new AssignInterface() {
+				@Override
+				public void result() throws IOException, HoareException, LexerException, ParserException {
+					callback.result(node, preCond, postCond);
+				}
+			}, var, exp);
 		}
 		
-		private void wlp_loop_acceptInvariant(HoareCond invariant, SyntaxTreeNode loopNode, wlp_callback callback) throws IOException, HoareException, LexerException, ParserException {
-			HoareCond loopCond = new HoareCondBoolExpr(loopNode.findChild(_grammar.NON_TERMINAL_BOOL_EXP));
-			SyntaxTreeNode body = loopNode.findChild(_grammar.NON_TERMINAL_PROG);
+		private void wlp_composite(SyntaxTreeNode node, HoareCond postCond, wlp_callback callback) throws HoareException, IOException, LexerException, ParserException {
+			SyntaxTreeNode firstNode = node.findChild(_grammar.NON_TERMINAL_CMD);
+			SyntaxTreeNode secondNode = node.findChild(_grammar.NON_TERMINAL_PROG_);
+			
+			_actionInterface.requestCompositionStartDialog(node, postCond, new CompositionStartInterface() {
+				@Override
+				public void result() throws IOException, HoareException, LexerException, ParserException {
+					wlp(secondNode, postCond, new wlp_callback() {
+						@Override
+						public void result(SyntaxTreeNode secondNode, HoareCond secondPreCond, HoareCond secondPostCond) throws IOException, HoareException, LexerException, ParserException {
+							HoareCond firstPostCond = secondPreCond;
+							
+							_actionInterface.requestCompositionMidDialog(node, postCond, new CompositionMidInterface() {
+								@Override
+								public void result() throws IOException, HoareException, LexerException, ParserException {
+									wlp(firstNode, firstPostCond, new wlp_callback() {
+										@Override
+										public void result(SyntaxTreeNode firstNode, HoareCond firstPreCond, HoareCond firstPostCond) throws IOException, HoareException, LexerException, ParserException {
+											HoareCond preCond = firstPreCond;
+											
+											_actionInterface.requestCompositionEndDialog(node, preCond, postCond, new CompositionEndInterface() {
+												@Override
+												public void result() throws IOException, HoareException, LexerException, ParserException {
+													callback.result(node, preCond, postCond);
+												}
+											}, firstNode, secondNode, secondPreCond, firstPreCond);
+										}
+									});
+								}
+							}, firstNode, secondNode, secondPreCond);
+						}
+					});
+				}
+			}, firstNode, secondNode);
+		}
+		
+		private interface alt_callback {
+			void ret(HoareCond thenPreCond, HoareCond thenPostCond, HoareCond elsePreCond, HoareCond elsePostCond) throws IOException, HoareException, LexerException, ParserException;
+		}
+		
+		private void wlp_alt(SyntaxTreeNode node, HoareCond postCond, wlp_callback callback) throws IOException, HoareException, LexerException, ParserException {
+			println_begin();
+			
+			HoareCond altCond = new HoareCondBoolExp(BoolExp.fromString(node.findChild(_grammar.NON_TERMINAL_BOOL_EXP).synthesize()));
+			
+			SyntaxTreeNode selectionElseNonTerminal = node.findChild(_grammar.NON_TERMINAL_SELECTION_ELSE);
+			
+			SyntaxTreeNode thenProg = node.findChild(_grammar.NON_TERMINAL_PROG);
+			SyntaxTreeNode elseProgV = null;
+			
+			if (selectionElseNonTerminal.getSubRule().equals(_grammar.RULE_SELECTION_ELSE)) {
+				elseProgV = node.findChild(_grammar.NON_TERMINAL_PROG);
+			}
+			
+			SyntaxTreeNode elseProg = elseProgV;
+
+			String thenProgS = thenProg.synthesize().replaceAll("\n", "");
+			String elseProgS = (elseProg != null) ? elseProg.synthesize().replaceAll("\n", "") : "SKIP";
+			
+			alt_callback retCallback = new alt_callback() {
+				@Override
+				public void ret(HoareCond thenPreCond, HoareCond thenPostCond, HoareCond elsePreCond, HoareCond elsePostCond) throws IOException, HoareException, LexerException, ParserException {
+					HoareCond thenPart = new HoareCondAnd(thenPreCond, altCond);
+					HoareCond elsePart = new HoareCondAnd(elsePreCond, new HoareCondNeg(altCond));
+					
+					HoareCond preCond = new HoareCondAnd(thenPart, elsePart);
+					
+					println("apply alternative rule:");
+					println("\t" + thenPart.toStringEx() + " " + thenProgS + " " + postCond.toStringEx() + ", " + elsePart.toStringEx() + " " + elseProgS + " " + postCond.toStringEx());
+					println("\t" + "->");
+					println("\t" + preCond.toStringEx() + " if " + "(" + altCond + ")" + "{" + thenProgS + "}" + " else " + "{" + elseProgS + "}" + postCond.toStringEx());
+					
+					callback.result(node, preCond, postCond);
+				}
+			};
+			
+			wlp_callback altCallback = new wlp_callback() {
+				@Override
+				public void result(SyntaxTreeNode node, HoareCond preCond, HoareCond postCond) throws IOException, HoareException, LexerException, ParserException {
+					callback.result(node, preCond, postCond);
+				}
+			};
+			
+			wlp(thenProg, postCond, new wlp_callback() {
+				@Override
+				public void result(SyntaxTreeNode thenNode, HoareCond thenPreCond, HoareCond thenPostCond) throws IOException, HoareException, LexerException, ParserException {
+					if (elseProg != null) {
+						wlp(elseProg, postCond, new wlp_callback() {
+							@Override
+							public void result(SyntaxTreeNode node, HoareCond elsePreCond, HoareCond elsePostCond) throws IOException, HoareException, LexerException, ParserException {
+								
+							}
+						});
+					} else {
+						HoareCond elsePreCond = postCond;
+						HoareCond elsePostCond = postCond;
+						
+
+					}
+				}
+			});
+			
+			println_end();
+		}
+		
+		private void wlp_loop_acceptInvariant(SyntaxTreeNode node, HoareCond invariant, HoareCond postCond, wlp_callback callback) throws IOException, HoareException, LexerException, ParserException {			
+			HoareCond loopCond = new HoareCondBoolExp(BoolExp.fromString(node.findChild(_grammar.NON_TERMINAL_BOOL_EXP).synthesize()));
+			SyntaxTreeNode body = node.findChild(_grammar.NON_TERMINAL_PROG);
 			
 			println("accept invariant " + invariant);
 			
-			HoareCond preCond = new HoareCondAnd(invariant);
+			HoareCond preCond = invariant;
 			
 			if (preCond==null) throw new RuntimeException("preCond null");
 			if (loopCond==null) throw new RuntimeException("loopCond null");
@@ -248,73 +345,62 @@ public class Hoare {
 			
 			println_end();
 
-			callback.result(preCond);
+			callback.result(node, preCond, postCond);
 		}
 		
-		private void wlp_loop_tryInvariant(SyntaxTreeNode loopNode, HoareCond postCond, HoareCond invariantPost, wlp_callback callback) throws HoareException, IOException, LexerException, ParserException {
+		private void wlp_loop_tryInvariant(SyntaxTreeNode node, HoareCond postCond, HoareCond invariantPost, wlp_callback callback) throws HoareException, IOException, LexerException, ParserException {
 			//TODO: auto-generate invariants
 			
 			if (invariantPost == null) {
-				println("failed to guess invariant: ask user");
-				
-				InvariantDialog diag = new InvariantDialog(_grammar, loopNode, postCond, new InvariantInterface() {
-					@Override
-					public void result(HoareCond invariant) throws HoareException, IOException, LexerException, ParserException {
-						if (invariant != null) {
-							wlp_loop_acceptInvariant(invariant, loopNode, callback);
-						} else {
-							throw new HoareException("aborted");
-						}
-					}
-				});
-				
-				diag.show();
+
 			} else {
 				println("try invariant: " + invariantPost);
 				
-				wlp(loopNode.findChild(_grammar.NON_TERMINAL_PROG), invariantPost, new wlp_callback() {
+				wlp(node.findChild(_grammar.NON_TERMINAL_PROG), invariantPost, new wlp_callback() {
 					@Override
-					public void result(HoareCond invariantPre) throws HoareException, LexerException, IOException, ParserException {
+					public void result(SyntaxTreeNode node, HoareCond invariantPre, HoareCond invariantPost) throws HoareException, LexerException, IOException, ParserException {
 						println("tried invariant " + invariantPost + " resulted in " + invariantPre);
 						
-						ImplicationDialog diag = new ImplicationDialog(invariantPre, invariantPost, new ImplicationInterface() {
+						_actionInterface.requestImplicationDialog(invariantPre, invariantPost, new ImplicationInterface() {
 							@Override
 							public void result(boolean yes) throws HoareException, LexerException, IOException, ParserException {
 								if (yes) {
-									wlp_loop_acceptInvariant(invariantPre, loopNode, callback);
+									wlp_loop_acceptInvariant(node, invariantPre, invariantPost, callback);
 								} else {
-									wlp_loop_tryInvariant(loopNode, postCond, null, callback);
+									wlp_loop_tryInvariant(node, postCond, null, callback);
 								}
 							}
 						}, true);
-						
-						diag.show();
 					}
 				});
 			}
 		}
 		
-		private void wlp_loop(HoareCond postCond, SyntaxTreeNode loopNode, wlp_callback callback) throws HoareException, IOException {
+		private void wlp_loop(SyntaxTreeNode node, HoareCond postCond, wlp_callback callback) throws HoareException, IOException {
 			println_begin();
-			
-			try {
-				println("applying loop rule... needs invariant");
-				
-				//HoareCondition invariantPost = HoareCondition.fromString("erg==2^(y-x)");
-				HoareCond invariantPost = null;//HoareCond.fromString("y==z!");
-				
-				wlp_loop_tryInvariant(loopNode, postCond, invariantPost, callback);
-			} catch (LexerException | ParserException e) {
-				throw new HoareException(e.getMessage());
-			}
+
+			println("applying loop rule... needs invariant");
+
+			HoareCond invariantPost = null;
+
+			_actionInterface.requestInvariantDialog(node, postCond, new InvariantInterface() {
+				@Override
+				public void result(HoareCond invariant) throws HoareException, IOException, LexerException, ParserException {
+					if (invariant != null) {
+						wlp_loop_tryInvariant(node, invariant, invariantPost, callback);
+					} else {
+						throw new HoareException("aborted");
+					}
+				}
+			});
 		}
 		
-		private void wlp_consequence_pre(HoareCond origPreCond, HoareCond origPostCond, SyntaxTreeNode body, HoareCond newPreCond, HoareCond newPostCond, wlp_callback callback) throws IOException, HoareException, LexerException, ParserException {
+		private void wlp_consequence_pre(SyntaxTreeNode node, HoareCond origPreCond, HoareCond origPostCond, HoareCond newPreCond, HoareCond newPostCond, wlp_callback callback) throws IOException, HoareException, LexerException, ParserException {
 			println_begin();
 			
-			String bodyS = body.synthesize().replaceAll("\n", "");
+			String bodyS = node.synthesize().replaceAll("\n", "");
 			
-			System.out.println("apply consequence rule");
+			System.out.println("apply consequence rule (pre)");
 			System.out.println("\t" + newPreCond + "->" + origPreCond + ", " + origPostCond.toStringEx() + " " + bodyS + " " + origPostCond.toStringEx() + ", " + origPostCond + "->" + newPostCond);
 			System.out.println("\t" + "->");
 			System.out.println("\t" + newPreCond.toStringEx() + " " + bodyS + " " + newPostCond.toStringEx());
@@ -322,115 +408,110 @@ public class Hoare {
 			println_end();
 			
 			//TODO: for post as well, merged?
-			callback.result(newPreCond);
+			callback.result(node, newPreCond, origPreCond);
 		}
 		
 		private void wlp(SyntaxTreeNode node, HoareCond postCondV, wlp_callback callback) throws HoareException, IOException, LexerException, ParserException {
 			_wlp_nestDepth++;
+
+			_currentNodeP.set(node);
 			
 			final HoareCond postCond = postCondV.copy();
 			
 			_postCondMap.put(node, postCond);
-			
+
 			//System.out.println(StringUtil.repeat("\t", _wlp_nestDepth) + "postcond " + node);
 
 			wlp_callback retCallback = new wlp_callback() {
 				@Override
-				public void result(HoareCond cond) throws IOException, HoareException, LexerException, ParserException {
-					_preCondMap.put(node, cond);
+				public void result(SyntaxTreeNode node, HoareCond preCond, HoareCond postCond) throws IOException, HoareException, LexerException, ParserException {
+					_preCondMap.put(node, preCond);
 					_wlp_nestDepth--;
 					
-					callback.result(cond);
+					callback.result(node, preCond, postCond);
 				}
 			};
 
-			if (node.getSymbol().equals(_grammar.NON_TERMINAL_PROG)) {
-				SyntaxTreeNode firstChild = node.getChildren().firstElement();
-				SyntaxTreeNode lastChild = node.getChildren().lastElement(); 
+			Symbol symbol = node.getSymbol();
+			
+			if (symbol.equals(_grammar.NON_TERMINAL_PROG)) {
+				SyntaxTreeNode cmdChild = node.findChild(_grammar.NON_TERMINAL_CMD);
+				SyntaxTreeNode lastChild = node.findChild(_grammar.NON_TERMINAL_PROG_); 
 				
-				if (lastChild.findChild(_grammar.NON_TERMINAL_PROG) != null) {
-					wlp_composite(postCond, firstChild, lastChild.findChild(_grammar.NON_TERMINAL_PROG), retCallback);
+				assert(cmdChild != null);
+				assert(lastChild != null);
+				
+				if (lastChild.findChild(_grammar.NON_TERMINAL_CMD) != null) {
+					System.out.println("find " + node);
+					wlp_composite(node, postCond, retCallback);
 				} else {
-					wlp(firstChild, postCond, retCallback);
+					wlp(cmdChild, postCond, retCallback);
 				}
-			} else if (node.getSymbol().equals(_grammar.NON_TERMINAL_PROG_)) {
-				if (node.getSubRule().equals(_grammar.RULE_PROG__PROG))
-					wlp(node.findChild(_grammar.NON_TERMINAL_PROG), postCond, retCallback);
-				else
-					retCallback.result(postCond);
-			} else if (node.getSymbol().equals(_grammar.NON_TERMINAL_SKIP))
-				retCallback.result(postCond);
-			else if (node.getSymbol().equals(_grammar.NON_TERMINAL_ASSIGN)) {
-				SyntaxTreeNode idNode = node.findChild(_grammar.TERMINAL_ID);
-
-				SyntaxTreeNode expNode = node.findChild(_grammar.NON_TERMINAL_EXP);
+			} else if (symbol.equals(_grammar.NON_TERMINAL_PROG_)) {
+				SyntaxTreeNode cmdChild = node.findChild(_grammar.NON_TERMINAL_CMD);
+				SyntaxTreeNode lastChild = node.findChild(_grammar.NON_TERMINAL_PROG_); 
 				
-				String var = idNode.synthesize();
-				SyntaxTreeNode exp = expNode;
+				assert(cmdChild != null);
+				assert(lastChild != null);
 				
-				wlp_assign(postCond, var, exp, retCallback);
-			} else if (node.getSymbol().equals(_grammar.NON_TERMINAL_SELECTION)) {
-				if (node.getSubRule().equals(_grammar.RULE_SELECTION)) {
-					SyntaxTreeNode selectionElseRule = node.findChild(_grammar.NON_TERMINAL_PROG);
-					
-					if (selectionElseRule.getSubRule().equals(Terminal.EPSILON)) {
-						wlp(node.findChild(_grammar.NON_TERMINAL_PROG), postCond, new wlp_callback() {
-							@Override
-							public void result(HoareCond thenCond) throws IOException, HoareException, LexerException, ParserException {
-								HoareCond elseCond = postCond;
-								
-								retCallback.result(new HoareCondOr(thenCond, elseCond));
-							}
-						});
-					} else if (selectionElseRule.getSubRule().equals(_grammar.RULE_SELECTION_ELSE)) {
-						wlp(node.findChild(_grammar.NON_TERMINAL_PROG), postCond, new wlp_callback() {
-							@Override
-							public void result(HoareCond thenCond) throws IOException, HoareException, LexerException, ParserException {
-								wlp(node.findChild(_grammar.NON_TERMINAL_PROG, 2), postCond, new wlp_callback() {
-									@Override
-									public void result(HoareCond elseCond) throws IOException, HoareException, LexerException, ParserException {
-										retCallback.result(new HoareCondOr(thenCond, elseCond));
-									}
-								});
-							}
-						});
-					}
+				if (lastChild.findChild(_grammar.NON_TERMINAL_CMD) != null) {
+					wlp_composite(node, postCond, retCallback);
+				} else {
+					wlp(cmdChild, postCond, retCallback);
 				}
-			} else if (node.getSymbol().equals(_grammar.NON_TERMINAL_WHILE)) {
-				wlp_loop(postCond, node, retCallback);
-			} else if (node.getSymbol().equals(_grammar.nonTerminal_hoare_block)) {
-				wlp(node.findChild(_grammar.NON_TERMINAL_PROG), postCond, retCallback);
+			} else if (symbol.equals(_grammar.NON_TERMINAL_CMD)) {
+				wlp(node.getChildren().firstElement(), postCond, retCallback);
+			} else if (symbol.equals(_grammar.NON_TERMINAL_SKIP))
+				wlp_skip(node, postCond, retCallback);
+			else if (symbol.equals(_grammar.NON_TERMINAL_ASSIGN)) {
+				wlp_assign(node, postCond, retCallback);
+			} else if (symbol.equals(_grammar.NON_TERMINAL_SELECTION)) {
+				wlp_alt(node, postCond, retCallback);
+			} else if (symbol.equals(_grammar.NON_TERMINAL_WHILE)) {
+				wlp_loop(node, postCond, retCallback);
+			} else if (symbol.equals(_grammar.NON_TERMINAL_HOARE_BLOCK)) {
+				SyntaxTreeNode progNode = node.findChild(_grammar.NON_TERMINAL_PROG);
+				
+				System.out.println("wlp " + progNode.hashCode());
+						
+				wlp(progNode, postCond, retCallback);
 			} else {
 				throw new HoareException("no wlp for " + node + " with rule " + node.getSubRule());
 			}
 		}
 		
 		public void exec() throws IOException, HoareException, LexerException, ParserException {
-			SyntaxTreeNode preNode = _node._actualNode.findChild(_grammar.nonTerminal_hoare_pre);
-			SyntaxTreeNode postNode = _node._actualNode.findChild(_grammar.nonTerminal_hoare_post);
+			SyntaxTreeNode refNode = _node.getRefNode();
+
+			_currentHoareNodeP.set(refNode);
 			
-			HoareCond preCondition = HoareCond.fromString(preNode.findChild(_grammar.NON_TERMINAL_BOOL_EXP).synthesize());
-			HoareCond postCondition = HoareCond.fromString(postNode.findChild(_grammar.NON_TERMINAL_BOOL_EXP).synthesize());
+			SyntaxTreeNode preNode = refNode.findChild(_grammar.NON_TERMINAL_HOARE_PRE);
+			SyntaxTreeNode postNode = refNode.findChild(_grammar.NON_TERMINAL_HOARE_POST);
 			
-			System.err.println(StringUtil.repeat("\t", _nestDepth) + "checking " + preCondition + "->" + postCondition + " at " + _node);
+			HoareCond preCond = new HoareCondBoolExp(BoolExp.fromString(preNode.findChild(_grammar.NON_TERMINAL_BOOL_EXP).synthesize()));
+			HoareCond postCond = new HoareCondBoolExp(BoolExp.fromString(postNode.findChild(_grammar.NON_TERMINAL_BOOL_EXP).synthesize()));
+			
+			System.err.println(StringUtil.repeat("\t", _nestDepth) + "checking " + preCond + "->" + postCond + " at " + _node);
 			
 			_wlp_nestDepth = 0;
 			_wlp_printDepth = 0;
 			
-			wlp(_node._actualNode, postCondition, new wlp_callback() {
+			wlp(refNode, postCond, new wlp_callback() {
 				@Override
-				public void result(HoareCond finalPreCondition) throws IOException, HoareException, LexerException, ParserException {
-					System.out.println("final preCondition: " + finalPreCondition);
+				public void result(SyntaxTreeNode node, HoareCond lastPreCond, HoareCond lastPostCond) throws IOException, HoareException, LexerException, ParserException {
+					System.out.println("final preCondition: " + preCond);
 					
 					try {
-						implicates(preCondition, finalPreCondition, new ImplicationInterface() {
+						implicates(preCond, lastPreCond, new ImplicationInterface() {
 							@Override
 							public void result(boolean yes) throws HoareException, LexerException, IOException, ParserException {
 								if (yes) {
-									System.out.println(preCondition + "->" + postCondition + " holds true (wlp: " + finalPreCondition + ")");
+									System.out.println(preCond + "->" + postCond + " holds true (wlp: " + preCond + ")");
 								} else {
-									System.out.println(preCondition + "->" + postCondition + " failed (wlp: " + finalPreCondition + ")");
+									System.out.println(preCond + "->" + postCond + " failed (wlp: " + preCond + ")");
 								}
+								
+								_actionInterface.finished(refNode, preCond, postCond, yes);
 								
 								_callback.finished();
 							}
@@ -446,12 +527,15 @@ public class Hoare {
 			_execChainIt.next().exec();
 		}
 		
-		public Executer(HoareNode node, int nestDepth, HoareWhileGrammar grammar, ObservableMap<SyntaxTreeNode, HoareCond> preCondMap, ObservableMap<SyntaxTreeNode, HoareCond> postCondMap, ExecInterface callback) throws IOException, HoareException, NoRuleException, LexerException {
+		public Executer(HoareNode node, int nestDepth, HoareWhileGrammar grammar, ObservableMap<SyntaxTreeNode, HoareCond> preCondMap, ObservableMap<SyntaxTreeNode, HoareCond> postCondMap, ObjectProperty<SyntaxTreeNode> currentNodeP, ObjectProperty<SyntaxTreeNode> currentHoareNodeP, ActionInterface actionInterface, ExecInterface callback) throws IOException, HoareException, NoRuleException, LexerException {
 			_node = node;
 			_nestDepth = nestDepth;
 			_grammar = grammar;
 			_preCondMap = preCondMap;
 			_postCondMap = postCondMap;
+			_currentNodeP = currentNodeP;
+			_currentHoareNodeP = currentHoareNodeP;
+			_actionInterface = actionInterface;
 			_callback = callback;
 			
 			ExecInterface childCallback = new ExecInterface() {
@@ -464,7 +548,7 @@ public class Hoare {
 			};
 			
 			for (HoareNode child : node.getChildren()) {
-				_execChain.add(new Executer(child, nestDepth + 1, _grammar, preCondMap, postCondMap, childCallback));
+				_execChain.add(new Executer(child, nestDepth + 1, _grammar, _preCondMap, _postCondMap, _currentNodeP, _currentHoareNodeP, _actionInterface, childCallback));
 			}
 			
 			_execChain.add(this);
@@ -478,8 +562,8 @@ public class Hoare {
 	
 	public void exec() throws HoareException, LexerException, IOException, ParserException {
 		System.err.println("hoaring...");
-
-		Vector<HoareNode> children = collectChildren(_tree.getRoot());
+System.out.println("exec with " + _syntaxTreeP.get().hashCode());
+		Vector<HoareNode> children = collectChildren(_syntaxTreeP.get().getRoot());
 
 		if (children.isEmpty()) {
 			System.err.println("no hoareBlocks");
@@ -488,14 +572,16 @@ public class Hoare {
 			
 			for (HoareNode child : children) {
 				if (children.lastElement().equals(child)) {
-					_execChain.add(new Executer(child, 0, _grammar, _preCondMap, _postCondMap, new ExecInterface() {
+					_execChain.add(new Executer(child, 0, _grammar, _preCondMapP, _postCondMapP, _currentNodeP, _currentHoareNodeP, _actionInterface, new ExecInterface() {
 						@Override
 						public void finished() throws HoareException, NoRuleException, LexerException, IOException {
 							System.err.println("hoaring finished");
+							
+							_currentHoareNodeP.set(null);
 						}
 					}));
 				} else {
-					_execChain.add(new Executer(child, 0, _grammar, _preCondMap, _postCondMap, new ExecInterface() {
+					_execChain.add(new Executer(child, 0, _grammar, _preCondMapP, _postCondMapP, _currentNodeP, _currentHoareNodeP, _actionInterface, new ExecInterface() {
 						@Override
 						public void finished() throws IOException, HoareException, LexerException, ParserException {
 							_execChainIt.next().exec();
@@ -510,15 +596,18 @@ public class Hoare {
 		}
 	}
 	
-	public Hoare(ObjectProperty<SyntaxTree> tree, ObjectProperty<ObservableMap<SyntaxTreeNode, HoareCond>> preCondMap, ObjectProperty<ObservableMap<SyntaxTreeNode, HoareCond>> postCondMap) throws Exception {
-		_tree = tree.get();
-		_preCondMap = preCondMap.get();
-		_postCondMap = postCondMap.get();
+	public Hoare(ObjectProperty<SyntaxTree> syntaxTreeP, ObjectProperty<ObservableMap<SyntaxTreeNode, HoareCond>> preCondMap, ObjectProperty<ObservableMap<SyntaxTreeNode, HoareCond>> postCondMap, ObjectProperty<SyntaxTreeNode> currentNodeP, ObjectProperty<SyntaxTreeNode> currentHoareNodeP, ActionInterface actionInterface) throws Exception {
+		_syntaxTreeP = syntaxTreeP;
+		_preCondMapP = preCondMap.get();
+		_postCondMapP = postCondMap.get();
+		_currentNodeP = currentNodeP;
+		_currentHoareNodeP = currentHoareNodeP;
+		_actionInterface = actionInterface;
 
-		if (_tree == null) throw new Exception("no syntaxTree");
-		if (_preCondMap == null) throw new Exception("no preCondMap");
-		if (_postCondMap == null) throw new Exception("no postCondMap");
+		if (_syntaxTreeP == null) throw new Exception("no syntaxTree");
+		if (_preCondMapP == null) throw new Exception("no preCondMap");
+		if (_postCondMapP == null) throw new Exception("no postCondMap");
 		
-		_grammar = (HoareWhileGrammar) _tree.getGrammar();
+		_grammar = (HoareWhileGrammar) _syntaxTreeP.get().getGrammar();
 	}
 }

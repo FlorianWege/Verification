@@ -19,6 +19,10 @@ public class Exp {
 		}
 	}
 	
+	public String synthesize() {
+		return _base.synthesize();
+	}
+	
 	public static Exp fromString(String s) throws ParserException, LexerException {
 		ExpGrammar expGrammar = new ExpGrammar();
 		

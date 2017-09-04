@@ -4,12 +4,12 @@ import core.structures.Terminal;
 import core.structures.NonTerminal;
 
 public class HoareWhileGrammar extends WhileGrammar {
-	public final Terminal terminal_hoare_pre;
-	public final Terminal terminal_hoare_post;
+	public final Terminal TERMINAL_HOARE_PRE;
+	public final Terminal TERMINAL_HOARE_POST;
 	
-	public final NonTerminal nonTerminal_hoare_block;
-	public final NonTerminal nonTerminal_hoare_pre;
-	public final NonTerminal nonTerminal_hoare_post;
+	public final NonTerminal NON_TERMINAL_HOARE_BLOCK;
+	public final NonTerminal NON_TERMINAL_HOARE_PRE;
+	public final NonTerminal NON_TERMINAL_HOARE_POST;
 	
 	public final HoareExpGrammar _hoareExpGrammar;
 	
@@ -21,23 +21,23 @@ public class HoareWhileGrammar extends WhileGrammar {
 		merge(_hoareExpGrammar);
 		
 		//lexer rules
-		terminal_hoare_pre = createTerminal("HOARE_PRE");
-		terminal_hoare_post = createTerminal("HOARE_POST");
+		TERMINAL_HOARE_PRE = createTerminal("HOARE_PRE");
+		TERMINAL_HOARE_POST = createTerminal("HOARE_POST");
 
-		terminal_hoare_pre.addRule("PRE");
+		TERMINAL_HOARE_PRE.addRule("PRE");
 
-		terminal_hoare_post.addRule("POST");
+		TERMINAL_HOARE_POST.addRule("POST");
 
 		//parser rules
-		nonTerminal_hoare_pre = createNonTerminal("hoare_pre");
-		nonTerminal_hoare_post = createNonTerminal("hoare_post");
-		nonTerminal_hoare_block = createNonTerminal("hoare_block");
+		NON_TERMINAL_HOARE_PRE = createNonTerminal("hoare_pre");
+		NON_TERMINAL_HOARE_POST = createNonTerminal("hoare_post");
+		NON_TERMINAL_HOARE_BLOCK = createNonTerminal("hoare_block");
 		
-		createRule(nonTerminal_hoare_pre, "HOARE_PRE hoare_exp");
+		createRule(NON_TERMINAL_HOARE_PRE, "HOARE_PRE hoare_exp");
 		
-		createRule(nonTerminal_hoare_post, "HOARE_POST hoare_exp");
+		createRule(NON_TERMINAL_HOARE_POST, "HOARE_POST hoare_exp");
 
-		createRule(nonTerminal_hoare_block, "hoare_pre prog hoare_post");
+		createRule(NON_TERMINAL_HOARE_BLOCK, "hoare_pre prog hoare_post");
 		
 		//extend while
 		createRule(NON_TERMINAL_PROG, "hoare_block prog'");

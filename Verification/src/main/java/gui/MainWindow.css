@@ -1,8 +1,0 @@
-.list-cell {
-	-fx-cell-size: 25px;
-}
-
-.list-cell:empty {
-	-fx-cell-size: white;
-	-fx-cell-size: 0px;
-}

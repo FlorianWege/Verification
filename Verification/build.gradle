@@ -10,6 +10,7 @@
 apply plugin: 'java'
 apply plugin: 'java-library'
 apply plugin: 'eclipse'
+apply plugin: 'idea'
 
 // In this section you declare where to find the dependencies of your project
 repositories {
@@ -33,3 +34,20 @@ dependencies {
     testImplementation 'junit:junit:4.12'
 }
 
+allprojects {
+    apply plugin: 'idea'
+    idea {
+        module {
+            inheritOutputDirs = true
+        }
+    }
+}
+
+sourceSets {
+    main {
+        resources {
+            srcDirs = ["src/main/java","src/main/resources"]
+            includes = ["**/*.fxml","**/*.txt","**/*.png","**/*.css"]
+        }
+    }
+}

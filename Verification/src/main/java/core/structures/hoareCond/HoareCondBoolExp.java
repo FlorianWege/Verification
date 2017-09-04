@@ -1,28 +1,28 @@
 package core.structures.hoareCond;
 
 import core.SyntaxTreeNode;
+import core.structures.BoolExp;
 import core.structures.Terminal;
 
-public class HoareCondBoolExpr extends HoareCond {
-	private SyntaxTreeNode _base = null;
+public class HoareCondBoolExp extends HoareCond {
+	private BoolExp _base = null;
 	
 	@Override
 	public String toString() {
-		//return _base.toString();
-		return _base.synthesize();
+		return _base.getBase().synthesize();
 	}
 	
 	@Override
 	public HoareCond copy() {
-		return new HoareCondBoolExpr(_base.copy());
+		return new HoareCondBoolExp(_base.copy());
 	}
 	
 	@Override
 	public void replace(Terminal lexerRule, String var, SyntaxTreeNode exp) {
-		_base.replace(lexerRule, var, exp);
+		_base.getBase().replace(lexerRule, var, exp);
 	}
 	
-	public HoareCondBoolExpr(SyntaxTreeNode base) {
+	public HoareCondBoolExp(BoolExp base) {
 		super();
 		
 		_base = base;

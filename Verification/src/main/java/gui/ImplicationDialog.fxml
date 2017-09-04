@@ -4,12 +4,20 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+<?import org.fxmisc.richtext.StyleClassedTextArea?>
 
-
-<VBox xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8.0.102">
+<VBox xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
    <children>
-      <Label fx:id="_label_question" alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="50.0" text="Label" textAlignment="CENTER" VBox.vgrow="ALWAYS" />
+      <Label alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="50.0" text="Implication Check" textAlignment="CENTER" VBox.vgrow="ALWAYS">
+         <font>
+            <Font name="System Bold" size="18.0" />
+         </font></Label>
+      <Pane VBox.vgrow="ALWAYS" />
+      <StyleClassedTextArea fx:id="_textArea" disable="true" />
+      <Pane VBox.vgrow="ALWAYS" />
       <HBox prefWidth="150.0">
          <children>
             <Button fx:id="_button_yes" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Yes" HBox.hgrow="ALWAYS">

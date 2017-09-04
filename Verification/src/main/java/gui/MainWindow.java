@@ -5,20 +5,14 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Vector;
 
-import core.Hoare.HoareException;
-import core.Lexer.LexerException;
-import core.Parser.ParserException;
 import gui.CloseSaveDialog.Result;
 import gui.FileTab.AutoParseException;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -71,6 +65,8 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 	private CheckMenuItem _menu_parse_auto;
 	@FXML
 	private MenuItem _menu_hoare;
+	@FXML
+	private MenuItem _menu_hoare_abort;
 	
 	public CheckMenuItem getMenuParseAuto() {
 		return _menu_parse_auto;
@@ -86,6 +82,8 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 	private Button _button_parse;
 	@FXML
 	private Button _button_hoare;
+	@FXML
+	private Button _button_hoare_abort;
 
 	private Stage _stage;
 
@@ -171,10 +169,17 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 	}
 	
 	private void addButtonAccelerator(Button button, KeyCodeCombination keyCodeCombination) {
+		assert(button != null);
+		assert(keyCodeCombination != null);
+		
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
-				button.getTooltip().setText(button.getTooltip().getText() + " " + "(" + keyCodeCombination + ")");
+				Tooltip tooltip = button.getTooltip();
+				
+				assert(tooltip != null);
+				
+				tooltip.setText(tooltip.getText() + " " + "(" + keyCodeCombination + ")");
 				
 				button.getScene().getAccelerators().put(keyCodeCombination, new Runnable() {
 					@Override
@@ -210,16 +215,128 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 		}
 	}
 	
+	private void initParse() {
+		_button_parse.setTooltip(new Tooltip("Parse"));
+		
+		_button_parse.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				try {
+					Tab tab = _tabPane_files.getSelectionModel().getSelectedItem();
+					
+					if (tab instanceof FileTab) {
+						((FileTab) tab).parse();
+					}
+				} catch (Exception e) {
+					ErrorUtil.logEFX(e);
+				}
+			}
+		});
+
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				addButtonAccelerator(_button_parse, new KeyCodeCombination(KeyCode.P, KeyCombination.CONTROL_DOWN));
+			}
+		});
+		
+		updateParse();
+	}
+	
 	private void updateHoare() {
 		Tab tab = _tabPane_files.getSelectionModel().getSelectedItem();
+		
+		_button_hoare.managedProperty().bind(_button_hoare.visibleProperty());
+		_button_hoare_abort.managedProperty().bind(_button_hoare_abort.visibleProperty());
 		
 		if ((tab == null) || !(tab instanceof FileTab)) {
 			_button_hoare.setDisable(true);
 			_menu_hoare.setDisable(true);
+			_button_hoare_abort.setVisible(false);
+			_menu_hoare_abort.setVisible(false);
 		} else {
-			_button_hoare.setDisable(((FileTab) tab).isHoared());
-			_menu_hoare.setDisable(((FileTab) tab).isHoared());
+			_button_hoare.setDisable(false);
+			_menu_hoare.setDisable(false);
+			
+			FileTab fileTab = (FileTab) tab;
+			
+			_button_hoare.setVisible(!fileTab.isHoaring());
+			_button_hoare_abort.setVisible(fileTab.isHoaring());
+			_menu_hoare.setVisible(!fileTab.isHoaring());
+			_menu_hoare_abort.setVisible(fileTab.isHoaring());
 		}
+	}
+	
+	private void initHoare() {
+		_button_hoare.setTooltip(new Tooltip("Verify"));
+		_button_hoare_abort.setTooltip(new Tooltip("Abort Verification"));
+		
+		_button_hoare.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				try {
+					Tab tab = _tabPane_files.getSelectionModel().getSelectedItem();
+					
+					if (tab instanceof FileTab) {
+						((FileTab) tab).hoare();
+					}
+				} catch (Exception e) {
+					ErrorUtil.logEFX(e);
+				}
+			}
+		});
+		_button_hoare_abort.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				try {
+					Tab tab = _tabPane_files.getSelectionModel().getSelectedItem();
+					
+					if (tab instanceof FileTab) {
+						((FileTab) tab).hoare_abort();
+					}
+				} catch (Exception e) {
+					ErrorUtil.logEFX(e);
+				}
+			}
+		});
+		_menu_hoare.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				try {
+					Tab tab = _tabPane_files.getSelectionModel().getSelectedItem();
+					
+					if (tab instanceof FileTab) {
+						((FileTab) tab).hoare();
+					}
+				} catch (Exception e) {
+					ErrorUtil.logEFX(e);
+				}
+			}
+		});
+		_menu_hoare.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				try {
+					Tab tab = _tabPane_files.getSelectionModel().getSelectedItem();
+					
+					if (tab instanceof FileTab) {
+						((FileTab) tab).hoare_abort();
+					}
+				} catch (Exception e) {
+					ErrorUtil.logEFX(e);
+				}
+			}
+		});
+		
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				addButtonAccelerator(_button_hoare, new KeyCodeCombination(KeyCode.H, KeyCombination.CONTROL_DOWN));
+				addButtonAccelerator(_button_hoare_abort, new KeyCodeCombination(KeyCode.H, KeyCombination.CONTROL_DOWN));
+			}
+		});
+		
+		updateHoare();
 	}
 	
 	private void saveFileTab(FileTab tab) throws IOException {
@@ -307,9 +424,6 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 			@Override
 			public void isHoaredChanged() {
 				try {
-					if (tab.equals(_tabPane_files.getSelectionModel().getSelectedItem())) {
-						_button_hoare.setDisable(tab.isHoared());
-					}
 					updateHoare();
 				} catch (Exception e) {
 					ErrorUtil.logEFX(e);
@@ -353,8 +467,7 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 		}
 	}
 	
-	@Override
-	public void initialize(URL location, ResourceBundle resources) {
+	private void initMenu() {
 		_diag_open.setInitialDirectory(_savesDir);
 		_diag_save.setInitialDirectory(_savesDir);
 		
@@ -383,6 +496,8 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 					tab.setName(String.format("Untitled " + c, c));
 
 					addFileTab(tab);
+					
+					tab.select();
 				} catch (Exception e) {
 					ErrorUtil.logEFX(e);
 				}
@@ -414,11 +529,15 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 								FileTab tab = new FileTab(file, false, _stage.getScene().getAccelerators());
 								
 								addFileTab(tab);
+								
+								tab.select();
 							} catch (IOException e) {
 								throw new Exception("path already opened");
 							}
 						} else {
 							_tabPane_files.getSelectionModel().select(oldTab);
+							
+							oldTab.select();
 							
 							throw new Exception("path already opened");
 						}
@@ -470,21 +589,6 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 			});
 		}
 		
-		/*_listView_files.setItems(fileItems);
-		_listView_files.setPrefHeight((_listView_files.getItems().size() + 1) * 25);
-		_listView_files.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<FileItem>() {
-			@Override
-			public void changed(ObservableValue<? extends FileItem> obs, FileItem oldVal, FileItem newVal) {
-				try {
-					String s = IOUtil.getResourceAsString(newVal.getFile().toString());
-					
-					_textArea_code.clear();
-					_textArea_code.insertText(0, s);
-				} catch (IOException | URISyntaxException e) {
-					e.printStackTrace();
-				}
-			}
-		});*/
 		_menu_save.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {
@@ -587,43 +691,15 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 				}
 			}
 		});
+		
 		updateMenu();
-		
-		_button_parse.setTooltip(new Tooltip("parse"));
-		
-		_button_parse.setOnAction(new EventHandler<ActionEvent>() {
-			@Override
-			public void handle(ActionEvent event) {
-				try {
-					Tab tab = _tabPane_files.getSelectionModel().getSelectedItem();
-					
-					if (tab instanceof FileTab) {
-						((FileTab) tab).parse();
-					}
-				} catch (Exception e) {
-					ErrorUtil.logEFX(e);
-				}
-			}
-		});
-		updateParse();
-		
-		_button_hoare.setTooltip(new Tooltip("hoare"));
-		
-		_button_hoare.setOnAction(new EventHandler<ActionEvent>() {
-			@Override
-			public void handle(ActionEvent event) {
-				try {
-					Tab tab = _tabPane_files.getSelectionModel().getSelectedItem();
-					
-					if (tab instanceof FileTab) {
-						((FileTab) tab).hoare();
-					}
-				} catch (Exception e) {
-					ErrorUtil.logEFX(e);
-				}
-			}
-		});
-		updateHoare();
+	}
+	
+	@Override
+	public void initialize(URL location, ResourceBundle resources) {
+		initMenu();
+		initParse();
+		initHoare();
 		
 		try {
 			_console = new Console();
@@ -632,14 +708,6 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 		} catch (IOException e) {
 			ErrorUtil.logEFX(e);
 		}
-		
-		Platform.runLater(new Runnable() {
-			@Override
-			public void run() {
-				addButtonAccelerator(_button_parse, new KeyCodeCombination(KeyCode.P, KeyCombination.CONTROL_DOWN));
-				addButtonAccelerator(_button_hoare, new KeyCodeCombination(KeyCode.H, KeyCombination.CONTROL_DOWN));
-			}
-		});
 	}
 
 	@Override

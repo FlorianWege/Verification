@@ -1,5 +1,7 @@
 package core;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Vector;
 import java.util.function.UnaryOperator;
 
@@ -87,9 +89,14 @@ public class SyntaxTreeNode {
 		StringBuilder sb = new StringBuilder();
 		
 		for (SyntaxTreeNode child : getChildren()) {
+			String childS = child.synthesize();
+			
+			if (sb.length() != 0 && !childS.isEmpty()) sb.append(" ");
+			
 			boolean addParentheses = false;
 			
 			if (child.getSymbol().equals("exp")) {
+				
 				SyntaxTreeNode erest_child = child.getChildren().get(1);
 				
 				if (erest_child.getChildren().size() > 1) {
@@ -103,12 +110,22 @@ public class SyntaxTreeNode {
 			
 			if (addParentheses) sb.append("(");
 			
-			sb.append(child.synthesize());
+			sb.append(childS);
 			
 			if (addParentheses) sb.append(")");
 		}
 		
 		return sb.toString();
+	}
+	
+	public List<Token> tokenize() {
+		List<Token> ret = new ArrayList<>();
+		
+		for (SyntaxTreeNode child : getChildren()) {
+			ret.addAll(child.tokenize());
+		}
+		
+		return ret;
 	}
 	
 	public SyntaxTreeNode copy() {

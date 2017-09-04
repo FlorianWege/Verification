@@ -1,5 +1,9 @@
 package core;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import core.structures.Terminal;
 
 public class SyntaxTreeNodeTerminal extends SyntaxTreeNode {
@@ -27,6 +31,10 @@ public class SyntaxTreeNodeTerminal extends SyntaxTreeNode {
 	@Override
 	public void print(int nestDepth) {
 		System.out.println(new String(new char[nestDepth]).replace('\0', '\t') + toString());
+	}
+	
+	public List<Token> tokenize() {
+		return (_token != null) ? Arrays.asList(_token) : new ArrayList<>();
 	}
 	
 	@Override

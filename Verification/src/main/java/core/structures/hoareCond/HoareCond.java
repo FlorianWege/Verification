@@ -35,14 +35,4 @@ public abstract class HoareCond {
 	public HoareCond() {
 		
 	}
-	
-	public static HoareCond fromString(String s) throws LexerException, ParserException {
-		BoolExpGrammar boolExpGrammar = new BoolExpGrammar();
-		
-		Parser parser = new Parser(boolExpGrammar);
-		
-		SyntaxTree tree = parser.parse(new Lexer(boolExpGrammar).tokenize(s).getTokens());
-		
-		return new HoareCondBoolExpr(tree.getRoot());
-	}
 }

@@ -22,18 +22,22 @@ public class WhileGrammar extends BoolExpGrammar {
 	
 	public final NonTerminal NON_TERMINAL_PROG;
 	public final NonTerminal NON_TERMINAL_PROG_;
+	public final NonTerminal NON_TERMINAL_CMD;
 	public final NonTerminal NON_TERMINAL_SKIP;
 	public final NonTerminal NON_TERMINAL_ASSIGN;
 	public final NonTerminal NON_TERMINAL_SELECTION;
 	public final NonTerminal NON_TERMINAL_SELECTION_ELSE;
 	public final NonTerminal NON_TERMINAL_WHILE;
 	
-	public final ParserRule RULE_PROG_SKIP;
-	public final ParserRule RULE_PROG_ASSIGN;
-	public final ParserRule RULE_PROG_SELECTION;
-	public final ParserRule RULE_PROG_WHILE;
+	public final ParserRule RULE_PROG_CMD_PROG_;
 	
-	public final ParserRule RULE_PROG__PROG;
+	public final ParserRule RULE_CMD_SKIP;
+	public final ParserRule RULE_CMD_ASSIGN;
+	public final ParserRule RULE_CMD_SELECTION;
+	public final ParserRule RULE_CMD_WHILE;
+	
+	public final ParserRule RULE_PROG__SEP_CMD_PROG_;
+	
 	public final ParserRule RULE_SKIP;
 	public final ParserRule RULE_ASSIGN;
 	public final ParserRule RULE_SELECTION;
@@ -77,18 +81,21 @@ public class WhileGrammar extends BoolExpGrammar {
 		//parser rules
 		NON_TERMINAL_PROG = createNonTerminal("prog");
 		NON_TERMINAL_PROG_ = createNonTerminal("prog'");
+		NON_TERMINAL_CMD = createNonTerminal("cmd");
 		NON_TERMINAL_SKIP = createNonTerminal("skip");
 		NON_TERMINAL_ASSIGN = createNonTerminal("assign");
 		NON_TERMINAL_SELECTION = createNonTerminal("selection");
 		NON_TERMINAL_SELECTION_ELSE = createNonTerminal("selection_else");
 		NON_TERMINAL_WHILE = createNonTerminal("while");
 		
-		RULE_PROG_SKIP = createRule(NON_TERMINAL_PROG, "skip prog'");
-		RULE_PROG_ASSIGN = createRule(NON_TERMINAL_PROG, "assign prog'");
-		RULE_PROG_SELECTION = createRule(NON_TERMINAL_PROG, "selection prog'");
-		RULE_PROG_WHILE = createRule(NON_TERMINAL_PROG, "while prog'");
+		RULE_PROG_CMD_PROG_ = createRule(NON_TERMINAL_PROG, "cmd prog'");
 		
-		RULE_PROG__PROG = createRule(NON_TERMINAL_PROG_, "STATEMENT_SEPARATOR prog");
+		RULE_CMD_SKIP = createRule(NON_TERMINAL_CMD, "skip");
+		RULE_CMD_ASSIGN = createRule(NON_TERMINAL_CMD, "assign");
+		RULE_CMD_SELECTION = createRule(NON_TERMINAL_CMD, "selection");
+		RULE_CMD_WHILE = createRule(NON_TERMINAL_CMD, "while");
+		
+		RULE_PROG__SEP_CMD_PROG_ = createRule(NON_TERMINAL_PROG_, "STATEMENT_SEPARATOR cmd prog'");
 		createRule(NON_TERMINAL_PROG_, Terminal.EPSILON);
 		
 		RULE_SKIP = createRule(NON_TERMINAL_SKIP, "OP_SKIP");
