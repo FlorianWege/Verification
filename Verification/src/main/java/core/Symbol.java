@@ -1,7 +1,7 @@
 package core;
 
 public abstract class Symbol {
-	protected SymbolKey _key;
+	private SymbolKey _key;
 	
 	public SymbolKey getKey() {
 		return _key;

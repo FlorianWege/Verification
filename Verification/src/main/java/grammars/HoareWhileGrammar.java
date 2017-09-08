@@ -40,9 +40,16 @@ public class HoareWhileGrammar extends WhileGrammar {
 		createRule(NON_TERMINAL_HOARE_BLOCK, "hoare_pre prog hoare_post");
 		
 		//extend while
-		createRule(NON_TERMINAL_PROG, "hoare_block prog'");
+		//createRule(NON_TERMINAL_PROG, "hoare_block prog'");
+		createRule(NON_TERMINAL_CMD, "hoare_block");
 		
 		//finalize
-		updatePredictiveParserTable();
+		updateParserTable();
+	}
+
+	private static HoareWhileGrammar _instance = new HoareWhileGrammar();
+
+	public static HoareWhileGrammar getInstance() {
+		return _instance;
 	}
 }

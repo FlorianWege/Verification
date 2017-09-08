@@ -5,7 +5,7 @@ import core.structures.NonTerminal;
 import core.structures.ParserRule;
 
 public class WhileGrammar extends BoolExpGrammar {
-	public final Terminal TERMINAL_STATEMENT_SEPARATOR;
+	public final Terminal TERMINAL_STATEMENT_SEP;
 	
 	public final Terminal TERMINAL_OP_SKIP;
 	
@@ -25,7 +25,7 @@ public class WhileGrammar extends BoolExpGrammar {
 	public final NonTerminal NON_TERMINAL_CMD;
 	public final NonTerminal NON_TERMINAL_SKIP;
 	public final NonTerminal NON_TERMINAL_ASSIGN;
-	public final NonTerminal NON_TERMINAL_SELECTION;
+	public final NonTerminal NON_TERMINAL_ALT;
 	public final NonTerminal NON_TERMINAL_SELECTION_ELSE;
 	public final NonTerminal NON_TERMINAL_WHILE;
 	
@@ -47,7 +47,7 @@ public class WhileGrammar extends BoolExpGrammar {
 	public WhileGrammar() {
 		super();
 		
-		TERMINAL_STATEMENT_SEPARATOR = createTerminal("STATEMENT_SEPARATOR");
+		TERMINAL_STATEMENT_SEP = createTerminal("STATEMENT_SEP");
 		TERMINAL_OP_SKIP = createTerminal("OP_SKIP");
 		TERMINAL_OP_ASSIGN = createTerminal("OP_ASSIGN");
 		TERMINAL_IF = createTerminal("IF");
@@ -58,7 +58,8 @@ public class WhileGrammar extends BoolExpGrammar {
 		TERMINAL_DO = createTerminal("DO");
 		TERMINAL_OD = createTerminal("OD");
 		
-		TERMINAL_STATEMENT_SEPARATOR.addRule(";");
+		TERMINAL_STATEMENT_SEP.addRule(";");
+		TERMINAL_STATEMENT_SEP.setSep();
 		
 		TERMINAL_OP_SKIP.addRule("SKIP");
 		
@@ -84,7 +85,7 @@ public class WhileGrammar extends BoolExpGrammar {
 		NON_TERMINAL_CMD = createNonTerminal("cmd");
 		NON_TERMINAL_SKIP = createNonTerminal("skip");
 		NON_TERMINAL_ASSIGN = createNonTerminal("assign");
-		NON_TERMINAL_SELECTION = createNonTerminal("selection");
+		NON_TERMINAL_ALT = createNonTerminal("selection");
 		NON_TERMINAL_SELECTION_ELSE = createNonTerminal("selection_else");
 		NON_TERMINAL_WHILE = createNonTerminal("while");
 		
@@ -95,14 +96,14 @@ public class WhileGrammar extends BoolExpGrammar {
 		RULE_CMD_SELECTION = createRule(NON_TERMINAL_CMD, "selection");
 		RULE_CMD_WHILE = createRule(NON_TERMINAL_CMD, "while");
 		
-		RULE_PROG__SEP_CMD_PROG_ = createRule(NON_TERMINAL_PROG_, "STATEMENT_SEPARATOR cmd prog'");
+		RULE_PROG__SEP_CMD_PROG_ = createRule(NON_TERMINAL_PROG_, "STATEMENT_SEP cmd prog'");
 		createRule(NON_TERMINAL_PROG_, Terminal.EPSILON);
 		
 		RULE_SKIP = createRule(NON_TERMINAL_SKIP, "OP_SKIP");
 		
 		RULE_ASSIGN = createRule(NON_TERMINAL_ASSIGN, "ID OP_ASSIGN exp");
 
-		RULE_SELECTION = createRule(NON_TERMINAL_SELECTION, "IF bool_exp THEN prog selection_else FI");
+		RULE_SELECTION = createRule(NON_TERMINAL_ALT, "IF bool_exp THEN prog selection_else FI");
 		
 		RULE_SELECTION_ELSE = createRule(NON_TERMINAL_SELECTION_ELSE, "ELSE prog");
 		createRule(NON_TERMINAL_SELECTION_ELSE, Terminal.EPSILON);
@@ -112,6 +113,6 @@ public class WhileGrammar extends BoolExpGrammar {
 		//finalize
 		setStartSymbol(NON_TERMINAL_PROG);
 		
-		updatePredictiveParserTable();
+		updateParserTable();
 	}
 }

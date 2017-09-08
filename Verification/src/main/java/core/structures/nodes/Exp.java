@@ -1,17 +1,18 @@
-package core.structures;
+package core.structures.nodes;
 
 import core.Lexer;
 import core.Lexer.LexerException;
 import core.Parser;
 import core.Parser.ParserException;
+import core.SyntaxNode;
 import core.SyntaxTree;
-import core.SyntaxTreeNode;
 import grammars.ExpGrammar;
+import grammars.HoareWhileGrammar;
 
-public class Exp {
-	private SyntaxTreeNode _base;
+public class Exp extends SyntaxNodeSpec {
+	private SyntaxNode _base;
 	
-	public SyntaxTreeNode getBaseEx() {
+	public SyntaxNode getBaseEx() {
 		try {
 			return fromString("(" + _base.synthesize() + ")")._base;
 		} catch (ParserException | LexerException e) {
@@ -33,7 +34,9 @@ public class Exp {
 		return new Exp(tree.getRoot());
 	}
 	
-	public Exp(SyntaxTreeNode base) {
+	public Exp(SyntaxNode base) {
+		if (!base.getSymbol().equals(HoareWhileGrammar.getInstance().NON_TERMINAL_EXP)) throw new RuntimeException("wrong node " + base);
+
 		_base = base;
 	}
 }

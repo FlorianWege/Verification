@@ -10,8 +10,9 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-import gui.MainWindow;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -26,9 +27,13 @@ public class IOUtil {
 		
 		return new String(bytes);
 	}
-	
+
+	private static Map<File, URL> _urlMap = new LinkedHashMap<>();
+
 	public static Scene inflateFXML(File file, Object controller) throws IOException {
-		URL url = MainWindow.class.getResource(file.toString());
+		if (!_urlMap.containsKey(file)) _urlMap.put(file, controller.getClass().getResource(file.toString()));
+
+		URL url = _urlMap.get(file);
 		
 		if (url == null) throw new IOException(file.toString() + " not found");
 		
@@ -46,16 +51,12 @@ public class IOUtil {
 			}));
 			
 			loader.load();
-		} catch (Exception e) {
-			throw e;
 		} finally {
 			System.setErr(errStream);
 		}
 		
 		Parent root = loader.getRoot();
 		
-		Scene scene = new Scene(root);
-		
-		return scene;
+		return new Scene(root);
 	}
 }

@@ -1,16 +1,15 @@
 package gui;
 
+import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.control.TextArea;
+import util.IOUtil;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
-
-import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.control.TextArea;
-import util.IOUtil;
 
 public class Console implements Initializable, JavaFXMain.PrintInterface {
 	@FXML
@@ -23,9 +22,7 @@ public class Console implements Initializable, JavaFXMain.PrintInterface {
 	}
 	
 	public Console() throws IOException {
-		Scene scene = IOUtil.inflateFXML(new File("Console.fxml"), this);
-		
-		_root = scene.getRoot();
+		_root = IOUtil.inflateFXML(new File("Console.fxml"), this).getRoot();
 	}
 
 	@Override
@@ -41,7 +38,7 @@ public class Console implements Initializable, JavaFXMain.PrintInterface {
 		_textArea_log.setVisible(_shown);
 	}
 	
-	public void setVisible(boolean show) {
+	void setVisible(boolean show) {
 		_shown = show;
 
 		updateVisibility();

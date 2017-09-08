@@ -68,10 +68,6 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 	@FXML
 	private MenuItem _menu_hoare_abort;
 	
-	public CheckMenuItem getMenuParseAuto() {
-		return _menu_parse_auto;
-	}
-	
 	@FXML
 	private SplitPane _split_main;
 	
@@ -93,11 +89,11 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 	private Console _console;
 
 	public interface ActionInterface {
-		public void parse() throws Exception;
-		public void hoare() throws Exception;
+		void parse() throws Exception;
+		void hoare() throws Exception;
 	}
 
-	public MainWindow(Stage stage) throws IOException {
+	MainWindow(Stage stage) throws IOException {
 		_stage = stage;
 		
 		_stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
@@ -131,15 +127,16 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 		_stage.getScene().getStylesheets().add(getClass().getResource("Highlight.css").toExternalForm());
 	}
 	
-	private Collection<File> files = Arrays.asList(new File[] {
+	private Collection<File> files = Arrays.asList(
+		new File("Alt.txt"),
 		new File("Div.txt"),
 		new File("Factorial.txt"),
 		new File("Factorial2.txt"),
 		new File("Euclid.txt"),
 		new File("Assign.txt"),
 		new File("AssignNested.txt"),
-		new File("Power.txt"),
-	});
+		new File("Power.txt")
+	);
 
 	private double _split_main_dividerPos = 0.8D;
 
@@ -347,7 +344,7 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 		}
 	}
 	
-	boolean _closeWantsCancel = false;
+	private boolean _closeWantsCancel = false;
 	
 	private void closeTab(Tab tab) throws IOException {
 		_tabPane_files.getSelectionModel().select(tab);
@@ -507,7 +504,7 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 			@Override
 			public void handle(ActionEvent event) {
 				try {
-					_savesDir.mkdirs();
+					if (!_savesDir.mkdirs()) throw new Exception("could not create " + _savesDir);
 					
 					File file = _diag_open.showOpenDialog(_stage);
 					
@@ -613,7 +610,7 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 						_diag_save.setTitle("Save code");
 						_diag_save.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Text", "*.txt"));
 						
-						_savesDir.mkdirs();
+						if (!_savesDir.mkdirs()) throw new Exception("could not create " + _savesDir);
 						
 						File file = _diag_save.showSaveDialog(_stage);
 						

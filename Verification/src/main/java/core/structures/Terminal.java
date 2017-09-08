@@ -32,7 +32,7 @@ public class Terminal extends Symbol {
 		return toString();
 	}
 	
-	public Set<LexerRule> _rules = new LinkedHashSet<>();
+	private Set<LexerRule> _rules = new LinkedHashSet<>();
 	
 	public Set<LexerRule> getRules() {
 		return _rules;
@@ -43,7 +43,17 @@ public class Terminal extends Symbol {
 	public boolean isSkipped() {
 		return _skip;
 	}
-	
+
+	private boolean _isSep = false;
+
+	public boolean isSep() {
+		return _isSep;
+	}
+
+	public void setSep() {
+		_isSep = true;
+	}
+
 	public Terminal(SymbolKey key, boolean skip) {
 		super(key);
 

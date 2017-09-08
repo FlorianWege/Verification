@@ -1,7 +1,7 @@
 package core.structures.hoareCond;
 
-import core.SyntaxTreeNode;
-import core.structures.BoolExp;
+import core.SyntaxNode;
+import core.structures.nodes.BoolExp;
 import core.structures.Terminal;
 
 public class HoareCondBoolExp extends HoareCond {
@@ -18,7 +18,7 @@ public class HoareCondBoolExp extends HoareCond {
 	}
 	
 	@Override
-	public void replace(Terminal lexerRule, String var, SyntaxTreeNode exp) {
+	public void replace(Terminal lexerRule, String var, SyntaxNode exp) {
 		_base.getBase().replace(lexerRule, var, exp);
 	}
 	

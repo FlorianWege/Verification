@@ -7,32 +7,23 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.ResourceBundle;
-import java.util.Set;
+import java.util.*;
 
+import core.*;
+import gui.hoare.*;
 import org.fxmisc.richtext.CodeArea;
 
-import core.Grammar;
-import core.Hoare;
-import core.Hoare.Executer.AssignInterface;
-import core.Hoare.Executer.CompositionEndInterface;
-import core.Hoare.Executer.CompositionStartInterface;
-import core.Hoare.Executer.CompositionMidInterface;
-import core.Hoare.Executer.SkipInterface;
-import core.Hoare.Executer.ImplicationInterface;
-import core.Hoare.Executer.InvariantInterface;
+import core.Hoare.Executer.Assign_callback;
+import core.Hoare.Executer.CompMerge_callback;
+import core.Hoare.Executer.CompSecond_callback;
+import core.Hoare.Executer.CompFirst_callback;
+import core.Hoare.Executer.Skip_callback;
+import core.Hoare.Executer.LoopAskInv_callback;
 import core.Hoare.HoareException;
-import core.Lexer;
 import core.Lexer.LexerException;
 import core.Lexer.LexerResult;
-import core.Parser;
 import core.Parser.ParserException;
-import core.SyntaxTree;
-import core.SyntaxTreeNode;
-import core.Token;
-import core.structures.Exp;
+import core.structures.nodes.Exp;
 import core.structures.hoareCond.HoareCond;
 import grammars.HoareWhileGrammar;
 import javafx.application.Platform;
@@ -42,14 +33,9 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableMap;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
@@ -89,7 +75,7 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 	@FXML
 	private CheckBox _checkBox_syntaxTree_filterEps;
 	@FXML
-	private TreeView<SyntaxTreeNode> _treeView_syntaxTreeBase;
+	private TreeView<SyntaxNode> _treeView_syntaxTreeBase;
 	
 	@FXML
 	private CheckBox _checkBox_hoare_auto;
@@ -101,18 +87,18 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 	
 	private SyntaxTreeView _syntaxTreeView;
 	private ObjectProperty<SyntaxTree> _syntaxTree = new SimpleObjectProperty<>();
-	private ObjectProperty<SyntaxTreeNode> _currentNodeP = new SimpleObjectProperty<>();
-	private ObjectProperty<SyntaxTreeNode> _currentHoareNodeP = new SimpleObjectProperty<>();
+	private ObjectProperty<SyntaxNode> _currentNodeP = new SimpleObjectProperty<>();
+	private ObjectProperty<SyntaxNode> _currentHoareNodeP = new SimpleObjectProperty<>();
 	
-	private ObjectProperty<ObservableMap<SyntaxTreeNode, HoareCond>> _preCondMap = new SimpleObjectProperty<>();
-	private ObjectProperty<ObservableMap<SyntaxTreeNode, HoareCond>> _postCondMap = new SimpleObjectProperty<>();
+	private ObjectProperty<ObservableMap<SyntaxNode, HoareCond>> _preCondMap = new SimpleObjectProperty<>();
+	private ObjectProperty<ObservableMap<SyntaxNode, HoareCond>> _postCondMap = new SimpleObjectProperty<>();
 	private SyntaxChart _syntaxChart;
 	private Map<KeyCombination, Runnable> _accelerators;
 	
-	private Parent _root;
+	private Scene _scene;
 	
-	public Node getRoot() {
-		return _root;
+	public Scene getScene() {
+		return _scene;
 	}
 	
 	public interface ActionListener {
@@ -281,13 +267,11 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 		
 		setFile(file, isInternalFile);
 		
-		Scene scene = IOUtil.inflateFXML(new File("FileTab.fxml"), this);
+		_scene = IOUtil.inflateFXML(new File("FileTab.fxml"), this);
 		
-		scene.getStylesheets().add(getClass().getResource("ExtendedCodeArea.css").toExternalForm());
+		_scene.getStylesheets().add(getClass().getResource("ExtendedCodeArea.css").toExternalForm());
 		
-		_root = scene.getRoot();
-		
-		setContent(_root);
+		setContent(_scene.getRoot());
 	}
 
 	public FileTab(Map<KeyCombination, Runnable> accelerators) throws IOException {
@@ -307,7 +291,9 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		try {
-			_codeArea = new ExtendedCodeArea(_textArea_code, _grammar);
+			_codeArea = new ExtendedCodeArea(_textArea_code);
+
+			_codeArea.setCurrentNodeP(_currentNodeP, _currentHoareNodeP);
 	
 			if (_file != null) {
 				if (_isInternalFile) {
@@ -362,7 +348,7 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 			
 			updateVisibility();
 			
-			new ExtendedCodeArea(_codeArea_hoare, new HoareWhileGrammar());
+			_extendedCodeArea_hoare = new ExtendedCodeArea(_codeArea_hoare);
 		} catch (Exception e) {
 			ErrorUtil.logEFX(e);
 		}
@@ -502,51 +488,40 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 			_textArea_tokens.replaceText(sb.toString());
 			_textArea_tokens.positionCaret(0);
 
-			Platform.runLater(new Runnable() {
-				@Override
-				public void run() {
-					try {
-						Parser parser = new Parser(_grammar);
-						
-						try {
-							_syntaxTree.set(parser.parse(lexerResult.getTokens()));
-						} catch (ParserException e) {
-							
-							System.err.println("PARSER EXCP");
-							
-							setParsed(false);
-							
-							Token token = e.getToken();
-							
-							int pos = (token != null) ? token.getPos() : 0;
-							
-							_textArea_code.positionCaret(pos);
-							_textArea_code.requestFocus();
-							
-							_codeArea.setErrorPos(pos);
-							
-							throw e;
-						}
-					} catch (Exception e) {
-						throwException(e);
-					}
+			try {
+				Parser parser = new Parser(_grammar);
+
+				try {
+					_syntaxTree.set(parser.parse(lexerResult.getTokens()));
+				} catch (ParserException e) {
+					setParsed(false);
+
+					Token token = e.getToken();
+
+					int pos = (token != null) ? token.getPos() : 0;
+
+					_codeArea.setErrorPos(pos, true);
+
+					throw e;
 				}
-			});
+			} catch (Exception e) {
+				throwException(e);
+			}
 		} catch (LexerException e) {
 			setParsed(false);
 			
-			_textArea_code.positionCaret(e.getCurPos());
-			_textArea_code.requestFocus();
-			
-			_codeArea.setErrorPos(e.getCurPos());
+			_codeArea.setErrorPos(e.getCurPos(), true);
 			
 			throw e;
 		}
 	}
 
+	@Override
 	public void hoare() throws Exception {
 		if (isHoaring()) throw new Exception("already in verification process");
-		
+
+		if (!isParsed()) parse();
+
 		if (_syntaxTree == null) throw new Exception("no syntaxTree");
 
 		setHoaring(true);
@@ -571,67 +546,62 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 				private void println_end() {
 					_wlp_printDepth--;
 				}
-				
-				private Parent _root;
-				
-				private void setNode(SyntaxTreeNode node, HoareCond postCond) {
-					_codeArea.setCurrentNode(node);
-					_codeArea_hoare.replaceText(node.synthesize() + " " + postCond.toStringEx());
+
+				private void nodeSynthesize(SyntaxNode node, int nestDepth, StringBuilder sb) {
+					for (SyntaxNode child : node.getChildren()) {
+						if (child instanceof SyntaxNodeTerminal) sb.append(child.synthesize());
+						else {
+							sb.append(StringUtil.repeat("\t", nestDepth));
+						}
+					}
+				}
+
+				private String nodeSynthesize(SyntaxNode node) {
+					StringBuilder sb = new StringBuilder();
+
+					nodeSynthesize(node, 0, sb);
+
+					return sb.toString();
+				}
+
+				private void setNode(SyntaxNode node, HoareCond postCond) {
+					_codeArea_hoare.replaceText(((node != null) ? node.synthesize() : null) + " " + ((postCond != null) ? postCond.toStringEx() : null));
 					_currentNodeP.set(node);
-				}
-				
-				@Override
-				public void requestImplicationDialog(HoareCond a, HoareCond b, ImplicationInterface callback, boolean equal) throws IOException {
-					_root = new ImplicationDialog(a, b, new ImplicationInterface() {
-						@Override
-						public void result(boolean yes) throws HoareException, LexerException, IOException, ParserException {
-							_pane_hoare_dialogHost.getChildren().remove(_root);
-							
-							callback.result(yes);
+
+					/*if (node != null) {
+						for (Token token : node.tokenize()) {
+							System.out.println(token.getText() + ";" + token.getPos());
+							_codeArea_hoare.insertText(token.getPos(), token.getText());
 						}
-					}, false).getRoot();
+					}*/
+				}
 
-					_pane_hoare_dialogHost.getChildren().add(_root);
+				private void pushDialog(HoareDialog dialog) {
+					setNode(dialog.getNode(), dialog.getPostCond());
+
+					dialog.setCloseHandler(() -> _pane_hoare_dialogHost.getChildren().remove(dialog.getRoot()));
+
+					_pane_hoare_dialogHost.getChildren().add(dialog.getRoot());
 				}
 
 				@Override
-				public void requestInvariantDialog(SyntaxTreeNode node, HoareCond postCond, InvariantInterface callback) throws IOException {
-					setNode(node, postCond);
-					
-					_root = new InvariantDialog(node, postCond, new InvariantInterface() {
-						@Override
-						public void result(HoareCond invariant) throws HoareException, LexerException, IOException, ParserException {
-							_pane_hoare_dialogHost.getChildren().remove(_root);
-							
-							callback.result(invariant);
-						}
-					}).getRoot();
-
-					_pane_hoare_dialogHost.getChildren().add(_root);
-				}
-
-				@Override
-				public void requestSkipDialog(SyntaxTreeNode node, HoareCond preCond, HoareCond postCond, SkipInterface callback) throws IOException, HoareException, LexerException, ParserException {
+				public void reqSkipDialog(SyntaxNode node, HoareCond preCond, HoareCond postCond, Skip_callback callback) throws IOException, HoareException, LexerException, ParserException {
 					if (_checkBox_hoare_auto.isSelected()) {
 						callback.result();
 					} else {
-						setNode(node, postCond);
-						
-						_root = new SkipDialog(node, preCond, postCond, new SkipInterface() {
+						HoareDialog dialog = new SkipDialog(node, preCond, postCond, new Skip_callback() {
 							@Override
 							public void result() throws IOException, HoareException, LexerException, ParserException {
-								_pane_hoare_dialogHost.getChildren().remove(_root);
-								
 								callback.result();
 							}
-						}).getRoot();
-						
-						_pane_hoare_dialogHost.getChildren().add(_root);
+						});
+
+						pushDialog(dialog);
 					}
 				}
 
 				@Override
-				public void requestAssignDialog(SyntaxTreeNode node, HoareCond preCond, HoareCond postCond, AssignInterface callback, String var, Exp exp) throws IOException, HoareException, LexerException, ParserException {
+				public void reqAssignDialog(SyntaxNode node, HoareCond preCond, HoareCond postCond, Assign_callback callback, String var, Exp exp) throws IOException, HoareException, LexerException, ParserException {
 					println_begin();
 					
 					println("apply assignment rule:");
@@ -643,90 +613,140 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 						
 						callback.result();
 					} else {
-						setNode(node, postCond);
-						
-						_root = new AssignDialog(node, preCond, postCond, new AssignInterface() {
+						HoareDialog dialog = new AssignDialog(node, preCond, postCond, new Assign_callback() {
 							@Override
 							public void result() throws IOException, HoareException, LexerException, ParserException {
-								_pane_hoare_dialogHost.getChildren().remove(_root);
-								
 								println_end();
 								
 								callback.result();
 							}
-						}, var, exp).getRoot();
+						}, var, exp);
 						
-						_pane_hoare_dialogHost.getChildren().add(_root);
+						pushDialog(dialog);
 					}
 				}
 
 				@Override
-				public void requestCompositionStartDialog(SyntaxTreeNode node, HoareCond postCond, CompositionStartInterface callback, SyntaxTreeNode firstNode, SyntaxTreeNode secondNode) throws IOException, HoareException, LexerException, ParserException {
-					setNode(node, postCond);
-					
+				public void reqCompSecondDialog(Hoare.Executer.wlp_comp comp, CompSecond_callback callback) throws IOException, HoareException, LexerException, ParserException {
 					println_begin();
-					
+
 					println("applying composition rule...");
-					
-					_root = new CompositionInitDialog(node, postCond, new CompositionStartInterface() {
+
+					HoareDialog dialog = new CompSecondDialog(comp, new CompSecond_callback() {
 						@Override
 						public void result() throws IOException, HoareException, LexerException, ParserException {
 							callback.result();
 						}
-					}, firstNode, secondNode).getRoot();
-					
-					_pane_hoare_dialogHost.getChildren().add(_root);
+					});
+
+					pushDialog(dialog);
 				}
-				
+
 				@Override
-				public void requestCompositionMidDialog(SyntaxTreeNode node, HoareCond postCond, CompositionMidInterface callback, SyntaxTreeNode firstNode, SyntaxTreeNode secondNode, HoareCond secondPreCond) throws IOException, HoareException, LexerException, ParserException {
-					setNode(node, postCond);
-					
-					_root = new CompositionMidDialog(node, postCond, new CompositionMidInterface() {
+				public void reqCompFirstDialog(Hoare.Executer.wlp_comp comp, CompFirst_callback callback) throws IOException, HoareException, LexerException, ParserException {
+					HoareDialog dialog = new CompFirstDialog(comp, new CompFirst_callback() {
 						@Override
 						public void result() throws IOException, HoareException, LexerException, ParserException {
 							callback.result();
 						}
-					}, firstNode, secondNode, secondPreCond).getRoot();
-					
-					_pane_hoare_dialogHost.getChildren().add(_root);
+					});
+
+					pushDialog(dialog);
 				}
-				
+
 				@Override
-				public void requestCompositionEndDialog(SyntaxTreeNode node, HoareCond preCond, HoareCond postCond, CompositionEndInterface callback, SyntaxTreeNode firstNode, SyntaxTreeNode secondNode, HoareCond secondPreCond, HoareCond firstPreCond) throws IOException, HoareException, LexerException, ParserException {
-					setNode(node, postCond);
-					
-					_root = new CompositionEndDialog(node, preCond, postCond, new CompositionEndInterface() {
+				public void reqCompMergeDialog(Hoare.Executer.wlp_comp comp, CompMerge_callback callback) throws IOException, HoareException, LexerException, ParserException {
+					HoareDialog dialog = new CompMergeDialog(comp, callback);
+
+					pushDialog(dialog);
+				}
+
+				@Override
+				public void reqAltFirstDialog(Hoare.Executer.wlp_alt alt, Hoare.Executer.AltThen_callback callback) throws IOException, HoareException, LexerException, ParserException {
+					HoareDialog dialog = new AltThenDialog(alt, callback);
+
+					pushDialog(dialog);
+				}
+
+				@Override
+				public void reqAltElseDialog(Hoare.Executer.wlp_alt alt, Hoare.Executer.AltElse_callback callback) throws IOException, HoareException, LexerException, ParserException {
+					HoareDialog dialog = new AltElseDialog(alt, callback);
+
+					pushDialog(dialog);
+				}
+
+				@Override
+				public void reqAltMergeDialog(Hoare.Executer.wlp_alt alt, Hoare.Executer.AltMerge_callback callback) throws IOException, HoareException, LexerException, ParserException {
+					HoareDialog dialog = new AltMergeDialog(alt, callback);
+
+					pushDialog(dialog);
+				}
+
+				@Override
+				public void reqLoopAskInvDialog(Hoare.Executer.wlp_loop loop, Hoare.Executer.LoopAskInv_callback callback) throws IOException {
+					HoareDialog dialog = new LoopAskInvariantDialog(loop, new LoopAskInv_callback() {
 						@Override
-						public void result() throws IOException, HoareException, LexerException, ParserException {
-							HoareCond firstPostCond = secondPreCond;
-							
-							println("apply composition rule:");
-							println("\t" + preCond.toStringEx() + " " + firstNode.synthesize() + " " + firstPostCond.toStringEx() + ", " + secondPreCond.toStringEx() + " " + secondNode.synthesize() + " " + postCond.toStringEx());
-							println("\t" + "->");
-							println("\t" + preCond.toStringEx() + " " + firstNode.synthesize() + "; " + secondNode.synthesize() + " " + postCond.toStringEx());
-							
-							println_end();
-							
-							callback.result();
+						public void result(HoareCond postInvariant) throws HoareException, LexerException, IOException, ParserException {
+							callback.result(postInvariant);
 						}
-					}, firstNode, secondNode, secondPreCond, firstPreCond).getRoot();
-					
-					_pane_hoare_dialogHost.getChildren().add(_root);
+					});
+
+					pushDialog(dialog);
 				}
-				
+
 				@Override
-				public void finished(SyntaxTreeNode node, HoareCond preCond, HoareCond postCond, boolean yes) throws IOException {
+				public void reqLoopCheckPostCondDialog(Hoare.Executer.wlp_loop loop, Hoare.Executer.LoopCheckPostCond_callback callback) throws IOException {
+					HoareDialog dialog = new LoopCheckPostCondDialog(loop, callback);
+
+					pushDialog(dialog);
+				}
+
+				@Override
+				public void reqLoopGetBodyCondDialog(Hoare.Executer.wlp_loop loop, Hoare.Executer.LoopGetBodyCond_callback callback) throws IOException {
+					HoareDialog dialog = new LoopGetBodyCondDialog(loop, callback);
+
+					pushDialog(dialog);
+				}
+
+				@Override
+				public void reqLoopCheckBodyCondDialog(Hoare.Executer.wlp_loop loop, Hoare.Executer.LoopCheckBodyCond_callback callback) throws IOException {
+					HoareDialog dialog = new LoopCheckBodyCondDialog(loop, callback);
+
+					pushDialog(dialog);
+				}
+
+				@Override
+				public void reqLoopAcceptInvCondDialog(Hoare.Executer.wlp_loop loop, Hoare.Executer.LoopAcceptInv_callback callback) throws IOException {
+					HoareDialog dialog = new LoopAcceptInvariantDialog(loop, callback);
+
+					pushDialog(dialog);
+				}
+
+				@Override
+				public void reqConseqPreCheckDialog(SyntaxNode node, HoareCond origPreCond, HoareCond newPreCond, HoareCond origPostCond, HoareCond newPostCond, Hoare.Executer.ConseqCheck_callback callback) throws IOException {
+					HoareDialog dialog = new ConseqCheckDialog(node, origPreCond, newPreCond, origPostCond, newPostCond, new Hoare.Executer.ConseqCheck_callback() {
+						@Override
+						public void result(boolean yes) throws HoareException, LexerException, IOException, ParserException {
+							callback.result(yes);
+						}
+					});
+
+					pushDialog(dialog);
+				}
+
+				@Override
+				public void finished(SyntaxNode node, HoareCond preCond, HoareCond postCond, boolean yes) throws IOException {
+					HoareDialog dialog = new EndDialog(yes);
+
+					pushDialog(dialog);
 					setNode(node, postCond);
-					
-					_pane_hoare_dialogHost.getChildren().add(new EndDialog(yes).getRoot());
 					
 					setHoaring(false);
 				}
 			});
 			
 			hoare.exec();
-		} catch (HoareException e) {
+		} catch (Exception e) {
 			setHoaring(false);
 			
 			throw e;

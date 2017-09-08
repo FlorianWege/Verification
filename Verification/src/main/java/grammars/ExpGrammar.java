@@ -15,6 +15,7 @@ public class ExpGrammar extends Grammar {
 	public final Terminal TERMINAL_OP_POW;
 	public final Terminal TERMINAL_OP_FACTORIAL;
 	public final Terminal TERMINAL_ID;
+	public final Terminal TERMINAL_PARAM_SEP;
 	
 	public final NonTerminal NON_TERMINAL_EXP;
 	public final NonTerminal NON_TERMINAL_EXP_;
@@ -25,6 +26,10 @@ public class ExpGrammar extends Grammar {
 	public final NonTerminal NON_TERMINAL_FACTORIAL;
 	public final NonTerminal NON_TERMINAL_FACTORIAL_;
 	public final NonTerminal NON_TERMINAL_EXP_ELEMENTARY;
+
+	public final NonTerminal NON_TERMINAL_PARAM_LIST;
+	public final NonTerminal NON_TERMINAL_PARAM;
+	public final NonTerminal NON_TERMINAL_PARAM_;
 	
 	public ExpGrammar() {
 		super();
@@ -40,6 +45,7 @@ public class ExpGrammar extends Grammar {
 		TERMINAL_OP_POW = createTerminal("OP_POW");
 		TERMINAL_OP_FACTORIAL = createTerminal("OP_FACTORIAL");
 		TERMINAL_ID = createTerminal("ID");
+		TERMINAL_PARAM_SEP = createTerminal("PARAM_SEP");
 
 		TERMINAL_NUM.addRuleRegEx("[1-9][0-9]*");
 		TERMINAL_NUM.addRuleRegEx("0");
@@ -54,6 +60,9 @@ public class ExpGrammar extends Grammar {
 		TERMINAL_OP_FACTORIAL.addRule("!");
 		
 		TERMINAL_ID.addRuleRegEx("[a-zA-Z][a-zA-Z0-9]*");
+
+		TERMINAL_PARAM_SEP.addRule(",");
+		TERMINAL_PARAM_SEP.setSep();
 		
 		//parser rules
 		NON_TERMINAL_EXP = createNonTerminal("exp");
@@ -65,6 +74,9 @@ public class ExpGrammar extends Grammar {
 		NON_TERMINAL_FACTORIAL = createNonTerminal("factorial");
 		NON_TERMINAL_FACTORIAL_ = createNonTerminal("factorial'");
 		NON_TERMINAL_EXP_ELEMENTARY = createNonTerminal("exp_elem");
+		NON_TERMINAL_PARAM_LIST = createNonTerminal("param_list");
+		NON_TERMINAL_PARAM = createNonTerminal("param");
+		NON_TERMINAL_PARAM_ = createNonTerminal("param'");
 		
 		createRule(NON_TERMINAL_EXP, "factor exp'");
 		
@@ -88,13 +100,20 @@ public class ExpGrammar extends Grammar {
 		createRule(NON_TERMINAL_FACTORIAL_, "OP_FACTORIAL");
 		createRule(NON_TERMINAL_FACTORIAL_, Terminal.EPSILON);
 		
-		createRule(NON_TERMINAL_EXP_ELEMENTARY, "ID");
+		createRule(NON_TERMINAL_EXP_ELEMENTARY, "ID param_list");
 		createRule(NON_TERMINAL_EXP_ELEMENTARY, "NUM");
 		createRule(NON_TERMINAL_EXP_ELEMENTARY, "PAREN_OPEN exp PAREN_CLOSE");
-		
+
+		createRule(NON_TERMINAL_PARAM_LIST, "PAREN_OPEN param param' PAREN_CLOSE");
+		createRule(NON_TERMINAL_PARAM_LIST, Terminal.EPSILON);
+
+		createRule(NON_TERMINAL_PARAM, "exp");
+		createRule(NON_TERMINAL_PARAM_, "PARAM_SEP exp param'");
+		createRule(NON_TERMINAL_PARAM_, Terminal.EPSILON);
+
 		//finalize
 		setStartSymbol(NON_TERMINAL_EXP);
 		
-		updatePredictiveParserTable();
+		updateParserTable();
 	}
 }

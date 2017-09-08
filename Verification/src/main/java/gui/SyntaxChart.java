@@ -12,9 +12,9 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.function.Predicate;
 
+import core.SyntaxNode;
+import core.SyntaxNodeTerminal;
 import core.SyntaxTree;
-import core.SyntaxTreeNode;
-import core.SyntaxTreeNodeTerminal;
 import core.structures.NonTerminal;
 import core.structures.hoareCond.HoareCond;
 import grammars.HoareWhileGrammar;
@@ -32,7 +32,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
-import javafx.scene.control.CheckBox;
+import javafx.scene.control.*;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Background;
@@ -57,30 +57,32 @@ public class SyntaxChart implements Initializable {
 	@FXML
 	private Pane _pane;
 	@FXML
+	private ScrollPane _scrollPane;
+	@FXML
 	private VBox _pane_checkBoxes;
 	
 	private Scale _scale = new Scale();
 	
 	private ObjectProperty<SyntaxTree> _syntaxTreeP;
-	private ObservableMap<SyntaxTreeNode, HoareCond> _preCondMap;
-	private ObservableMap<SyntaxTreeNode, HoareCond> _postCondMap;
-	private ObjectProperty<SyntaxTreeNode> _currentNodeP;
-	private ObjectProperty<SyntaxTreeNode> _currentHoareNodeP;
+	private ObservableMap<SyntaxNode, HoareCond> _preCondMap;
+	private ObservableMap<SyntaxNode, HoareCond> _postCondMap;
+	private ObjectProperty<SyntaxNode> _currentNodeP;
+	private ObjectProperty<SyntaxNode> _currentHoareNodeP;
 	
 	private Collection<NonTerminal> _includedNonTerminals = new ArrayList<>();
 	private Stage _stage;
 	
 	private HoareWhileGrammar _hoareGrammar = new HoareWhileGrammar();
-	
-	public SyntaxChart(ObjectProperty<SyntaxTree> syntaxTree, ObjectProperty<ObservableMap<SyntaxTreeNode, HoareCond>> preCondMap, ObjectProperty<ObservableMap<SyntaxTreeNode, HoareCond>> postCondMap, ObjectProperty<SyntaxTreeNode> currentNodeP, ObjectProperty<SyntaxTreeNode> currentHoareNodeP, Map<KeyCombination, Runnable> accelerators) throws IOException {
+
+	SyntaxChart(ObjectProperty<SyntaxTree> syntaxTree, ObjectProperty<ObservableMap<SyntaxNode, HoareCond>> preCondMap, ObjectProperty<ObservableMap<SyntaxNode, HoareCond>> postCondMap, ObjectProperty<SyntaxNode> currentNodeP, ObjectProperty<SyntaxNode> currentHoareNodeP, Map<KeyCombination, Runnable> accelerators) throws IOException {
 		_syntaxTreeP = syntaxTree;
 		_preCondMap = preCondMap.get();
 		_postCondMap = postCondMap.get();
 		_currentNodeP = currentNodeP;
 		_currentHoareNodeP = currentHoareNodeP;
-		
+
 		_stage = new Stage();
-		
+
 		_stage.setTitle("Syntax Chart");
 		_stage.setScene(IOUtil.inflateFXML(new File("SyntaxChart.fxml"), this));
 		//_stage.setAlwaysOnTop(true);
@@ -106,40 +108,34 @@ public class SyntaxChart implements Initializable {
 			}
 		});
 		
-		_preCondMap.addListener(new MapChangeListener<SyntaxTreeNode, HoareCond>() {
+		_preCondMap.addListener(new MapChangeListener<SyntaxNode, HoareCond>() {
 			@Override
-			public void onChanged(javafx.collections.MapChangeListener.Change<? extends SyntaxTreeNode, ? extends HoareCond> obs) {
-				SyntaxTreeNode node = obs.getKey();
-				HoareCond cond = obs.getValueAdded();
+			public void onChanged(javafx.collections.MapChangeListener.Change<? extends SyntaxNode, ? extends HoareCond> obs) {
+				SyntaxNode node = obs.getKey();
 				
 				Node chartNode = _nodeMap.get(node);
 				
-				if (chartNode != null) {
-					chartNode.setPreCond(cond);
-				}
+				if (chartNode != null) chartNode.update();
 			}
 		});
-		_postCondMap.addListener(new MapChangeListener<SyntaxTreeNode, HoareCond>() {
+		_postCondMap.addListener(new MapChangeListener<SyntaxNode, HoareCond>() {
 			@Override
-			public void onChanged(javafx.collections.MapChangeListener.Change<? extends SyntaxTreeNode, ? extends HoareCond> obs) {
-				SyntaxTreeNode node = obs.getKey();
-				HoareCond cond = obs.getValueAdded();
+			public void onChanged(javafx.collections.MapChangeListener.Change<? extends SyntaxNode, ? extends HoareCond> obs) {
+				SyntaxNode node = obs.getKey();
 				
 				Node chartNode = _nodeMap.get(node);
 				
-				if (chartNode != null) {
-					chartNode.setPostCond(cond);
-				}
+				if (chartNode != null) chartNode.update();
 			}
 		});
 	}
 
-	public void setVisible(boolean show) {
+	void setVisible(boolean show) {
 		if (show) _stage.show(); else _stage.hide();
 	}
 	
 	private class Node {
-		private SyntaxTreeNode _refNode;
+		private SyntaxNode _refNode;
 
 		private double _x;
 		private double _y;
@@ -157,36 +153,14 @@ public class SyntaxChart implements Initializable {
 		
 		private Text _text = new Text();
 		private Text _subText = new Text();
-		
-		private HoareCond _preCond;
-		private HoareCond _postCond;
 
 		private Text _preCondText = new Text();
 		private Text _postCondText = new Text();
-		
-		public void setPreCond(HoareCond preCond) {
-			_preCond = preCond;
-			
-			_preCondText.setFill(Color.BLUE);
-			_preCondText.setText("pre: " + _preCond.toStringEx());
-			
-			update();
-		}
-		
-		public void setPostCond(HoareCond postCond) {
-			_postCond = postCond;
-			
-			_postCondText.setFill(Color.BLUE);
-			_postCondText.setText("post: " + _postCond.toStringEx());
-			
-			update();
-		}
 		
 		private List<Node> _children = new ArrayList<>();
 		
 		private final double PADDING_X = 5D;
 		private final double PADDING_Y = 5D;
-
 		
 		private double getLocalWidth() {
 			double ret = 0D;
@@ -211,7 +185,7 @@ public class SyntaxChart implements Initializable {
 		private final double MARGIN_X = 20D;
 		private final double MARGIN_Y = 30D;
 		
-		public double getWidth() {
+		double getWidth() {
 			double ret = 0D;
 			
 			for (Node child : _children) {
@@ -221,7 +195,7 @@ public class SyntaxChart implements Initializable {
 			return Math.max(getLocalWidth(), ret) + MARGIN_X;
 		}
 		
-		public double getHeight() {
+		double getHeight() {
 			double ret = getLocalHeight();
 			double childHeight = 0D;
 			
@@ -237,7 +211,7 @@ public class SyntaxChart implements Initializable {
 		private Circle _circle = new Circle();
 		private Rectangle _rect = new Rectangle();
 		
-		public void addChild(Node child) {
+		void addChild(Node child) {
 			_children.add(child);
 			
 			Line line = new Line();
@@ -248,7 +222,7 @@ public class SyntaxChart implements Initializable {
 		
 		private Map<Node, Line> _lineMap = new LinkedHashMap<>();
 		
-		public void update() {
+		void update() {
 			double localWidth = getLocalWidth();
 			double localHeight = getLocalHeight();
 			
@@ -263,7 +237,7 @@ public class SyntaxChart implements Initializable {
 			_rect.setHeight(localHeight);
 			_rect.setX(_x-_rect.getWidth() / 2);
 			_rect.setY(_y-_rect.getHeight() / 2);
-			_rect.setFill(_isCurrentHoare ? Color.YELLOW : _isCurrent ? Color.RED : Color.TRANSPARENT);
+			_rect.setFill(_refNode.equals(_currentNodeP.get()) ? Color.RED : _refNode.equals(_currentHoareNodeP.get()) ? Color.LIGHTBLUE : Color.TRANSPARENT);
 			_rect.setStroke(Color.BLACK);
 			_rect.setStrokeWidth(1D);
 			
@@ -298,52 +272,43 @@ public class SyntaxChart implements Initializable {
 					childX += child.getWidth() / 2;
 				}
 			}
-		}
 
-		private boolean _isCurrentHoare = false;
-		
-		public void setCurrentHoare(boolean flag) {
-			_isCurrentHoare = flag;
-			
-			update();
-		}
+			HoareCond preCond = _preCondMap.get(_refNode);
+			HoareCond postCond = _postCondMap.get(_refNode);
 
-		private boolean _isCurrent = false;
-		
-		public void setCurrent(boolean flag) {
-			_isCurrent = flag;
-			
-			update();
+			_preCondText.setFill(Color.BLUE);
+			_preCondText.setText((preCond != null) ? "pre: " + preCond.toStringEx() : null);
+			_postCondText.setFill(Color.BLUE);
+			_postCondText.setText((postCond != null) ? "post: " + postCond.toStringEx() : null);
 		}
 		
-		public void setXY(double x, double y) {
+		void setXY(double x, double y) {
 			_x = x;
 			_y = y;
 			
 			update();
 		}
 
-		private boolean isEmptyComposite(SyntaxTreeNode node) {
+		private boolean isEmptyComposite(SyntaxNode node) {
 			if (!node.getSymbol().equals(_hoareGrammar.NON_TERMINAL_PROG_)) return false;
 
 			return (calcChildren(node).size() < 2);
 		}
 
-		private List<SyntaxTreeNode> calcChildren(SyntaxTreeNode refNode) {
-			//System.out.println("calc " + refNode);
-			List<SyntaxTreeNode> ret = new ArrayList<>();
+		private List<SyntaxNode> calcChildren(SyntaxNode refNode) {
+			List<SyntaxNode> ret = new ArrayList<>();
 			
-			if (refNode instanceof SyntaxTreeNodeTerminal) return ret;
+			if (refNode instanceof SyntaxNodeTerminal) return ret;
 			
-			for (SyntaxTreeNode child : refNode.getChildren()) {
-				List<SyntaxTreeNode> sub = calcChildren(child);
+			for (SyntaxNode child : refNode.getChildren()) {
+				List<SyntaxNode> sub = calcChildren(child);
 
 				if (_includedNonTerminals.contains(child.getSymbol()) && !isEmptyComposite(child)) {
 					if (!child.synthesize().isEmpty()) ret.add(child);
 				} else {
-					sub.removeIf(new Predicate<SyntaxTreeNode>() {
+					sub.removeIf(new Predicate<SyntaxNode>() {
 						@Override
-						public boolean test(SyntaxTreeNode node) {
+						public boolean test(SyntaxNode node) {
 							return !_includedNonTerminals.contains(node.getSymbol()) || node.synthesize().isEmpty();
 						}
 					});
@@ -351,15 +316,15 @@ public class SyntaxChart implements Initializable {
 					ret.addAll(sub);
 				}
 			}
-//System.out.println("ret " + ret);
+
 			return ret;
 		}
 		
-		public Node(SyntaxTreeNode refNode) {
+		Node(SyntaxNode refNode) {
 			_refNode = refNode;
 			_x = 0D;
 			_y = 0D;
-System.out.println("create " + refNode + ";" + refNode.hashCode());
+
 			_pane.getChildren().add(_circle);
 			_pane.getChildren().add(_rect);
 
@@ -382,7 +347,6 @@ System.out.println("create " + refNode + ";" + refNode.hashCode());
 			
 			_subText = new Text(stop ? refNode.synthesize() : null);
 
-
 			_subText.setFont(Font.font("Verdana", FontWeight.BOLD, 10));
 			_subText.setVisible(false);
 			
@@ -397,13 +361,15 @@ System.out.println("create " + refNode + ";" + refNode.hashCode());
 			
 			_pane.getChildren().add(_box);
 			
-			for (SyntaxTreeNode childRefNode : calcChildren(refNode)) {
+			for (SyntaxNode childRefNode : calcChildren(refNode)) {
 				addChild(new Node(childRefNode));
 			}
+
+			update();
 		}
 	}
 	
-	private Map<SyntaxTreeNode, Node> _nodeMap = new LinkedHashMap<>();
+	private Map<SyntaxNode, Node> _nodeMap = new LinkedHashMap<>();
 	
 	private Map<CheckBox, NonTerminal> _checkBoxNonTerminalMap = new HashMap<>();
 	
@@ -411,28 +377,11 @@ System.out.println("create " + refNode + ";" + refNode.hashCode());
 	
 	private void updateScale() {
 		_pane.backgroundProperty().set(new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY)));
+		_scrollPane.backgroundProperty().set(new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY)));
 		
-		if (_root != null) {
-			double treeWidth = _root.getWidth();
-			double treeHeight = _root.getHeight();
-			
-			/*if (treeWidth == 0D) {
-				_scale.setPivotX(0D);
-				_scale.setX(1D);
-				_scale.setPivotY(0D);
-				_scale.setY(1D);
-			} else {		
-				double widthFactor = _pane.getWidth() / treeWidth;
-				double heightFactor = _pane.getHeight() / treeHeight;
-				
-				_scale.setPivotX(0D);
-				_scale.setX(widthFactor);
-				_scale.setPivotY(0D);
-				_scale.setY(heightFactor);
-			}*/
+		if (_root != null) _root.setXY(_root.getWidth() / 2, _root.getLocalHeight() / 2 + _root.MARGIN_Y/2);
 
-			_root.setXY(treeWidth / 2, _root.getLocalHeight() / 2 + _root.MARGIN_Y/2);
-		}
+		_scrollPane.setViewportBounds(_pane.getBoundsInLocal());
 	}
 	
 	private void updateTree() {
@@ -450,7 +399,6 @@ System.out.println("create " + refNode + ";" + refNode.hashCode());
 		}
 
 		if (_syntaxTreeP.get() != null) {
-			System.out.println("updateTree " + _syntaxTreeP.get().getRoot().hashCode());
 			_root = new Node(_syntaxTreeP.get().getRoot());
 			
 			updateScale();
@@ -468,13 +416,15 @@ System.out.println("create " + refNode + ";" + refNode.hashCode());
 			activeNonTerminals.add(_hoareGrammar.NON_TERMINAL_PROG_);
 			activeNonTerminals.add(_hoareGrammar.NON_TERMINAL_HOARE_BLOCK);
 			activeNonTerminals.add(_hoareGrammar.NON_TERMINAL_ASSIGN);
-			activeNonTerminals.add(_hoareGrammar.NON_TERMINAL_SELECTION);
+			activeNonTerminals.add(_hoareGrammar.NON_TERMINAL_ALT);
 			activeNonTerminals.add(_hoareGrammar.NON_TERMINAL_WHILE);
 			activeNonTerminals.add(_hoareGrammar.NON_TERMINAL_SKIP);
 
 			for (NonTerminal nonTerminal : _syntaxTreeP.get().getGrammar().getNonTerminals()) {
 				CheckBox box = new CheckBox(nonTerminal.toString());
-				
+
+				box.setMnemonicParsing(false);
+
 				_checkBoxNonTerminalMap.put(box, nonTerminal);
 				
 				if (activeNonTerminals.contains(nonTerminal)) box.setSelected(true);
@@ -488,7 +438,7 @@ System.out.println("create " + refNode + ";" + refNode.hashCode());
 				
 				_pane_checkBoxes.getChildren().add(box);
 			}
-		};
+		}
 		
 		updateTree();
 	}
@@ -500,7 +450,6 @@ System.out.println("create " + refNode + ";" + refNode.hashCode());
 		_syntaxTreeP.addListener(new ChangeListener<SyntaxTree>() {
 			@Override
 			public void changed(ObservableValue<? extends SyntaxTree> obs, SyntaxTree oldVal, SyntaxTree newVal) {
-				System.out.println("changed " + newVal.hashCode());
 				updateAll();
 			}
 		});
@@ -517,24 +466,24 @@ System.out.println("create " + refNode + ";" + refNode.hashCode());
 		
 		updateAll();
 
-		_currentNodeP.addListener(new ChangeListener<SyntaxTreeNode>() {
+		_currentNodeP.addListener(new ChangeListener<SyntaxNode>() {
 			@Override
-			public void changed(ObservableValue<? extends SyntaxTreeNode> obs, SyntaxTreeNode oldVal, SyntaxTreeNode newVal) {
+			public void changed(ObservableValue<? extends SyntaxNode> obs, SyntaxNode oldVal, SyntaxNode newVal) {
 				Node oldNode = _nodeMap.get(oldVal);
 				Node newNode = _nodeMap.get(newVal);
 
-				if (oldNode != null) oldNode.setCurrent(false);
-				if (newNode != null) newNode.setCurrent(true);
+				if (oldNode != null) oldNode.update();
+				if (newNode != null) newNode.update();
 			}
 		});
-		_currentHoareNodeP.addListener(new ChangeListener<SyntaxTreeNode>() {
+		_currentHoareNodeP.addListener(new ChangeListener<SyntaxNode>() {
 			@Override
-			public void changed(ObservableValue<? extends SyntaxTreeNode> obs, SyntaxTreeNode oldVal, SyntaxTreeNode newVal) {
+			public void changed(ObservableValue<? extends SyntaxNode> obs, SyntaxNode oldVal, SyntaxNode newVal) {
 				Node oldNode = _nodeMap.get(oldVal);
 				Node newNode = _nodeMap.get(newVal);
 
-				if (oldNode != null) oldNode.setCurrentHoare(false);
-				if (newNode != null) newNode.setCurrentHoare(true);
+				if (oldNode != null) oldNode.update();
+				if (newNode != null) newNode.update();
 			}
 		});
 	}

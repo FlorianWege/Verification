@@ -1,13 +1,12 @@
 package core;
 
-import java.util.Collection;
+import core.structures.LexerRule;
+import core.structures.Terminal;
+
 import java.util.Comparator;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import core.structures.Terminal;
-import core.structures.LexerRule;
 
 /**
  * using a specified grammar, takes the lexer rules and converts a String into a list of tokens
@@ -20,9 +19,7 @@ public class Lexer {
 	}
 	
 	private Token createToken(Terminal terminal, LexerRule rule, String text, int line, int lineOffset, int pos) {
-		Token token = new Token(terminal, rule, text, line, lineOffset, pos);
-		
-		return token;
+		return new Token(terminal, rule, text, line, lineOffset, pos);
 	}
 	
 	public class LexerException extends Exception {
@@ -94,11 +91,11 @@ public class Lexer {
 			System.out.println("tokens:");
 			
 			for (int i = 0; i < getTokens().size(); i++) {
-				System.out.println("#" + i + ": " + getTokens().get(i).getTerminal().getKey() + "->" + getTokens().get(i)._text);
+				System.out.println("#" + i + ": " + getTokens().get(i).getTerminal().getKey() + "->" + getTokens().get(i).getText());
 			}
 		}
 		
-		public LexerResult(Vector<Token> tokens) {
+		LexerResult(Vector<Token> tokens) {
 			_tokens = new Vector<>(tokens);
 		}
 	}
@@ -142,17 +139,15 @@ public class Lexer {
 			}
 			
 			int curLen = 0;	LexerRule curRule = null; Terminal curTerminal = null;
-			
-			for (int i = 0; i < terminals.size(); i++) {
-				Terminal terminal = terminals.get(i);
-				
+
+			for (Terminal terminal : terminals) {
 				for (LexerRule rule : terminal.getRules()) {
 					String ruleS = (curPos > 0) ? String.format("^.{%d}(%s)", curPos, rule.getRegEx()) : String.format("^(%s)", rule.getRegEx());
 
 					Pattern adjustedPattern = Pattern.compile(ruleS, Pattern.DOTALL);
-					
+
 					Matcher matcher = adjustedPattern.matcher(s);
-					
+
 					if (matcher.find() && (matcher.start(1) == curPos)) {
 						int newLen = (matcher.end(1) - 1) - matcher.start(1) + 1;
 

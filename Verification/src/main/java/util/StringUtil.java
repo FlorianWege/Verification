@@ -4,10 +4,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import com.google.common.html.HtmlEscapers;
 import core.structures.Terminal;
 import javafx.util.Pair;
 
 public class StringUtil {
+	public static Character bool_and = '\u2227';
+	public static Character bool_or = '\u2228';
+	public static Character bool_neg = '\u00AC';
+	public static String html_tab = "&nbsp;";
+
 	public static String repeat(String s, int repeat) {
 		if (repeat < 1) return "";
 		
@@ -39,5 +45,9 @@ public class StringUtil {
 		}
 		
 		return s;
+	}
+
+	public static String escapeHTML(String s) {
+		return HtmlEscapers.htmlEscaper().escape(s);
 	}
 }

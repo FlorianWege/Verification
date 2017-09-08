@@ -26,7 +26,7 @@ public class ExtendedCodeAreaToken {
 	private CodeArea _textArea;
 	private Grammar _grammar;
 	
-	public ExtendedCodeAreaToken(CodeArea textArea, Grammar grammar) {
+	ExtendedCodeAreaToken(CodeArea textArea, Grammar grammar) {
 		_textArea = textArea;
 		_grammar = grammar;
 		

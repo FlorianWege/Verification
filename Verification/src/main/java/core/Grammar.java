@@ -17,19 +17,19 @@ public class Grammar {
 	public Grammar() {
 	}
 	
-	private PredictiveParserTable _predictiveParserTable;
+	private ParserTable _parserTable;
 	
-	public PredictiveParserTable getPredictiveParserTable() {
-		return _predictiveParserTable;
+	ParserTable getParserTable() {
+		return _parserTable;
 	}
 	
-	public void updatePredictiveParserTable() {
-		_predictiveParserTable = new PredictiveParserTable(this);
+	protected void updateParserTable() {
+		_parserTable = new ParserTable(this);
 	}
 	
 	private NonTerminal _startSymbol;
 	
-	public NonTerminal getStartSymbol() {
+	NonTerminal getStartSymbol() {
 		return _startSymbol;
 	}
 	
@@ -163,11 +163,10 @@ public class Grammar {
 		}
 	}
 	
-	public void merge(Grammar other) {
-		_predictiveParserTable.merge(other.getPredictiveParserTable());
+	protected void merge(Grammar other) {
+		_parserTable.merge(other.getParserTable());
 		_terminals.addAll(other.getTerminals());
 		_nonTerminals.addAll(other.getNonTerminals());
 		_symbols.putAll(other.getSymbols());
-		//_startParserRule = other.getStartParserRule();
 	}
 }

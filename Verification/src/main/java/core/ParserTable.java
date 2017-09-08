@@ -1,28 +1,14 @@
 package core;
 
-import java.io.PrintStream;
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import core.structures.NonTerminal;
 import core.structures.ParserRule;
 import core.structures.Terminal;
-import grammars.BoolExpGrammar;
-import util.StringUtil;
 
-public class PredictiveParserTable {
+import java.io.PrintStream;
+import java.util.*;
+
+public class ParserTable {
 	private Map<NonTerminal, Map<Terminal, ParserRule>> _map = new HashMap<>();
-	
-	public Map<Terminal, ParserRule> getSourceRuleMap(NonTerminal parserRule) {
-		return _map.get(parserRule);
-	}
 	
 	public ParserRule get(NonTerminal parserRule, Terminal lexerRule) {
 		if (!_map.containsKey(parserRule)) return null;
@@ -42,7 +28,7 @@ public class PredictiveParserTable {
 		subMap.put(lexerRule, targetRule);
 	}
 	
-	public void merge(PredictiveParserTable other) {
+	void merge(ParserTable other) {
 		_map.putAll(other._map);
 	}
 	
@@ -58,9 +44,9 @@ public class PredictiveParserTable {
 		}
 	}
 	
-	private Map<NonTerminal, Set<Terminal>> _followMap = new LinkedHashMap<>();
+	//private Map<NonTerminal, Set<Terminal>> _followMap = new LinkedHashMap<>();
 	
-	public Set<Terminal> getFollow(NonTerminal nonTerminal, Grammar grammar, Set<NonTerminal> recursiveSet) {		
+	private Set<Terminal> getFollow(NonTerminal nonTerminal, Grammar grammar, Set<NonTerminal> recursiveSet) {
 		//if (_followMap.containsKey(nonTerminal)) return _followMap.get(nonTerminal);
 
 		Set<Terminal> ret = new LinkedHashSet<>();
@@ -84,7 +70,7 @@ public class PredictiveParserTable {
 						if (restSymbols.isEmpty()) {
 							ret.addAll(getFollow(p, grammar, recursiveSet));
 						} else {
-							Set<Terminal> subSet = getFirst(restSymbols, new LinkedHashSet<NonTerminal>());
+							Set<Terminal> subSet = getFirst(restSymbols, new LinkedHashSet<>());
 
 							if (subSet.contains(Terminal.EPSILON)) {
 								subSet.remove(Terminal.EPSILON);
@@ -106,12 +92,12 @@ public class PredictiveParserTable {
 		return ret;
 	}
 	
-	public Set<Terminal> getFollow(NonTerminal nonTerminal, Grammar grammar) {
-		return getFollow(nonTerminal, grammar, new LinkedHashSet<NonTerminal>());
+	private Set<Terminal> getFollow(NonTerminal nonTerminal, Grammar grammar) {
+		return getFollow(nonTerminal, grammar, new LinkedHashSet<>());
 	}
 	
-	public Set<Terminal> getFirst(List<Symbol> symbols, Set<NonTerminal> recursiveSet) {
-		if (symbols.contains(Terminal.EPSILON)) return new LinkedHashSet<>(Arrays.asList(new Terminal[]{Terminal.EPSILON}));
+	private Set<Terminal> getFirst(List<Symbol> symbols, Set<NonTerminal> recursiveSet) {
+		if (symbols.contains(Terminal.EPSILON)) return new LinkedHashSet<>(Collections.singletonList(Terminal.EPSILON));
 
 		Set<Terminal> ret = new LinkedHashSet<>();
 
@@ -134,9 +120,9 @@ public class PredictiveParserTable {
 		return ret;
 	}
 	
-	private Map<NonTerminal, Set<Terminal>> _firstMap = new LinkedHashMap<>();
+	//private Map<NonTerminal, Set<Terminal>> _firstMap = new LinkedHashMap<>();
 	
-	public Set<Terminal> getFirst(NonTerminal nonTerminal, Set<NonTerminal> recursiveSet) {
+	private Set<Terminal> getFirst(NonTerminal nonTerminal, Set<NonTerminal> recursiveSet) {
 		//if (_firstMap.containsKey(nonTerminal)) return _firstMap.get(nonTerminal);
 		
 		Set<Terminal> ret = new LinkedHashSet<>();
@@ -154,75 +140,11 @@ public class PredictiveParserTable {
 		return ret;
 	}
 	
-	public Set<Terminal> getFirst(NonTerminal nonTerminal) {
+	private Set<Terminal> getFirst(NonTerminal nonTerminal) {
 		return getFirst(nonTerminal, new LinkedHashSet<>());
 	}
 	
-	public static void firstTest() {
-		/*System.out.println("sampleA");
-		SampleGrammarA g = new SampleGrammarA();
-		
-		for (NonTerminal p : g.getParserRules()) {
-			System.out.println(p + "->" + getFirst(p) + "->" + getFollow(p, g));
-		}
-		
-		System.out.println("sampleB");
-		SampleGrammarB h = new SampleGrammarB();
-		
-		for (NonTerminal p : h.getParserRules()) {
-			System.out.println(p + "->" + getFirst(p) + "->" + getFollow(p, h));
-		}
-		
-		System.out.println("sampleC");
-		SampleGrammarC i = new SampleGrammarC();
-		
-		for (NonTerminal p : i.getParserRules()) {
-			System.out.println(p + "->" + getFirst(p) + "->" + getFollow(p, i));
-		}
-		
-		System.out.println("sampleD");
-		SampleGrammarD j = new SampleGrammarD();
-		
-		for (NonTerminal p : j.getParserRules()) {
-			System.out.println(p + "->" + getFirst(p) + "->" + getFollow(p, j));
-		}
-		
-		new PredictiveParserTable(j).print(System.out);
-		
-		System.out.println("sampleE");
-		SampleGrammarE k = new SampleGrammarE();
-		
-		for (NonTerminal p : k.getParserRules()) {
-			System.out.println(p + "->" + getFirst(p) + "->" + getFollow(p, k));
-		}
-		
-		System.out.println("sampleF");
-		SampleGrammarF l = new SampleGrammarF();
-		
-		for (NonTerminal p : l.getParserRules()) {
-			System.out.println(p + "->" + getFirst(p) + "->" + getFollow(p, l));
-		}
-		
-		new PredictiveParserTable(i).print(System.out);*/
-		
-		_exp = new BoolExpGrammar();
-		
-		System.out.println(new PredictiveParserTable().getFollow(_exp.NON_TERMINAL_BOOL_AND, _exp));
-		
-		//HoareWhileGrammar all = new HoareWhileGrammar();
-		
-		//getFirst(all.NON_TERMINAL_PROG);
-		
-		/*for (NonTerminal p : all.getParserRules()) {
-			System.out.println(p + "->" + getFirst(p) + "->" + getFollow(p, all));
-		}
-		
-		new PredictiveParserTable(all);//.print(System.out);*/
-	}
-	
-	static BoolExpGrammar _exp;
-	
-	public PredictiveParserTable(Grammar g) {
+	ParserTable(Grammar g) {
 		Map<NonTerminal, Set<Terminal>> firstMap = new LinkedHashMap<>();
 		Map<NonTerminal, Set<Terminal>> followMap = new LinkedHashMap<>();
 		
@@ -245,16 +167,12 @@ public class PredictiveParserTable {
 					if (symbol instanceof Terminal) {
 						set(p, (Terminal) symbol, r);
 					} else if (symbol instanceof NonTerminal) {
-						for (Terminal terminal : firstMap.get((NonTerminal) symbol)) {
+						for (Terminal terminal : firstMap.get(symbol)) {
 							set(p, terminal, r);
 						}
 					}
 				}
 			}
 		}
-	}
-	
-	private PredictiveParserTable() {
-		
 	}
 }

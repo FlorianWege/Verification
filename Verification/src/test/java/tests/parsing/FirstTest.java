@@ -1,10 +1,9 @@
 package tests.parsing;
 
-import core.PredictiveParserTable;
+import core.ParserTable;
 
 public class FirstTest {
 	FirstTest() {
-		PredictiveParserTable.firstTest();
 	}
 	
 	public static void main(String[] args) {

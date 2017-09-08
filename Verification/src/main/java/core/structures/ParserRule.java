@@ -9,11 +9,11 @@ public class ParserRule {
 	private NonTerminal _nonTerminal;
 	private Vector<Symbol> _symbols = new Vector<>();
 	
-	public ParserRule(NonTerminal nonTerminal) {
+	ParserRule(NonTerminal nonTerminal) {
 		_nonTerminal = nonTerminal;
 	}
 
-	public ParserRule(NonTerminal nonTerminal, Vector<Symbol> symbols) {
+	ParserRule(NonTerminal nonTerminal, Vector<Symbol> symbols) {
 		this(nonTerminal);
 		
 		if (symbols.isEmpty()) throw new RuntimeException("no symbols");
@@ -22,26 +22,10 @@ public class ParserRule {
 	}
 	
 	public ParserRule(NonTerminal nonTerminal, Symbol... symbols) {
-		this(nonTerminal, new Vector<Symbol>(Arrays.asList(symbols)));
+		this(nonTerminal, new Vector<>(Arrays.asList(symbols)));
 		
 		_symbols = new Vector<>(Arrays.asList(symbols));		
 	}
-	
-	/*	@Override
-	public String toString() {
-		return _rule.toString();
-	}
-
-	@Override
-	public boolean equals(Object other) {
-		if (other instanceof Symbol) {
-			if (_rule != null) {
-				return _rule.equals(other);
-			}
-		}
-		
-		return super.equals(other);
-	}*/
 	
 	public NonTerminal getNonTerminal() {
 		return _nonTerminal;

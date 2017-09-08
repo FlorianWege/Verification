@@ -24,12 +24,8 @@ public class NonTerminal extends Symbol {
 	private Set<ParserRule> _rules = new LinkedHashSet<>();
 	
 	public Set<ParserRule> getRules() {
-		return new LinkedHashSet<ParserRule>(_rules);
+		return new LinkedHashSet<>(_rules);
 	}
-	
-	/*public ParserRule getRule(int index) {
-		return _rules.get(index);
-	}*/
 	
 	public ParserRule createRule(Vector<Symbol> symbols) {
 		if (symbols.isEmpty()) throw new RuntimeException("no symbols");

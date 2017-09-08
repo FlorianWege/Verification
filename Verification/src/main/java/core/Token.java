@@ -10,9 +10,9 @@ import core.structures.LexerRule;
  * a token is a concatenation of text to a lexer rule abiding entity, storing the lexer rule and the collected text 
  */
 public class Token {
-	public Terminal _terminal;
-	public LexerRule _rule;
-	public String _text;
+	private Terminal _terminal;
+	private LexerRule _rule;
+	private String _text;
 	
 	public Terminal getTerminal() {
 		return _terminal;
@@ -48,7 +48,7 @@ public class Token {
 		_text = newText;
 	}
 	
-	public Token(Terminal terminal, LexerRule rule, String text, int line, int lineOffset, int pos) {
+	Token(Terminal terminal, LexerRule rule, String text, int line, int lineOffset, int pos) {
 		_terminal = terminal;
 		_rule = rule;
 		_text = text;
@@ -58,7 +58,7 @@ public class Token {
 		_pos = pos;
 	}
 	
-	public static Token createTerminator(Vector<Token> tokens) {
+	static Token createTerminator(Vector<Token> tokens) {
 		return new Token(Terminal.TERMINATOR, null, null, tokens.lastElement() == null ? 0 : tokens.lastElement().getLine(), tokens.lastElement() == null ? 0 : tokens.lastElement().getLineOffset() + 1, tokens.lastElement() == null ? 0 : tokens.lastElement().getPos() + 1);
 	}
 	
@@ -67,7 +67,7 @@ public class Token {
 		return String.format("%s (%s)", _terminal.toString(), _text);
 	}
 	
-	public String toStringVert() {
+	String toStringVert() {
 		return String.format("%s%s(%s)", _terminal.toString(), System.lineSeparator(), _text);
 	}
 }

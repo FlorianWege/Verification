@@ -7,13 +7,13 @@ public class SyntaxTree {
 		return _grammar;
 	}
 	
-	private SyntaxTreeNode _rootNode;
+	private SyntaxNode _rootNode;
 	
-	public SyntaxTreeNode getRoot() {
+	public SyntaxNode getRoot() {
 		return _rootNode;
 	}
 	
-	public SyntaxTree(Grammar grammar, SyntaxTreeNode rootNode) {
+	SyntaxTree(Grammar grammar, SyntaxNode rootNode) {
 		_grammar = grammar;
 		_rootNode = rootNode;
 	}

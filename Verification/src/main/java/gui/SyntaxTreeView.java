@@ -3,9 +3,8 @@ package gui;
 import java.util.ArrayList;
 import java.util.List;
 
+import core.SyntaxNodeTerminal;
 import core.SyntaxTree;
-import core.SyntaxTreeNode;
-import core.SyntaxTreeNodeTerminal;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -20,33 +19,33 @@ import javafx.scene.layout.CornerRadii;
 import javafx.scene.paint.Color;
 import javafx.util.Callback;
 
-public class SyntaxTreeView {
-	private TreeView<SyntaxTreeNode> _treeView;
+class SyntaxTreeView {
+	private TreeView<core.SyntaxNode> _treeView;
 	private CheckBox _checkBox_filterEps;
 	
 	private ObjectProperty<SyntaxTree> _syntaxTree;
 	
-	private class SyntaxNode extends TreeItem<SyntaxTreeNode> {
-		private SyntaxTreeNode _node;
+	private class SyntaxNode extends TreeItem<core.SyntaxNode> {
+		private core.SyntaxNode _node;
 		
 		@Override
 		public String toString() {
 			return _node.toString();
 		}
 		
-		public SyntaxTreeNode getNode() {
+		public core.SyntaxNode getNode() {
 			return _node;
 		}
 		
 		private int _reqChildren = 0;
 		
-		public int getReqChildren() {
+		int getReqChildren() {
 			return _reqChildren;
 		}
 		
 		private boolean updateReqChildren() {
-			if (_node instanceof SyntaxTreeNodeTerminal) {
-				if (((SyntaxTreeNodeTerminal) _node).getToken() == null) {
+			if (_node instanceof SyntaxNodeTerminal) {
+				if (((SyntaxNodeTerminal) _node).getToken() == null) {
 					_reqChildren = 0;
 					
 					return false;
@@ -59,9 +58,9 @@ public class SyntaxTreeView {
 			
 			int reqChildren = 0;
 
-			List<TreeItem<SyntaxTreeNode>> children = new ArrayList<>(getChildren());
+			List<TreeItem<core.SyntaxNode>> children = new ArrayList<>(getChildren());
 
-			for (TreeItem<SyntaxTreeNode> child : children) {
+			for (TreeItem<core.SyntaxNode> child : children) {
 				SyntaxNode childItem = ((SyntaxNode) child);
 				
 				if (childItem.updateReqChildren()) {
@@ -74,20 +73,20 @@ public class SyntaxTreeView {
 			return (reqChildren > 0);
 		}
 		
-		public void addChild(SyntaxNode child) {
+		void addChild(SyntaxNode child) {
 			getChildren().add(child);
 			
 			updateReqChildren();
 		}
 		
-		public SyntaxNode(SyntaxTreeNode node) {
+		public SyntaxNode(core.SyntaxNode node) {
 			_node = node;
 			
 			setValue(_node);
 			
-			/*getChildren().addListener(new ListChangeListener<TreeItem<SyntaxTreeNode>>() {
+			/*getChildren().addListener(new ListChangeListener<TreeItem<SyntaxNode>>() {
 				@Override
-				public void onChanged(javafx.collections.ListChangeListener.Change<? extends TreeItem<SyntaxTreeNode>> arg0) {
+				public void onChanged(javafx.collections.ListChangeListener.Change<? extends TreeItem<SyntaxNode>> arg0) {
 					if (arg0.wasAdded()) {
 						updateReqChildren();
 					}
@@ -98,14 +97,14 @@ public class SyntaxTreeView {
 		}
 	}
 	
-	private class SyntaxTreeNodeCell extends TreeCell<SyntaxTreeNode> {
+	private class SyntaxTreeNodeCell extends TreeCell<core.SyntaxNode> {
 		@Override
 		public void cancelEdit() {
 			super.cancelEdit();
 		}
 
 		@Override
-		public void commitEdit(SyntaxTreeNode arg0) {
+		public void commitEdit(core.SyntaxNode arg0) {
 			super.commitEdit(arg0);
 		}
 
@@ -115,7 +114,7 @@ public class SyntaxTreeView {
 		}
 		
 		@Override
-		public void updateItem(SyntaxTreeNode item, boolean empty) {
+		public void updateItem(core.SyntaxNode item, boolean empty) {
 			super.updateItem(item, empty);
 			
 			if (empty) {
@@ -131,7 +130,7 @@ public class SyntaxTreeView {
 					setText(getItem().toString());
 					setGraphic(getTreeItem().getGraphic());
 
-					if (((SyntaxNode) getTreeItem())._reqChildren > 0) {
+					if (((SyntaxTreeView.SyntaxNode) getTreeItem())._reqChildren > 0) {
 						backgroundProperty().set(new Background(new BackgroundFill(Color.ALICEBLUE, CornerRadii.EMPTY, Insets.EMPTY)));
 					} else {
 						backgroundProperty().set(new Background(new BackgroundFill(Color.BISQUE, CornerRadii.EMPTY, Insets.EMPTY)));
@@ -141,12 +140,12 @@ public class SyntaxTreeView {
 		}
 	}
 
-	private SyntaxNode addNode(SyntaxTreeNode node) {
+	private SyntaxNode addNode(core.SyntaxNode node) {
 		SyntaxNode nodeItem = new SyntaxNode(node);
 		
 		nodeItem.setExpanded(true);
 		
-		for (SyntaxTreeNode child : node.getChildren()) {
+		for (core.SyntaxNode child : node.getChildren()) {
 			nodeItem.addChild(addNode(child));
 		}
 		
@@ -154,9 +153,9 @@ public class SyntaxTreeView {
 	}
 	
 	private void filterNode(SyntaxNode nodeItem) {
-		List<TreeItem<SyntaxTreeNode>> children = new ArrayList<>(nodeItem.getChildren());
+		List<TreeItem<core.SyntaxNode>> children = new ArrayList<>(nodeItem.getChildren());
 
-		for (TreeItem<SyntaxTreeNode> child : children) {
+		for (TreeItem<core.SyntaxNode> child : children) {
 			SyntaxNode childItem = ((SyntaxNode) child);
 			
 			if (childItem.getReqChildren() == 0) {
@@ -172,7 +171,7 @@ public class SyntaxTreeView {
 		
 		if (_syntaxTree.get() == null) return;
 		
-		SyntaxTreeNode root = _syntaxTree.get().getRoot();
+		core.SyntaxNode root = _syntaxTree.get().getRoot();
 		
 		SyntaxNode rootItem = addNode(root);
 
@@ -183,14 +182,14 @@ public class SyntaxTreeView {
 		_treeView.setRoot(rootItem);
 	}
 	
-	public SyntaxTreeView(TreeView<SyntaxTreeNode> treeView, CheckBox checkBox_filterEps, ObjectProperty<SyntaxTree> syntaxTree) {
+	SyntaxTreeView(TreeView<core.SyntaxNode> treeView, CheckBox checkBox_filterEps, ObjectProperty<SyntaxTree> syntaxTree) {
 		_treeView = treeView;
 		_checkBox_filterEps = checkBox_filterEps;
 		_syntaxTree = syntaxTree;
 		
-		_treeView.setCellFactory(new Callback<TreeView<SyntaxTreeNode>, TreeCell<SyntaxTreeNode>>() {
+		_treeView.setCellFactory(new Callback<TreeView<core.SyntaxNode>, TreeCell<core.SyntaxNode>>() {
 			@Override
-			public TreeCell<SyntaxTreeNode> call(TreeView<SyntaxTreeNode> arg0) {
+			public TreeCell<core.SyntaxNode> call(TreeView<core.SyntaxNode> arg0) {
 				return new SyntaxTreeNodeCell();
 			}
 		});

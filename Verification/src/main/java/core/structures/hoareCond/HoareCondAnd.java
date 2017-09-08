@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Vector;
 
-import core.SyntaxTreeNode;
+import core.SyntaxNode;
 import core.structures.Terminal;
 
 public class HoareCondAnd extends HoareCond {
@@ -40,7 +40,7 @@ public class HoareCondAnd extends HoareCond {
 	}
 	
 	@Override
-	public void replace(Terminal lexerRule, String var, SyntaxTreeNode exp) {
+	public void replace(Terminal lexerRule, String var, SyntaxNode exp) {
 		for (HoareCond child : getChildren()) {
 			child.replace(lexerRule, var, exp);
 		}

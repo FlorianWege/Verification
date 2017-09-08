@@ -41,7 +41,7 @@ public class JavaFXMain extends Application {
 	private MainWindow _mainWindow = null;
 	
 	public interface StopInterface {
-		public void onStop();
+		void onStop();
 	}
 	
 	@Override

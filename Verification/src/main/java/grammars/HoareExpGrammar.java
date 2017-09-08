@@ -1,6 +1,5 @@
 package grammars;
 
-import core.PredictiveParserTable;
 import core.structures.Terminal;
 import core.structures.NonTerminal;
 
@@ -29,6 +28,6 @@ public class HoareExpGrammar extends BoolExpGrammar {
 		//finalize
 		setStartSymbol(NON_TERMINAL_BOOL_EXP);
 
-		updatePredictiveParserTable();
+		updateParserTable();
 	}
 }

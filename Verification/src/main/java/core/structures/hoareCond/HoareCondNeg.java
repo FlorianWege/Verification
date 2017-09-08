@@ -1,9 +1,6 @@
 package core.structures.hoareCond;
 
-import java.util.Collection;
-import java.util.Vector;
-
-import core.SyntaxTreeNode;
+import core.SyntaxNode;
 import core.structures.Terminal;
 
 public class HoareCondNeg extends HoareCond {
@@ -20,7 +17,7 @@ public class HoareCondNeg extends HoareCond {
 	}
 	
 	@Override
-	public void replace(Terminal lexerRule, String var, SyntaxTreeNode exp) {
+	public void replace(Terminal lexerRule, String var, SyntaxNode exp) {
 		_base.replace(lexerRule, var, exp);
 	}
 	

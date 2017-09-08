@@ -1,28 +1,13 @@
 package gui;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.function.IntFunction;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.fxmisc.richtext.CodeArea;
-import org.fxmisc.richtext.LineNumberFactory;
-import org.fxmisc.richtext.StyleSpans;
-import org.fxmisc.richtext.StyleSpansBuilder;
-import org.reactfx.value.Val;
-
 import core.Grammar;
-import core.SyntaxTreeNode;
+import core.SyntaxNode;
 import core.Token;
 import core.structures.LexerRule;
 import core.structures.Terminal;
+import grammars.HoareWhileGrammar;
+import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.EventHandler;
@@ -32,16 +17,31 @@ import javafx.scene.control.IndexRange;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Polygon;
+import org.fxmisc.richtext.CodeArea;
+import org.fxmisc.richtext.LineNumberFactory;
+import org.fxmisc.richtext.StyleSpans;
+import org.fxmisc.richtext.StyleSpansBuilder;
+import org.reactfx.value.Val;
+
+import javax.annotation.Nonnull;
+import java.util.*;
+import java.util.function.Function;
+import java.util.function.IntFunction;
+import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ExtendedCodeArea {
 	private CodeArea _textArea;
-	private Grammar _grammar;
+	private Grammar _grammar = HoareWhileGrammar.getInstance();
+	private ObjectProperty<SyntaxNode> _currentNodeP = null;
+	private ObjectProperty<SyntaxNode> _currentHoareNodeP = null;
 	
-	public ExtendedCodeArea(CodeArea textArea, Grammar grammar) {
+	public ExtendedCodeArea(@Nonnull CodeArea textArea) {
 		_textArea = textArea;
-		_grammar = grammar;
 		
 		_textArea.setParagraphGraphicFactory(new IntFunction<Node>() {
 			@Override
@@ -100,8 +100,6 @@ public class ExtendedCodeArea {
 								c2++;
 							}
 						}
-						
-						System.out.println(_textArea.getText(start, start));
 
 						while ((start > 0) && !_textArea.getText(start - 1, start).matches("\n")) {
 							start--;
@@ -124,15 +122,115 @@ public class ExtendedCodeArea {
 			}
 		});
 	}
-	
+
+	void setCurrentNodeP(ObjectProperty<SyntaxNode> currentNodeP, ObjectProperty<SyntaxNode> currentHoareNodeP) {
+		_currentNodeP = currentNodeP;
+		_currentHoareNodeP = currentHoareNodeP;
+
+		IntFunction<Node> numFactory = LineNumberFactory.get(_textArea);
+		IntFunction<Node> arrowFactory = new IntFunction<Node>() {
+			private Node makeCurrentNodeTriangle(int line) {
+				Polygon triangle = new Polygon(0D, 0D, 10D, 5D, 0D, 10D);
+
+				triangle.setFill(Color.RED);
+
+				ObservableValue<Boolean> vis = Val.map(_currentNodeP, new Function<SyntaxNode, Boolean>() {
+					@Override
+					public Boolean apply(SyntaxNode node) {
+						if (node == null) return false;
+
+						List<Token> tokens = node.tokenize();
+
+						tokens.removeIf(new Predicate<Token>() {
+							@Override
+							public boolean test(Token token) {
+								return token.getTerminal().isSep();
+							}
+						});
+
+						if (tokens.isEmpty()) return false;
+
+						Token firstToken = tokens.get(0);
+						Token lastToken = tokens.get(tokens.size() - 1);
+
+						return (line >= firstToken.getLine() && line <= lastToken.getLine());
+					}
+				});
+
+				triangle.visibleProperty().bind(vis);
+
+				return triangle;
+			}
+
+			private Node makeCurrentHoareNodeTriangle(int line) {
+				Polygon triangle = new Polygon(0D, 0D, 10D, 5D, 0D, 10D);
+
+				triangle.setFill(Color.LIGHTBLUE);
+
+				ObservableValue<Boolean> vis = Val.map(_currentHoareNodeP, new Function<SyntaxNode, Boolean>() {
+					@Override
+					public Boolean apply(SyntaxNode node) {
+						if (node == null) return false;
+
+						List<Token> tokens = node.tokenize();
+
+						Token firstToken = tokens.get(0);
+						Token lastToken = tokens.get(tokens.size() - 1);
+
+						return (line == firstToken.getLine() || line == lastToken.getLine());
+					}
+				});
+
+				triangle.visibleProperty().bind(vis);
+
+				return triangle;
+			}
+
+			@Override
+			public Node apply(int line) {
+				StackPane stackPane = new StackPane();
+
+				stackPane.getChildren().add(makeCurrentNodeTriangle(line));
+				stackPane.getChildren().add(makeCurrentHoareNodeTriangle(line));
+
+				return stackPane;
+			}
+		};
+
+		_textArea.setParagraphGraphicFactory(new IntFunction<Node>() {
+			@Override
+			public Node apply(int line) {
+				HBox box = new HBox(numFactory.apply(line), arrowFactory.apply(line));
+
+				box.setAlignment(Pos.CENTER_LEFT);
+
+				return box;
+			}
+		});
+	}
+
 	private Integer _errorPos = null;
 	
-	public void setErrorPos(Integer pos) {
+	public void setErrorPos(Integer pos, boolean requestFocus) {
 		_errorPos = pos;
 		
 		highlight();
+
+		if (requestFocus) {
+			Platform.runLater(new Runnable() {
+				@Override
+				public void run() {
+					_textArea.positionCaret(pos);
+					_textArea.requestFocus();
+				}
+			});
+		}
 	}
-	
+
+	public void setErrorPos(Integer pos) {
+		setErrorPos(pos, false);
+	}
+
 	private void highlight() {
 		Set<String> keywords = new LinkedHashSet<>();
 
@@ -178,56 +276,7 @@ public class ExtendedCodeArea {
 		if (_errorPos != null) {
 			_textArea.setStyle(_errorPos, _textArea.getText().length(), Collections.singleton("error"));
 		}
-		
-		final ObjectProperty<Integer> lineP = new SimpleObjectProperty<>();
-		
-		lineP.set(2);
-		
-		IntFunction<Node> numFactory = LineNumberFactory.get(_textArea);
-		IntFunction<Node> arrowFactory = new IntFunction<Node>() {
-			@Override
-			public Node apply(int line) {
-				Polygon triangle = new Polygon(0D, 0D, 10D, 5D, 0D, 10D);
-				
-				triangle.setFill(Color.RED);
-				
-				ObservableValue<Boolean> vis = Val.map(_currentNodeP, new Function<SyntaxTreeNode, Boolean>() {
-					@Override
-					public Boolean apply(SyntaxTreeNode node) {
-						if (node == null) return false;
-						
-						List<Token> tokens = node.tokenize();
-						
-						Token firstToken = tokens.get(0);
-						Token lastToken = tokens.get(tokens.size() - 1);
-						
-						return (line >= firstToken.getLine() && line <= lastToken.getLine());
-					}
-				});
-				
-				triangle.visibleProperty().bind(vis);
-				
-				return triangle;
-			}
-		};
-		
-		_textArea.setParagraphGraphicFactory(new IntFunction<Node>() {
-			@Override
-			public Node apply(int line) {
-				HBox box = new HBox(numFactory.apply(line), arrowFactory.apply(line));
-				
-				box.setAlignment(Pos.CENTER_LEFT);
-				
-				return box;
-			}
-		});
 
 		//_textArea.setStyle(0, _textArea.getText().length() - 1, Collections.singleton("styled-text-area"));
-	}
-	
-	private ObjectProperty<SyntaxTreeNode> _currentNodeP = new SimpleObjectProperty<>();
-	
-	public void setCurrentNode(SyntaxTreeNode node) {
-		_currentNodeP.set(node);
 	}
 }

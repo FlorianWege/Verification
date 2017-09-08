@@ -2,11 +2,13 @@ package core;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
+import com.sun.istack.internal.NotNull;
 import core.structures.Terminal;
 
-public class SyntaxTreeNodeTerminal extends SyntaxTreeNode {
+public class SyntaxNodeTerminal extends SyntaxNode {
 	private Token _token;
 	
 	public Token getToken() {
@@ -33,21 +35,22 @@ public class SyntaxTreeNodeTerminal extends SyntaxTreeNode {
 		System.out.println(new String(new char[nestDepth]).replace('\0', '\t') + toString());
 	}
 	
+	@Override
 	public List<Token> tokenize() {
-		return (_token != null) ? Arrays.asList(_token) : new ArrayList<>();
+		return (_token != null) ? Collections.singletonList(_token) : new ArrayList<>();
 	}
 	
 	@Override
-	public SyntaxTreeNode copy() {
-		return new SyntaxTreeNodeTerminal((_token == null) ? null : _token.copy());
+	public SyntaxNode copy() {
+		return new SyntaxNodeTerminal((_token == null) ? null : _token.copy());
 	}
 	
-	public SyntaxTreeNodeTerminal(Terminal terminal) {
+	SyntaxNodeTerminal(Terminal terminal) {
 		super(terminal, null);
 	}
 	
-	public SyntaxTreeNodeTerminal(Token token) {
-		this((token == null) ? Terminal.EPSILON : token.getTerminal());
+	SyntaxNodeTerminal(Token token) {
+		this((token != null) ? token.getTerminal() : null);
 
 		_token = token;
 	}

@@ -1,0 +1,74 @@
+.dialog > *.label.content {
+	-fx-font-weight: bold;
+	-fx-alignment: center;
+	-fx-text-alignment: center;
+}
+
+.dialogassertion {
+	-fx-fill: black;
+	-fx-font-weight: bold;
+	-fx-alignment: center;
+	-fx-text-alignment: center;
+}
+
+.styled-text-area * {
+    -fx-text-alignment: center;
+}
+
+.styled-text-area.success {
+	-fx-font: 50px Tahoma;
+	-fx-fill: green;
+	-fx-font-weight: bold;
+	-fx-alignment: center;
+	-fx-text-alignment: center;
+}
+
+.failure {
+	-fx-font: 50px Tahoma;
+	-fx-fill: red;
+	-fx-font-weight: bold;
+	-fx-alignment: center;
+	-fx-text-alignment: center;
+}
+
+body {
+    text-align: center;
+    font-size: 14px;
+    background-color: lemonchiffon;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+p .prose {
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+p .param {
+    text-align: center;
+    font-size: 12px;
+    background-color: lightgreen;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+p .step {
+    text-align: center;
+    font-size: 12px;
+    background-color: lightblue;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+p .param {
+    text-align: center;
+    font-size: 12px;
+    background-color: rose;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.indent {
+    margin-left: 5em;
+}

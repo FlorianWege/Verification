@@ -92,6 +92,6 @@ public class BoolExpGrammar extends ExpGrammar {
 		//finalize
 		setStartSymbol(NON_TERMINAL_BOOL_EXP);
 
-		updatePredictiveParserTable();
+		updateParserTable();
 	}
 }
