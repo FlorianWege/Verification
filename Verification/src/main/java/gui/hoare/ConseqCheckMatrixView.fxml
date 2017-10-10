@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+
+<TabPane fx:id="_tabPane" side="LEFT" tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/8.0.102" xmlns:fx="http://javafx.com/fxml/1">
+   <tabs>
+      <Tab fx:id="_tab_matrix" text="Matrix">
+         <content>
+            <TableView fx:id="_tableView_matrix" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308">
+               <columns>
+                  <TableColumn fx:id="_tableCol_matrix_p" maxWidth="1.7976931348623157E308" minWidth="100.0" prefWidth="-1.0" />
+               </columns>
+            </TableView>
+         </content>
+      </Tab>
+      <Tab fx:id="_tab_list" text="List">
+         <content>
+            <TableView fx:id="_tableView_list" prefHeight="200.0" prefWidth="200.0">
+              <columns>
+                <TableColumn fx:id="_tableCol_list_p0" prefWidth="75.0" text="p0" />
+                  <TableColumn fx:id="_tableCol_list_p" prefWidth="75.0" text="p" />
+                  <TableColumn fx:id="_tableCol_list_checked" prefWidth="75.0" text="checked" />
+              </columns>
+            </TableView>
+         </content>
+      </Tab>
+   </tabs>
+</TabPane>

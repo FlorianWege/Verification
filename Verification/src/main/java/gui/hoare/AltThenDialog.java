@@ -1,8 +1,7 @@
 package gui.hoare;
 
 import core.Hoare;
-import core.SyntaxNode;
-import core.structures.nodes.BoolExp;
+import core.structures.semantics.prog.Skip;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -11,6 +10,7 @@ import javafx.scene.control.Button;
 import util.ErrorUtil;
 import util.StringUtil;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -20,18 +20,14 @@ public class AltThenDialog extends HoareDialog implements Initializable {
 	@FXML
 	private Button _button_continue;
 
-	private Hoare.Executer.AltThen_callback _callback;
-	private BoolExp _boolExp;
-	private SyntaxNode _thenProgNode;
-	private SyntaxNode _elseProgNode;
+	private final Hoare.Executer.wlp_alt _alt;
+	private final Hoare.Executer.AltThen_callback _callback;
 
-	public AltThenDialog(Hoare.Executer.wlp_alt alt, Hoare.Executer.AltThen_callback callback) throws IOException {
+	public AltThenDialog(@Nonnull Hoare.Executer.wlp_alt alt, @Nonnull Hoare.Executer.AltThen_callback callback) throws IOException {
 		super(alt._altNode, null, alt._postCond);
 
+		_alt = alt;
 		_callback = callback;
-		_boolExp = alt._boolExp;
-		_thenProgNode = alt._thenProgNode;
-		_elseProgNode = alt._elseProgNode;
 		
 		inflate(new File("AltThenDialog.fxml"));
 	}
@@ -45,12 +41,12 @@ public class AltThenDialog extends HoareDialog implements Initializable {
 	public String getRationale() {
 		RationaleBuilder sb = new RationaleBuilder();
 
-		sb.addProse("using Hoare rule 4 (conditional): " + "{p" + StringUtil.bool_and + "B} S<sub>1</sub> {q}, {p" + StringUtil.bool_and + StringUtil.bool_neg + "B} S<sub>2</sub>{q}" + " -> " + "{p} if B then S<sub>1</sub> else S<sub>2</sub> fi {q}");
+		sb.addProse("using Hoare rule 4 (conditional): " + "{p" + StringUtil.bool_and + "B} S<sub>1</sub> {q}, {p" + StringUtil.bool_and + StringUtil.bool_neg + "B} S<sub>2</sub>{q}" + StringUtil.bool_impl + "{p} if B then S<sub>1</sub> else S<sub>2</sub> fi {q}");
 
-		sb.addParam("B", _boolExp.getBase().synthesize());
-		sb.addParam("S<sub>1</sub>", _thenProgNode.synthesize());
-		sb.addParam("S<sub>2</sub>", _elseProgNode.synthesize());
-		sb.addParam("q", _postCond.toStringEx());
+		sb.addParam("B", styleNode(_alt._altNode.getBoolExp()));
+		sb.addParam("S<sub>1</sub>", styleNode(_alt._altNode.getThenProg()));
+		sb.addParam("S<sub>2</sub>", styleNode((_alt._altNode.getElseProg() != null) ? _alt._altNode.getElseProg() : new Skip()));
+		sb.addParam("q", styleCond(_postCond));
 
 		sb.addStep("get p" + StringUtil.bool_and + "B = wlp(S<sub>1</sub>, q)");
 
@@ -58,23 +54,22 @@ public class AltThenDialog extends HoareDialog implements Initializable {
 	}
 
 	@Override
-	public String getOutput() {
-		return null;
-	}
-
-	@Override
 	public void initialize(URL url, ResourceBundle resources) {
-		super.initialize(url, resources);
+		try {
+			super.initialize(url, resources);
 
-		_button_continue.setOnAction(new EventHandler<ActionEvent>() {
-			@Override
-			public void handle(ActionEvent event) {
-				try {
-					_callback.result();
-				} catch (Exception e) {
-					ErrorUtil.logEFX(e);
+			_button_continue.setOnAction(new EventHandler<ActionEvent>() {
+				@Override
+				public void handle(ActionEvent event) {
+					try {
+						_callback.result();
+					} catch (Exception e) {
+						ErrorUtil.logEFX(e);
+					}
 				}
-			}
-		});
+			});
+		} catch (Exception e) {
+			ErrorUtil.logEFX(e);
+		}
 	}
 }

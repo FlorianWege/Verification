@@ -1,30 +1,26 @@
 package core.structures;
 
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Vector;
 
 import core.Symbol;
 
-public class ParserRule {
-	private NonTerminal _nonTerminal;
-	private Vector<Symbol> _symbols = new Vector<>();
-	
-	ParserRule(NonTerminal nonTerminal) {
+public class ParserRule implements Serializable {
+	private final NonTerminal _nonTerminal;
+	private final List<Symbol> _symbols;
+
+	public ParserRule(NonTerminal nonTerminal, List<Symbol> symbols) {
+		if (symbols.isEmpty()) throw new RuntimeException("no symbols");
+
 		_nonTerminal = nonTerminal;
+		_symbols = new ArrayList<>(symbols);
 	}
 
-	ParserRule(NonTerminal nonTerminal, Vector<Symbol> symbols) {
-		this(nonTerminal);
-		
-		if (symbols.isEmpty()) throw new RuntimeException("no symbols");
-		
-		_symbols = new Vector<>(symbols);
-	}
-	
 	public ParserRule(NonTerminal nonTerminal, Symbol... symbols) {
-		this(nonTerminal, new Vector<>(Arrays.asList(symbols)));
-		
-		_symbols = new Vector<>(Arrays.asList(symbols));		
+		this(nonTerminal, Arrays.asList(symbols));
 	}
 	
 	public NonTerminal getNonTerminal() {
@@ -37,7 +33,17 @@ public class ParserRule {
 	
 	@Override
 	public boolean equals(Object other) {
-		if (_symbols.size() == 1) return _symbols.get(0).equals(other);
+		if (other instanceof ParserRule) {
+			ParserRule otherRule = (ParserRule) other;
+
+			if (getSymbols().size() == otherRule.getSymbols().size()) {
+				for (int i = 0; i < getSymbols().size(); i++) {
+					if (!getSymbols().get(i).equals(otherRule.getSymbols().get(i))) return false;
+				}
+
+				return true;
+			}
+		}
 		
 		return super.equals(other);
 	}

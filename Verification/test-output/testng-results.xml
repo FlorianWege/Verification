@@ -6,12 +6,12 @@
     <groups>
     </groups>
     <test name="Default test" duration-ms="144" started-at="2017-08-29T15:25:06Z" finished-at="2017-08-29T15:25:07Z">
-      <class name="logic.KNFTest">
-        <test-method status="PASS" signature="test()[pri:0, instance:logic.KNFTest@50c87b21]" name="test" duration-ms="111" started-at="2017-08-29T17:25:06Z" finished-at="2017-08-29T17:25:07Z">
+      <class name="logic.CNFTest">
+        <test-method status="PASS" signature="test()[pri:0, instance:logic.CNFTest@50c87b21]" name="test" duration-ms="111" started-at="2017-08-29T17:25:06Z" finished-at="2017-08-29T17:25:07Z">
           <reporter-output>
           </reporter-output>
         </test-method> <!-- test -->
-      </class> <!-- logic.KNFTest -->
+      </class> <!-- logic.CNFTest -->
     </test> <!-- Default test -->
   </suite> <!-- Default suite -->
 </testng-results>

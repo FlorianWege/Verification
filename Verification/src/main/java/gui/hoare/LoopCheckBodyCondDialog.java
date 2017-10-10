@@ -1,9 +1,9 @@
 package gui.hoare;
 
 import core.Hoare;
-import core.SyntaxNode;
-import core.structures.hoareCond.HoareCond;
-import core.structures.nodes.BoolExp;
+import core.structures.semantics.boolExp.HoareCond;
+import core.structures.semantics.boolExp.BoolExp;
+import core.structures.semantics.prog.Prog;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -12,6 +12,7 @@ import javafx.scene.control.Button;
 import util.ErrorUtil;
 import util.StringUtil;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -23,18 +24,16 @@ public class LoopCheckBodyCondDialog extends HoareDialog implements Initializabl
 	@FXML
 	private Button _button_reject;
 
-	private Hoare.Executer.LoopCheckBodyCond_callback _callback;
-	private BoolExp _boolExp;
-	private SyntaxNode _progNode;
-	private HoareCond _postInvariant;
-	private HoareCond _preInvariant;
+	private final Hoare.Executer.wlp_loop _loop;
+	private final Hoare.Executer.LoopCheckBodyCond_callback _callback;
+	private final HoareCond _postInvariant;
+	private final HoareCond _preInvariant;
 
-	public LoopCheckBodyCondDialog(Hoare.Executer.wlp_loop loop, Hoare.Executer.LoopCheckBodyCond_callback callback) throws IOException {
-		super(loop._loopNode, null, loop._postCond);
+	public LoopCheckBodyCondDialog(@Nonnull Hoare.Executer.wlp_loop loop, @Nonnull Hoare.Executer.LoopCheckBodyCond_callback callback) throws IOException {
+		super(loop._whileNode, null, loop._postCond);
 
+		_loop = loop;
 		_callback = callback;
-		_boolExp = loop._boolExp;
-		_progNode = loop._progNode;
 		_postInvariant = loop._postInvariant;
 		_preInvariant = loop._preInvariant;
 		
@@ -43,28 +42,28 @@ public class LoopCheckBodyCondDialog extends HoareDialog implements Initializabl
 
 	@Override
 	public String getTitle() {
-		return "Loop (Step 4)";
+		return "While (Step 4)";
 	}
 
 	@Override
 	public String getRationale() {
 		RationaleBuilder sb = new RationaleBuilder();
 
-		sb.addProse("using Hoare rule 5 (loop): {p" + StringUtil.bool_and + "B} S {p} -> {p} while B do S od {p" + StringUtil.bool_and + StringUtil.bool_neg + "B}");
-		sb.addProse("p" + StringUtil.bool_and + StringUtil.bool_neg + "B" + " -> q");
+		sb.addProse("using Hoare rule 5 (loop): {p" + StringUtil.bool_and + "B} S {p} " + StringUtil.bool_impl + " {p} while B do S od {p" + StringUtil.bool_and + StringUtil.bool_neg + "B}");
+		sb.addProse("p" + StringUtil.bool_and + StringUtil.bool_neg + "B" + StringUtil.bool_impl + "q");
 
-		sb.addParam("B", _boolExp.getBase().synthesize());
-		sb.addParam("S", _progNode.synthesize());
-		sb.addParam("q", _postCond.toStringEx());
+		sb.addParam("B", styleNode(_loop._whileNode.getBoolExp()));
+		sb.addParam("S", styleNode(_loop._whileNode.getProg()));
+		sb.addParam("q", styleCond(_postCond));
 
 		sb.addStep("get alleged invariant {p*}");
-		sb.addResult(_postInvariant.toStringEx());
+		sb.addResult(styleCond(_postInvariant));
 
-		sb.addStep("check p" + StringUtil.bool_and + StringUtil.bool_neg + "B -> q");
+		sb.addStep("check p" + StringUtil.bool_and + StringUtil.bool_neg + "B" + StringUtil.bool_impl + "q");
 		sb.addResult("true");
 
 		sb.addStep("get p**=wlp(S, p*)");
-		sb.addResult(_preInvariant.toStringEx());
+		sb.addResult(styleCond(_preInvariant));
 
 		sb.addStep("check p** -> p*");
 
@@ -72,33 +71,32 @@ public class LoopCheckBodyCondDialog extends HoareDialog implements Initializabl
 	}
 
 	@Override
-	public String getOutput() {
-		return null;
-	}
-
-	@Override
 	public void initialize(URL url, ResourceBundle resources) {
-		super.initialize(url, resources);
+		try {
+			super.initialize(url, resources);
 
-		_button_accept.setOnAction(new EventHandler<ActionEvent>() {
-			@Override
-			public void handle(ActionEvent event) {
-				try {
-					_callback.result(true);
-				} catch (Exception e) {
-					ErrorUtil.logEFX(e);
+			_button_accept.setOnAction(new EventHandler<ActionEvent>() {
+				@Override
+				public void handle(ActionEvent event) {
+					try {
+						_callback.result(true);
+					} catch (Exception e) {
+						ErrorUtil.logEFX(e);
+					}
 				}
-			}
-		});
-		_button_reject.setOnAction(new EventHandler<ActionEvent>() {
-			@Override
-			public void handle(ActionEvent event) {
-				try {
-					_callback.result(false);
-				} catch (Exception e) {
-					ErrorUtil.logEFX(e);
+			});
+			_button_reject.setOnAction(new EventHandler<ActionEvent>() {
+				@Override
+				public void handle(ActionEvent event) {
+					try {
+						_callback.result(false);
+					} catch (Exception e) {
+						ErrorUtil.logEFX(e);
+					}
 				}
-			}
-		});
+			});
+		} catch (Exception e) {
+			ErrorUtil.logEFX(e);
+		}
 	}
 }

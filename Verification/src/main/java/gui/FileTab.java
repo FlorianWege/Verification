@@ -10,21 +10,23 @@ import java.net.URL;
 import java.util.*;
 
 import core.*;
+import core.structures.semantics.SemanticNode;
+import core.structures.semantics.prog.Assign;
+import core.structures.semantics.prog.Skip;
+import core.structures.syntax.SyntaxNode;
 import gui.hoare.*;
 import org.fxmisc.richtext.CodeArea;
 
 import core.Hoare.Executer.Assign_callback;
 import core.Hoare.Executer.CompMerge_callback;
-import core.Hoare.Executer.CompSecond_callback;
-import core.Hoare.Executer.CompFirst_callback;
+import core.Hoare.Executer.CompNext_callback;
 import core.Hoare.Executer.Skip_callback;
 import core.Hoare.Executer.LoopAskInv_callback;
 import core.Hoare.HoareException;
 import core.Lexer.LexerException;
 import core.Lexer.LexerResult;
 import core.Parser.ParserException;
-import core.structures.nodes.Exp;
-import core.structures.hoareCond.HoareCond;
+import core.structures.semantics.boolExp.HoareCond;
 import grammars.HoareWhileGrammar;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
@@ -45,9 +47,13 @@ import javafx.scene.control.TreeView;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
+import org.fxmisc.richtext.StyleClassedTextArea;
 import util.ErrorUtil;
 import util.IOUtil;
 import util.StringUtil;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 public class FileTab extends Tab implements Initializable, MainWindow.ActionInterface {
 	@FXML
@@ -57,7 +63,8 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 	@FXML
 	private Pane _pane_code;
 	@FXML
-	private CodeArea _textArea_code;
+	private CodeArea _codeArea_code;
+	private ExtendedCodeArea _extendedCodeArea_code;
 	
 	@FXML
 	private TabPane _tabPane_modus;
@@ -70,12 +77,18 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 	private Pane _pane_tokens;
 	@FXML
 	private CodeArea _textArea_tokens;
+	private ExtendedCodeArea _extendedCodeArea_tokens;
 	@FXML
 	private Pane _pane_syntaxTree;
 	@FXML
 	private CheckBox _checkBox_syntaxTree_filterEps;
 	@FXML
-	private TreeView<SyntaxNode> _treeView_syntaxTreeBase;
+	private TreeView<SyntaxNode> _treeView_syntaxTreeHost;
+
+	@FXML
+	private Pane _pane_semanticTree;
+	@FXML
+	private TreeView<SemanticNode> _treeView_semanticTreeHost;
 	
 	@FXML
 	private CheckBox _checkBox_hoare_auto;
@@ -83,146 +96,44 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 	private CodeArea _codeArea_hoare;
 	private ExtendedCodeArea _extendedCodeArea_hoare;
 	@FXML
+	private StyleClassedTextArea _textArea_hoare_postCond;
+	@FXML
 	private StackPane _pane_hoare_dialogHost;
 	
-	private SyntaxTreeView _syntaxTreeView;
-	private ObjectProperty<SyntaxTree> _syntaxTree = new SimpleObjectProperty<>();
-	private ObjectProperty<SyntaxNode> _currentNodeP = new SimpleObjectProperty<>();
-	private ObjectProperty<SyntaxNode> _currentHoareNodeP = new SimpleObjectProperty<>();
+	private final SyntaxTreeView _syntaxTreeView;
+	private final ObjectProperty<SyntaxNode> _syntaxTreeP = new SimpleObjectProperty<>();
+	private final SemanticTreeView _semanticTreeView;
+	private final ObjectProperty<SemanticNode> _semanticTreeP = new SimpleObjectProperty<>();
+
+	private final ObjectProperty<SemanticNode> _currentNodeP = new SimpleObjectProperty<>();
+	private final ObjectProperty<SemanticNode> _currentHoareNodeP = new SimpleObjectProperty<>();
 	
-	private ObjectProperty<ObservableMap<SyntaxNode, HoareCond>> _preCondMap = new SimpleObjectProperty<>();
-	private ObjectProperty<ObservableMap<SyntaxNode, HoareCond>> _postCondMap = new SimpleObjectProperty<>();
-	private SyntaxChart _syntaxChart;
-	private Map<KeyCombination, Runnable> _accelerators;
+	private final ObjectProperty<ObservableMap<SemanticNode, HoareCond>> _preCondMapP = new SimpleObjectProperty<>();
+	private final ObjectProperty<ObservableMap<SemanticNode, HoareCond>> _postCondMapP = new SimpleObjectProperty<>();
+	private final TreeChartWindow _treeChartWindow;
+	private final Map<KeyCombination, Runnable> _accelerators;
 	
-	private Scene _scene;
+	private final Scene _scene;
 	
-	public Scene getScene() {
+	public @Nonnull Scene getScene() {
 		return _scene;
 	}
 	
 	public interface ActionListener {
-		public void isSavedChanged();
-		public void isParsedChanged();
-		public void isHoaredChanged();
-		public void throwException(Exception e);
+		void isSavedChanged();
+		void isParsedChanged();
+		void isHoaredChanged();
+		void throwException(Exception e);
 	}
 	
 	private Set<ActionListener> _actionListeners = new LinkedHashSet<>();
 	
-	public void addActionListener(ActionListener listener) {
+	public void addActionListener(@Nonnull ActionListener listener) {
 		_actionListeners.add(listener);
 	}
-	
-	private boolean _isSaved = true;
 
-	public boolean isSaved() {
-		return _isSaved;
-	}
-	
-	public void setSaved(boolean flag) {
-		if (flag == _isSaved) return;
+	private final Grammar _grammar = HoareWhileGrammar.getInstance();
 
-		_isSaved = flag;
-		
-		for (ActionListener listener : _actionListeners) {
-			listener.isSavedChanged();
-		}
-		
-		updateText();
-	}
-	
-	private boolean _isParsed = false;
-	
-	public boolean isParsed() {
-		return _isParsed;
-	}
-	
-	public void setParsed(boolean flag) {
-		if (flag == _isParsed) return;
-		
-		_isParsed = flag;
-		
-		for (ActionListener listener : _actionListeners) {
-			listener.isParsedChanged();
-		}
-	}
-	
-	private boolean _isHoaring = false;
-	
-	public boolean isHoaring() {
-		return _isHoaring;
-	}
-	
-	public void setHoaring(boolean flag) {
-		if (flag == _isHoaring) return;
-		
-		_isHoaring = flag;
-		
-		for (ActionListener listener : _actionListeners) {
-			listener.isHoaredChanged();
-		}
-		
-		if (!_isHoaring) {
-			_currentNodeP.set(null);
-			_currentHoareNodeP.set(null);
-		}
-	}
-	
-	public class AutoParseException extends Exception {
-		private static final long serialVersionUID = 1L;
-
-		public AutoParseException(Exception e) {
-			super(e);
-		}
-	}
-	
-	public void throwException(Exception e) {
-		for (ActionListener listener : _actionListeners) {
-			listener.throwException(e);
-		}
-	}
-	
-	private void updateText() {
-		StringBuilder text_sb = new StringBuilder();
-		StringBuilder tooltip_sb = new StringBuilder();
-		
-		if (!_isSaved) {
-			text_sb.append("*");
-		}
-		
-		if (_name != null) {
-			text_sb.append(_name);
-			tooltip_sb.append(_name);
-		} else if (_file != null) {
-			text_sb.append(_file.getName());
-			tooltip_sb.append(_file.toString());
-		}
-		
-		if (!_isSaved) {
-			tooltip_sb.append(" (edited)");
-		}
-		
-		setText(text_sb.toString());
-		setTooltip(new Tooltip(tooltip_sb.toString()));
-	}
-
-	private String _name = null;
-
-	public String getName() {
-		return _name;
-	}
-	
-	public void setName(String val) {
-		_name = val;
-
-		updateText();
-	}
-	
-	private Grammar _grammar = new HoareWhileGrammar();
-	
-	private ExtendedCodeArea _codeArea;
-	private ExtendedCodeAreaToken _tokenArea;
 	private File _file;
 	
 	public File getFile() {
@@ -235,17 +146,17 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 		return _isInternalFile;
 	}
 	
-	private void setFile(File file, boolean isInternalFile) {
+	private void setFile(@Nullable File file, boolean isInternalFile) {
 		_file = file;
 		_isInternalFile = isInternalFile;
 		
 		updateText();
 	}
 	
-	public void save(File file) throws IOException {
+	public void save(@Nonnull File file) throws IOException {
 		BufferedWriter writer = new BufferedWriter(new FileWriter(file));
 		
-		writer.write(_textArea_code.getText());
+		writer.write(_codeArea_code.getText());
 		
 		writer.close();
 
@@ -254,13 +165,7 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 		setSaved(true);
 	}
 	
-	private MainWindow _mainWindow;
-	
-	public void setMainWindow(MainWindow mainWindow) {
-		_mainWindow = mainWindow;
-	}
-	
-	public FileTab(File file, boolean isInternalFile, Map<KeyCombination, Runnable> accelerators) throws IOException {
+	public FileTab(@Nullable File file, boolean isInternalFile, @Nonnull Map<KeyCombination, Runnable> accelerators) throws IOException {
 		super();
 
 		_accelerators = accelerators;
@@ -272,34 +177,160 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 		_scene.getStylesheets().add(getClass().getResource("ExtendedCodeArea.css").toExternalForm());
 		
 		setContent(_scene.getRoot());
+
+		_preCondMapP.set(FXCollections.observableHashMap());
+		_postCondMapP.set(FXCollections.observableHashMap());
+
+		_syntaxTreeView = new SyntaxTreeView(_treeView_syntaxTreeHost, _syntaxTreeP, _checkBox_syntaxTree_filterEps);
+		_semanticTreeView = new SemanticTreeView(_treeView_semanticTreeHost, _semanticTreeP);
+		_treeChartWindow = new TreeChartWindow(_syntaxTreeP, _semanticTreeP, _preCondMapP, _postCondMapP, _currentNodeP, _currentHoareNodeP, _accelerators);
 	}
 
 	public FileTab(Map<KeyCombination, Runnable> accelerators) throws IOException {
 		this(null, false, accelerators);
 	}
-	
+
+	private boolean _isSaved = true;
+
+	public boolean isSaved() {
+		return _isSaved;
+	}
+
+	public void setSaved(boolean flag) {
+		if (flag == _isSaved) return;
+
+		_isSaved = flag;
+
+		for (ActionListener listener : _actionListeners) {
+			listener.isSavedChanged();
+		}
+
+		updateText();
+	}
+
+	private boolean _isParsed = false;
+
+	public boolean isParsed() {
+		return _isParsed;
+	}
+
+	public void setParsed(boolean flag) {
+		if (flag == _isParsed) return;
+
+		_isParsed = flag;
+
+		for (ActionListener listener : _actionListeners) {
+			listener.isParsedChanged();
+		}
+	}
+
+	private boolean _isAutoParsing = false;
+
+	public boolean isAutoParsing() {
+		return _isAutoParsing;
+	}
+
+	public void setAutoParsing(boolean flag) throws AutoParseException {
+		_isAutoParsing = flag;
+
+		if (_isAutoParsing && !isParsed()) {
+			try {
+				parse_priv();
+			} catch (ParserException | LexerException e) {
+				throw new AutoParseException(e);
+			}
+		}
+	}
+
+	private boolean _isHoaring = false;
+
+	public boolean isHoaring() {
+		return _isHoaring;
+	}
+
+	public void setHoaring(boolean flag) {
+		if (flag == _isHoaring) return;
+
+		_isHoaring = flag;
+
+		for (ActionListener listener : _actionListeners) {
+			listener.isHoaredChanged();
+		}
+
+		if (_isHoaring) {
+			_treeChartWindow.setHoare();
+		} else {
+			_currentNodeP.set(null);
+			_currentHoareNodeP.set(null);
+		}
+
+		_codeArea_code.setEditable(!_isHoaring);
+	}
+
+	public class AutoParseException extends Exception {
+		public AutoParseException(Exception e) {
+			super(e);
+		}
+	}
+
+	public void throwException(@Nonnull Exception e) {
+		for (ActionListener listener : _actionListeners) {
+			listener.throwException(e);
+		}
+	}
+
+	private void updateText() {
+		StringBuilder text_sb = new StringBuilder();
+		StringBuilder tooltip_sb = new StringBuilder();
+
+		if (!_isSaved) text_sb.append("*");
+
+		if (_name != null) {
+			text_sb.append(_name);
+			tooltip_sb.append(_name);
+		} else if (_file != null) {
+			text_sb.append(_file.getName());
+			tooltip_sb.append(_file.toString());
+		}
+
+		if (!_isSaved) tooltip_sb.append(" (edited)");
+
+		setText(text_sb.toString());
+		setTooltip(new Tooltip(tooltip_sb.toString()));
+	}
+
+	private String _name = null;
+
+	public String getName() {
+		return _name;
+	}
+
+	public void setName(String val) {
+		_name = val;
+
+		updateText();
+	}
+
 	public void select() {
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
-				_textArea_code.requestFocus();
-				_textArea_code.selectAll();
+				_codeArea_code.requestFocus();
+				_codeArea_code.selectAll();
 			}
 		});
 	}
 	
 	@Override
-	public void initialize(URL location, ResourceBundle resources) {
+	public void initialize(URL url, ResourceBundle resources) {
 		try {
-			_codeArea = new ExtendedCodeArea(_textArea_code);
-
-			_codeArea.setCurrentNodeP(_currentNodeP, _currentHoareNodeP);
+			_extendedCodeArea_code = new ExtendedCodeArea(_codeArea_code, _currentNodeP, _currentHoareNodeP, ExtendedCodeArea.Type.CODE);
 	
 			if (_file != null) {
 				if (_isInternalFile) {
 					String s = IOUtil.getResourceAsString(_file.toString());
 					
-					_textArea_code.replaceText(s);
+					_codeArea_code.replaceText(s);
 				} else {
 					BufferedReader reader = new BufferedReader(new FileReader(_file));
 					
@@ -307,48 +338,37 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 					String line;
 					
 					while ((line = reader.readLine()) != null) {
-						if (sb.length() > 0) {
-							sb.append(System.lineSeparator());
-						}
+						if (sb.length() > 0) sb.append(StringUtil.line_sep);
 
 						sb.append(line);
 					}
 					
 					reader.close();
 					
-					_textArea_code.replaceText(sb.toString());
+					_codeArea_code.replaceText(sb.toString());
 				}
 			}
 			
-			_textArea_code.textProperty().addListener(new ChangeListener<String>() {
+			_codeArea_code.textProperty().addListener(new ChangeListener<String>() {
 				@Override
 				public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-					setSaved(false);
-					setParsed(false);
-					setHoaring(false);
-					
-					if (_mainWindow != null && _mainWindow.getMenuParseAuto().isSelected()) {
-						try {
-							parse();
-						} catch (Exception e) {
-							throwException(new AutoParseException(e));
-						}
+					try {
+						setSaved(false);
+						setParsed(false);
+						setHoaring(false);
+
+						if (isAutoParsing()) parse_priv();
+					} catch (Exception e) {
+						throwException(new AutoParseException(e));
 					}
 				}
 			});
 			
-			_tokenArea = new ExtendedCodeAreaToken(_textArea_tokens, _grammar);
-			
-			_syntaxTreeView = new SyntaxTreeView(_treeView_syntaxTreeBase, _checkBox_syntaxTree_filterEps, _syntaxTree);
-
-			_preCondMap.set(FXCollections.observableHashMap());
-			_postCondMap.set(FXCollections.observableHashMap());
-			
-			_syntaxChart = new SyntaxChart(_syntaxTree, _preCondMap, _postCondMap, _currentNodeP, _currentHoareNodeP, _accelerators);
+			_extendedCodeArea_tokens = new ExtendedCodeArea(_textArea_tokens, _currentNodeP, _currentHoareNodeP, ExtendedCodeArea.Type.TOKEN);
 			
 			updateVisibility();
 			
-			_extendedCodeArea_hoare = new ExtendedCodeArea(_codeArea_hoare);
+			_extendedCodeArea_hoare = new ExtendedCodeArea(_codeArea_hoare, _currentNodeP, _currentHoareNodeP, ExtendedCodeArea.Type.HOARE);
 		} catch (Exception e) {
 			ErrorUtil.logEFX(e);
 		}
@@ -356,12 +376,13 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 
 	private boolean _tokens_shown = false;
 	private boolean _syntaxTreeBox_shown = false;
-	private boolean _syntaxChart_shown = false;
+	private boolean _semanticTreeBox_shown = false;
+	private boolean _treeChartWindow_shown = false;
 	
 	private double _split_main_dividerPos = 0.4D;
 	
 	private void updateVisibility() {
-		boolean modus_shown = _tokens_shown || _syntaxTreeBox_shown || isHoaring();
+		boolean modus_shown = _tokens_shown || _syntaxTreeBox_shown || _semanticTreeBox_shown || isHoaring();
 		
 		if (modus_shown) {
 			if (!_split_main.getItems().contains(_tabPane_modus)) {
@@ -385,9 +406,7 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 			if (_tokens_shown) {
 				int index = Math.min(0, _split_parsing.getItems().size());
 				
-				if (!_split_parsing.getItems().contains(_pane_tokens)) {
-					_split_parsing.getItems().add(index, _pane_tokens);
-				}
+				if (!_split_parsing.getItems().contains(_pane_tokens)) _split_parsing.getItems().add(index, _pane_tokens);
 			} else {
 				if (_split_parsing.getItems().contains(_pane_tokens)) _split_parsing.getItems().remove(_pane_tokens);
 			}
@@ -398,25 +417,28 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 			if (_syntaxTreeBox_shown) {
 				int index = Math.min(1, _split_parsing.getItems().size());
 				
-				if (!_split_parsing.getItems().contains(_pane_syntaxTree)) {
-					_split_parsing.getItems().add(index, _pane_syntaxTree);
-				}
+				if (!_split_parsing.getItems().contains(_pane_syntaxTree)) _split_parsing.getItems().add(index, _pane_syntaxTree);
 			} else {
 				if (_split_parsing.getItems().contains(_pane_syntaxTree)) _split_parsing.getItems().remove(_pane_syntaxTree);
 			}
 			
 			_pane_syntaxTree.setVisible(_syntaxTreeBox_shown);
 		}
-		
-		if (modus_shown) {
-			if (_split_parsing.getItems().isEmpty()) {
-				_tabPane_modus.getSelectionModel().select(_tab_hoare);
+		if (_pane_semanticTree != null) {
+			if (_semanticTreeBox_shown) {
+				int index = Math.min(2, _split_parsing.getItems().size());
+
+				if (!_split_parsing.getItems().contains(_pane_semanticTree)) _split_parsing.getItems().add(index, _pane_semanticTree);
+			} else {
+				if (_split_parsing.getItems().contains(_pane_semanticTree)) _split_parsing.getItems().remove(_pane_semanticTree);
 			}
+
+			_pane_semanticTree.setVisible(_semanticTreeBox_shown);
 		}
 		
-		if (_syntaxChart != null) {
-			_syntaxChart.setVisible(_syntaxChart_shown);
-		}
+		if (modus_shown) if (_split_parsing.getItems().isEmpty()) _tabPane_modus.getSelectionModel().select(_tab_hoare);
+		
+		if (_treeChartWindow != null) _treeChartWindow.setVisible(_treeChartWindow_shown);
 	}
 	
 	public void showTokens(boolean show) {
@@ -434,85 +456,99 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 		
 		updateVisibility();
 	}
-	
-	public void showSyntaxChart(boolean show) {
-		_syntaxChart_shown = show;
-		
+
+	public void showSemanticTree(boolean show) {
+		_semanticTreeBox_shown = show;
+
+		_tabPane_modus.getSelectionModel().select(_tab_parsing);
+
 		updateVisibility();
 	}
 	
-	@Override
-	public void parse() throws Exception {
-		if (_isParsed) throw new Exception("already parsed");
-
-		setParsed(true);
+	public void showTreeChartWindow(boolean show) {
+		_treeChartWindow_shown = show;
 		
-		_syntaxTree.set(null);
+		updateVisibility();
+	}
+
+	private void parse_priv() throws ParserException, LexerException {
+		setParsed(true);
+
+		_syntaxTreeP.set(null);
+		_semanticTreeP.set(null);
 
 		_textArea_tokens.clear();
 
-		String codeS = _textArea_code.getText();
+		String codeS = _codeArea_code.getText();
 
 		try {
 			LexerResult lexerResult = new Lexer(_grammar).tokenize(codeS);
 
 			StringBuilder sb = new StringBuilder();
-			
+
 			int lastX = 0;
 			int lastY = 0;
-			
+
 			for (Token token : lexerResult.getTokens()) {
 				int x = token.getLineOffset();
 				int y = token.getLine();
-				
+
 				if (y > lastY) {
 					lastX = 0;
 					sb.append(StringUtil.repeat("\n", y - lastY));
 				}
-				
+
 				lastY = y;
-				
-				if (x > lastX) {
-					sb.append(StringUtil.repeat(" ", x - lastX));
-				}
-				
+
+				if (x > lastX) sb.append(StringUtil.repeat(" ", x - lastX));
+
 				String tokenS = token.getTerminal().getKey().toString();
-				
+
 				lastX = x + tokenS.length();
-				
+
 				sb.append(tokenS);
-				
+
 				sb.append(" ");
 			}
 
 			_textArea_tokens.replaceText(sb.toString());
 			_textArea_tokens.positionCaret(0);
 
+			Parser parser = new Parser(_grammar);
+
 			try {
-				Parser parser = new Parser(_grammar);
+				SyntaxNode tree = parser.parse(lexerResult.getTokens());
 
-				try {
-					_syntaxTree.set(parser.parse(lexerResult.getTokens()));
-				} catch (ParserException e) {
-					setParsed(false);
+				_syntaxTreeP.set(tree);
+				_semanticTreeP.set(SemanticNode.fromSyntax(tree));
+			} catch (ParserException e) {
+				setParsed(false);
 
-					Token token = e.getToken();
+				Token token = e.getToken();
 
-					int pos = (token != null) ? token.getPos() : 0;
+				int pos = (token != null) ? token.getPos() : 0;
 
-					_codeArea.setErrorPos(pos, true);
+				_extendedCodeArea_code.setErrorPos(pos, true);
 
-					throw e;
-				}
-			} catch (Exception e) {
-				throwException(e);
+				throw e;
 			}
 		} catch (LexerException e) {
 			setParsed(false);
-			
-			_codeArea.setErrorPos(e.getCurPos(), true);
-			
+
+			_extendedCodeArea_code.setErrorPos(e.getCurPos(), true);
+
 			throw e;
+		}
+	}
+
+	@Override
+	public void parse() {
+		try {
+			if (_isParsed) throw new Exception("already parsed");
+
+			parse_priv();
+		} catch (Exception e) {
+			throwException(e);
 		}
 	}
 
@@ -522,7 +558,7 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 
 		if (!isParsed()) parse();
 
-		if (_syntaxTree == null) throw new Exception("no syntaxTree");
+		if (_semanticTreeP == null) throw new Exception("no syntaxTree");
 
 		setHoaring(true);
 		_tabPane_modus.getSelectionModel().select(_tab_hoare);
@@ -532,51 +568,20 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 		try {
 			_pane_hoare_dialogHost.getChildren().clear();
 			
-			Hoare hoare = new Hoare(_syntaxTree, _preCondMap, _postCondMap, _currentNodeP, _currentHoareNodeP, new Hoare.ActionInterface() {
-				private int _wlp_printDepth = 0;
-				
-				private void println_begin() {
-					_wlp_printDepth++;
-				}
-				
-				private void println(String s) {
-					System.out.println(StringUtil.repeat("\t", _wlp_printDepth - 1) + s);
-				}
-				
-				private void println_end() {
-					_wlp_printDepth--;
+			Hoare hoare = new Hoare(_semanticTreeP, _preCondMapP, _postCondMapP, _currentNodeP, _currentHoareNodeP, new Hoare.ActionInterface() {
+				private String nodeSynthesize(@Nonnull SemanticNode node) {
+					String ret = node.synthesize(false, false, null);
+
+					return (ret != null) ? ret : "<empty>";
 				}
 
-				private void nodeSynthesize(SyntaxNode node, int nestDepth, StringBuilder sb) {
-					for (SyntaxNode child : node.getChildren()) {
-						if (child instanceof SyntaxNodeTerminal) sb.append(child.synthesize());
-						else {
-							sb.append(StringUtil.repeat("\t", nestDepth));
-						}
-					}
-				}
-
-				private String nodeSynthesize(SyntaxNode node) {
-					StringBuilder sb = new StringBuilder();
-
-					nodeSynthesize(node, 0, sb);
-
-					return sb.toString();
-				}
-
-				private void setNode(SyntaxNode node, HoareCond postCond) {
-					_codeArea_hoare.replaceText(((node != null) ? node.synthesize() : null) + " " + ((postCond != null) ? postCond.toStringEx() : null));
+				private void setNode(@Nullable SemanticNode node, @Nullable HoareCond postCond) {
+					_codeArea_hoare.replaceText(((node != null) ? nodeSynthesize(node) : "<none>"));
 					_currentNodeP.set(node);
-
-					/*if (node != null) {
-						for (Token token : node.tokenize()) {
-							System.out.println(token.getText() + ";" + token.getPos());
-							_codeArea_hoare.insertText(token.getPos(), token.getText());
-						}
-					}*/
+					_textArea_hoare_postCond.replaceText((postCond != null) ? postCond.getContentString() : "<none>");
 				}
 
-				private void pushDialog(HoareDialog dialog) {
+				private void pushDialog(@Nonnull HoareDialog dialog) {
 					setNode(dialog.getNode(), dialog.getPostCond());
 
 					dialog.setCloseHandler(() -> _pane_hoare_dialogHost.getChildren().remove(dialog.getRoot()));
@@ -585,13 +590,13 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 				}
 
 				@Override
-				public void reqSkipDialog(SyntaxNode node, HoareCond preCond, HoareCond postCond, Skip_callback callback) throws IOException, HoareException, LexerException, ParserException {
+				public void reqSkipDialog(Skip skip, HoareCond preCond, HoareCond postCond, Skip_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
 					if (_checkBox_hoare_auto.isSelected()) {
 						callback.result();
 					} else {
-						HoareDialog dialog = new SkipDialog(node, preCond, postCond, new Skip_callback() {
+						HoareDialog dialog = new SkipDialog(skip, preCond, postCond, new Skip_callback() {
 							@Override
-							public void result() throws IOException, HoareException, LexerException, ParserException {
+							public void result() throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
 								callback.result();
 							}
 						});
@@ -601,85 +606,89 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 				}
 
 				@Override
-				public void reqAssignDialog(SyntaxNode node, HoareCond preCond, HoareCond postCond, Assign_callback callback, String var, Exp exp) throws IOException, HoareException, LexerException, ParserException {
-					println_begin();
+				public void reqAssignDialog(Assign assign, HoareCond preCond, HoareCond postCond, Assign_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
+					/*println_begin();
 					
 					println("apply assignment rule:");
 					println("\t" + postCond.toStringEx(var + ":=" + exp.synthesize()) + " " + var + "=" + exp.synthesize() + " " + postCond.toStringEx());
-					println("\t->" + preCond.toStringEx() + " " + var + "=" + exp.synthesize() + " " + postCond.toStringEx());
+					println("\t->" + preCond.toStringEx() + " " + var + "=" + exp.synthesize() + " " + postCond.toStringEx());*/
 					
 					if (_checkBox_hoare_auto.isSelected()) {
-						println_end();
+						//println_end();
 						
 						callback.result();
 					} else {
-						HoareDialog dialog = new AssignDialog(node, preCond, postCond, new Assign_callback() {
+						HoareDialog dialog = new AssignDialog(assign, preCond, postCond, new Assign_callback() {
 							@Override
-							public void result() throws IOException, HoareException, LexerException, ParserException {
-								println_end();
+							public void result() throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
+								//println_end();
 								
 								callback.result();
 							}
-						}, var, exp);
+						});
 						
 						pushDialog(dialog);
 					}
 				}
 
 				@Override
-				public void reqCompSecondDialog(Hoare.Executer.wlp_comp comp, CompSecond_callback callback) throws IOException, HoareException, LexerException, ParserException {
-					println_begin();
+				public void reqCompNextDialog(Hoare.Executer.wlp_comp comp, CompNext_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
+					if (_checkBox_hoare_auto.isSelected()) {
+						callback.result();
+					} else {
+						HoareDialog dialog = new CompNextDialog(comp, new CompNext_callback() {
+							@Override
+							public void result() throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
+								callback.result();
+							}
+						});
 
-					println("applying composition rule...");
-
-					HoareDialog dialog = new CompSecondDialog(comp, new CompSecond_callback() {
-						@Override
-						public void result() throws IOException, HoareException, LexerException, ParserException {
-							callback.result();
-						}
-					});
-
-					pushDialog(dialog);
+						pushDialog(dialog);
+					}
 				}
 
 				@Override
-				public void reqCompFirstDialog(Hoare.Executer.wlp_comp comp, CompFirst_callback callback) throws IOException, HoareException, LexerException, ParserException {
-					HoareDialog dialog = new CompFirstDialog(comp, new CompFirst_callback() {
-						@Override
-						public void result() throws IOException, HoareException, LexerException, ParserException {
-							callback.result();
-						}
-					});
+				public void reqCompMergeDialog(Hoare.Executer.wlp_comp comp, CompMerge_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
+					if (_checkBox_hoare_auto.isSelected()) {
+						callback.result();
+					} else {
+						HoareDialog dialog = new CompMergeDialog(comp, callback);
 
-					pushDialog(dialog);
+						pushDialog(dialog);
+					}
 				}
 
 				@Override
-				public void reqCompMergeDialog(Hoare.Executer.wlp_comp comp, CompMerge_callback callback) throws IOException, HoareException, LexerException, ParserException {
-					HoareDialog dialog = new CompMergeDialog(comp, callback);
+				public void reqAltFirstDialog(Hoare.Executer.wlp_alt alt, Hoare.Executer.AltThen_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
+					if (_checkBox_hoare_auto.isSelected()) {
+						callback.result();
+					} else {
+						HoareDialog dialog = new AltThenDialog(alt, callback);
 
-					pushDialog(dialog);
+						pushDialog(dialog);
+					}
 				}
 
 				@Override
-				public void reqAltFirstDialog(Hoare.Executer.wlp_alt alt, Hoare.Executer.AltThen_callback callback) throws IOException, HoareException, LexerException, ParserException {
-					HoareDialog dialog = new AltThenDialog(alt, callback);
+				public void reqAltElseDialog(Hoare.Executer.wlp_alt alt, Hoare.Executer.AltElse_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
+					if (_checkBox_hoare_auto.isSelected()) {
+						callback.result();
+					} else {
+						HoareDialog dialog = new AltElseDialog(alt, callback);
 
-					pushDialog(dialog);
+						pushDialog(dialog);
+					}
 				}
 
 				@Override
-				public void reqAltElseDialog(Hoare.Executer.wlp_alt alt, Hoare.Executer.AltElse_callback callback) throws IOException, HoareException, LexerException, ParserException {
-					HoareDialog dialog = new AltElseDialog(alt, callback);
+				public void reqAltMergeDialog(Hoare.Executer.wlp_alt alt, Hoare.Executer.AltMerge_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
+					if (_checkBox_hoare_auto.isSelected()) {
+						callback.result();
+					} else {
+						HoareDialog dialog = new AltMergeDialog(alt, callback);
 
-					pushDialog(dialog);
-				}
-
-				@Override
-				public void reqAltMergeDialog(Hoare.Executer.wlp_alt alt, Hoare.Executer.AltMerge_callback callback) throws IOException, HoareException, LexerException, ParserException {
-					HoareDialog dialog = new AltMergeDialog(alt, callback);
-
-					pushDialog(dialog);
+						pushDialog(dialog);
+					}
 				}
 
 				@Override
@@ -702,10 +711,14 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 				}
 
 				@Override
-				public void reqLoopGetBodyCondDialog(Hoare.Executer.wlp_loop loop, Hoare.Executer.LoopGetBodyCond_callback callback) throws IOException {
-					HoareDialog dialog = new LoopGetBodyCondDialog(loop, callback);
+				public void reqLoopGetBodyCondDialog(Hoare.Executer.wlp_loop loop, Hoare.Executer.LoopGetBodyCond_callback callback) throws IOException, LexerException, HoareException, ParserException, SemanticNode.CopyException {
+					if (_checkBox_hoare_auto.isSelected()) {
+						callback.result();
+					} else {
+						HoareDialog dialog = new LoopGetBodyCondDialog(loop, callback);
 
-					pushDialog(dialog);
+						pushDialog(dialog);
+					}
 				}
 
 				@Override
@@ -716,17 +729,21 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 				}
 
 				@Override
-				public void reqLoopAcceptInvCondDialog(Hoare.Executer.wlp_loop loop, Hoare.Executer.LoopAcceptInv_callback callback) throws IOException {
-					HoareDialog dialog = new LoopAcceptInvariantDialog(loop, callback);
+				public void reqLoopAcceptInvCondDialog(Hoare.Executer.wlp_loop loop, Hoare.Executer.LoopAcceptInv_callback callback) throws IOException, LexerException, HoareException, ParserException, SemanticNode.CopyException {
+					if (_checkBox_hoare_auto.isSelected()) {
+						callback.result();
+					} else {
+						HoareDialog dialog = new LoopAcceptInvariantDialog(loop, callback);
 
-					pushDialog(dialog);
+						pushDialog(dialog);
+					}
 				}
 
 				@Override
-				public void reqConseqPreCheckDialog(SyntaxNode node, HoareCond origPreCond, HoareCond newPreCond, HoareCond origPostCond, HoareCond newPostCond, Hoare.Executer.ConseqCheck_callback callback) throws IOException {
-					HoareDialog dialog = new ConseqCheckDialog(node, origPreCond, newPreCond, origPostCond, newPostCond, new Hoare.Executer.ConseqCheck_callback() {
+				public void reqConseqCheckPreDialog(SemanticNode node, HoareCond origPreCond, HoareCond newPreCond, Hoare.Executer.ConseqCheck_callback callback) throws IOException {
+					HoareDialog dialog = new ConseqCheckPreDialog(node, origPreCond, newPreCond, new Hoare.Executer.ConseqCheck_callback() {
 						@Override
-						public void result(boolean yes) throws HoareException, LexerException, IOException, ParserException {
+						public void result(boolean yes) throws HoareException, LexerException, IOException, ParserException, SemanticNode.CopyException {
 							callback.result(yes);
 						}
 					});
@@ -735,8 +752,20 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 				}
 
 				@Override
-				public void finished(SyntaxNode node, HoareCond preCond, HoareCond postCond, boolean yes) throws IOException {
-					HoareDialog dialog = new EndDialog(yes);
+				public void reqConseqCheckPostDialog(SemanticNode node, HoareCond origPostCond, HoareCond newPostCond, Hoare.Executer.ConseqCheck_callback callback) throws IOException {
+					HoareDialog dialog = new ConseqCheckPostDialog(node, origPostCond, newPostCond, new Hoare.Executer.ConseqCheck_callback() {
+						@Override
+						public void result(boolean yes) throws HoareException, LexerException, IOException, ParserException, SemanticNode.CopyException {
+							callback.result(yes);
+						}
+					});
+
+					pushDialog(dialog);
+				}
+
+				@Override
+				public void finished(SemanticNode node, HoareCond preCond, HoareCond postCond, boolean yes) throws IOException {
+					HoareDialog dialog = new EndDialog(node, preCond, postCond, yes);
 
 					pushDialog(dialog);
 					setNode(node, postCond);

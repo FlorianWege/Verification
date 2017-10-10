@@ -1,53 +1,59 @@
 package core;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Vector;
 
 import core.Lexer.LexerException;
 import core.Parser.NoRuleException;
 import core.Parser.ParserException;
-import core.structures.hoareCond.*;
-import core.structures.nodes.BoolExp;
-import core.structures.nodes.Exp;
-import grammars.HoareWhileGrammar;
+import core.structures.semantics.SemanticNode;
+import core.structures.semantics.boolExp.BoolAnd;
+import core.structures.semantics.boolExp.BoolImpl;
+import core.structures.semantics.boolExp.BoolNeg;
+import core.structures.semantics.boolExp.HoareCond;
+import core.structures.semantics.exp.Exp;
+import core.structures.semantics.exp.Id;
+import core.structures.semantics.prog.*;
 import javafx.beans.property.ObjectProperty;
 import javafx.collections.ObservableMap;
+import util.IOUtil;
 import util.StringUtil;
 
 import javax.annotation.Nonnull;
 
 public class Hoare {
-	private HoareWhileGrammar _grammar;
-	private ObjectProperty<SyntaxTree> _syntaxTreeP;
-	private ObservableMap<SyntaxNode, HoareCond> _preCondMap;
-	private ObservableMap<SyntaxNode, HoareCond> _postCondMap;
-	private ObjectProperty<SyntaxNode> _currentNodeP;
-	private ObjectProperty<SyntaxNode> _currentHoareNodeP;
+	private ObjectProperty<SemanticNode> _semanticTreeP;
+	private ObservableMap<SemanticNode, HoareCond> _preCondMap;
+	private ObservableMap<SemanticNode, HoareCond> _postCondMap;
+	private ObjectProperty<SemanticNode> _currentNodeP;
+	private ObjectProperty<SemanticNode> _currentHoareNodeP;
 	private ActionInterface _actionInterface;
 	
 	public interface ActionInterface {
-		void finished(SyntaxNode node, HoareCond preCond, HoareCond postCond, boolean yes) throws IOException;
+		void finished(SemanticNode node, HoareCond preCond, HoareCond postCond, boolean yes) throws IOException;
 
-		void reqSkipDialog(SyntaxNode node, HoareCond preCond, HoareCond postCond, Executer.Skip_callback callback) throws IOException, HoareException, LexerException, ParserException;
+		void reqSkipDialog(Skip skip, HoareCond preCond, HoareCond postCond, Executer.Skip_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException;
 
-		void reqAssignDialog(SyntaxNode node, HoareCond preCond, HoareCond postCond, Executer.Assign_callback callback, String var, Exp exp) throws IOException, HoareException, LexerException, ParserException;
+		void reqAssignDialog(Assign assign, HoareCond preCond, HoareCond postCond, Executer.Assign_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException;
 
-		void reqCompSecondDialog(Executer.wlp_comp comp, Executer.CompSecond_callback callback) throws IOException, HoareException, LexerException, ParserException;
-		void reqCompFirstDialog(Executer.wlp_comp comp, Executer.CompFirst_callback callback) throws IOException, HoareException, LexerException, ParserException;
-		void reqCompMergeDialog(Executer.wlp_comp comp, Executer.CompMerge_callback callback) throws IOException, HoareException, LexerException, ParserException;
+		void reqCompNextDialog(Executer.wlp_comp comp, Executer.CompNext_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException;
+		void reqCompMergeDialog(Executer.wlp_comp comp, Executer.CompMerge_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException;
 
-		void reqAltFirstDialog(Executer.wlp_alt alt, Executer.AltThen_callback callback) throws IOException, HoareException, LexerException, ParserException;
-		void reqAltElseDialog(Executer.wlp_alt alt, Executer.AltElse_callback callback) throws IOException, HoareException, LexerException, ParserException;
-		void reqAltMergeDialog(Executer.wlp_alt alt, Executer.AltMerge_callback callback) throws IOException, HoareException, LexerException, ParserException;
+		void reqAltFirstDialog(Executer.wlp_alt alt, Executer.AltThen_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException;
+		void reqAltElseDialog(Executer.wlp_alt alt, Executer.AltElse_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException;
+		void reqAltMergeDialog(Executer.wlp_alt alt, Executer.AltMerge_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException;
 
 		void reqLoopAskInvDialog(Executer.wlp_loop loop, Executer.LoopAskInv_callback callback) throws IOException;
 		void reqLoopCheckPostCondDialog(Executer.wlp_loop loop, Executer.LoopCheckPostCond_callback callback) throws IOException;
-		void reqLoopGetBodyCondDialog(Executer.wlp_loop loop, Executer.LoopGetBodyCond_callback callback) throws IOException;
+		void reqLoopGetBodyCondDialog(Executer.wlp_loop loop, Executer.LoopGetBodyCond_callback callback) throws IOException, LexerException, HoareException, ParserException, SemanticNode.CopyException;
 		void reqLoopCheckBodyCondDialog(Executer.wlp_loop loop, Executer.LoopCheckBodyCond_callback callback) throws IOException;
-		void reqLoopAcceptInvCondDialog(Executer.wlp_loop loop, Executer.LoopAcceptInv_callback callback) throws IOException;
+		void reqLoopAcceptInvCondDialog(Executer.wlp_loop loop, Executer.LoopAcceptInv_callback callback) throws IOException, LexerException, HoareException, ParserException, SemanticNode.CopyException;
 
-		void reqConseqPreCheckDialog(SyntaxNode node, HoareCond origPreCond, HoareCond newPreCond, HoareCond origPostCond, HoareCond newPostCond, Executer.ConseqCheck_callback callback) throws IOException;
+		void reqConseqCheckPreDialog(SemanticNode node, HoareCond origPreCond, HoareCond newPreCond, Executer.ConseqCheck_callback callback) throws IOException;
+		void reqConseqCheckPostDialog(SemanticNode node, HoareCond origPostCond, HoareCond newPostCond, Executer.ConseqCheck_callback callback) throws IOException;
 	}
 	
 	public static class HoareException extends Exception {
@@ -59,38 +65,38 @@ public class Hoare {
 	}
 	
 	private class HoareNode {
-		private SyntaxNode _refNode;
+		private HoareBlock _refNode;
 		
-		SyntaxNode getRefNode() {
+		public HoareBlock getRefNode() {
 			return _refNode;
 		}
 
-		private Vector<HoareNode> _children = new Vector<>();
+		private List<HoareNode> _children = new Vector<>();
 
-		public Vector<HoareNode> getChildren() {
+		public List<HoareNode> getChildren() {
 			return _children;
 		}
 		
-		void addChild(HoareNode child) {
+		public void addChild(HoareNode child) {
 			_children.add(child);
 		}
 		
-		HoareNode(SyntaxNode actualNode) {
+		public HoareNode(HoareBlock actualNode) {
 			_refNode = actualNode;
 		}
 	}
 	
-	private Vector<HoareNode> collectChildren(SyntaxNode node) {
-		Vector<HoareNode> ret = new Vector<>();
+	private List<HoareNode> collectChildren(SemanticNode node) {
+		List<HoareNode> ret = new ArrayList<>();
 		
-		for (SyntaxNode child : node.getChildren()) {
-			Vector<HoareNode> hoareChildren = collectChildren(child);
+		for (SemanticNode child : node.getChildren()) {
+			List<HoareNode> hoareChildren = collectChildren(child);
 
 			ret.addAll(hoareChildren);
 		}
 		
-		if ((node.getSymbol() != null) && node.getSymbol().equals(_grammar.NON_TERMINAL_HOARE_BLOCK)) {
-			HoareNode selfNode = new HoareNode(node);
+		if (node instanceof HoareBlock) {
+			HoareNode selfNode = new HoareNode((HoareBlock) node);
 			
 			for (HoareNode child : ret) {
 				selfNode.addChild(child);
@@ -105,17 +111,16 @@ public class Hoare {
 	}
 	
 	private interface ExecInterface {
-		void finished() throws HoareException, LexerException, IOException, ParserException;
+		void finished() throws HoareException, LexerException, IOException, ParserException, SemanticNode.CopyException;
 	}
 	
 	public static class Executer {
 		private HoareNode _node;
 		private int _nestDepth;
-		private HoareWhileGrammar _grammar;
-		private ObservableMap<SyntaxNode, HoareCond> _preCondMap;
-		private ObservableMap<SyntaxNode, HoareCond> _postCondMap;
-		private ObjectProperty<SyntaxNode> _currentNodeP;
-		private ObjectProperty<SyntaxNode> _currentHoareNodeP;
+		private ObservableMap<SemanticNode, HoareCond> _preCondMap;
+		private ObservableMap<SemanticNode, HoareCond> _postCondMap;
+		private ObjectProperty<SemanticNode> _currentNodeP;
+		private ObjectProperty<SemanticNode> _currentHoareNodeP;
 		private ActionInterface _actionHandler;
 		private ExecInterface _callback;
 		
@@ -123,230 +128,222 @@ public class Hoare {
 		private Iterator<Executer> _execChainIt;
 		
 		public interface Skip_callback {
-			void result() throws IOException, HoareException, LexerException, ParserException;
+			void result() throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException;
 		}
 
 		public interface Assign_callback {
-			void result() throws IOException, HoareException, LexerException, ParserException;
+			void result() throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException;
 		}
 
 		public interface AltThen_callback {
-			void result() throws IOException, HoareException, LexerException, ParserException;
+			void result() throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException;
 		}
 		public interface AltElse_callback {
-			void result() throws IOException, HoareException, LexerException, ParserException;
+			void result() throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException;
 		}
 		public interface AltMerge_callback {
-			void result() throws IOException, HoareException, LexerException, ParserException;
+			void result() throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException;
 		}
 
-		public interface CompSecond_callback {
-			void result() throws IOException, HoareException, LexerException, ParserException;
-		}
-		public interface CompFirst_callback {
-			void result() throws IOException, HoareException, LexerException, ParserException;
+		public interface CompNext_callback {
+			void result() throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException;
 		}
 		public interface CompMerge_callback {
-			void result() throws IOException, HoareException, LexerException, ParserException;
+			void result() throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException;
 		}
 		
 		public interface LoopAskInv_callback {
-			void result(HoareCond postInvariant) throws HoareException, LexerException, IOException, ParserException;
+			void result(@Nonnull HoareCond postInvariant) throws HoareException, LexerException, IOException, ParserException;
 		}
 		public interface LoopCheckPostCond_callback {
-			void result(boolean yes) throws HoareException, LexerException, IOException, ParserException;
+			void result() throws HoareException, LexerException, IOException, ParserException, SemanticNode.CopyException;
 		}
 		public interface LoopGetBodyCond_callback {
-			void result() throws HoareException, LexerException, IOException, ParserException;
+			void result() throws HoareException, LexerException, IOException, ParserException, SemanticNode.CopyException;
 		}
 		public interface LoopCheckBodyCond_callback {
-			void result(boolean yes) throws HoareException, LexerException, IOException, ParserException;
+			void result(boolean yes) throws HoareException, LexerException, IOException, ParserException, SemanticNode.CopyException;
 		}
 		public interface LoopAcceptInv_callback {
-			void result() throws HoareException, LexerException, IOException, ParserException;
+			void result() throws HoareException, LexerException, IOException, ParserException, SemanticNode.CopyException;
 		}
 
 		public interface ConseqCheck_callback {
-			void result(boolean yes) throws HoareException, LexerException, IOException, ParserException;
-		}
-
-		private int _wlp_nestDepth = 0;
-		private int _wlp_printDepth = 0;
-		
-		private void println_begin() {
-			_wlp_printDepth++;
-		}
-		
-		private void println(String s) {
-			System.out.println(StringUtil.repeat("\t", _wlp_printDepth - 1) + s);
-		}
-		
-		private void println_end() {
-			_wlp_printDepth--;
+			void result(boolean yes) throws HoareException, LexerException, IOException, ParserException, SemanticNode.CopyException;
 		}
 		
 		private interface wlp_callback {
-			void result(SyntaxNode node, HoareCond preCond, HoareCond postCond) throws IOException, HoareException, LexerException, ParserException;
+			void result(@Nonnull SemanticNode node, @Nonnull HoareCond preCond, @Nonnull HoareCond postCond) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException;
 		}
 		
-		private void wlp_skip(SyntaxNode node, HoareCond postCond, wlp_callback callback) throws IOException, HoareException, LexerException, ParserException {
+		private void wlp_skip(@Nonnull Skip skipNode, @Nonnull HoareCond postCond, @Nonnull wlp_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
 			HoareCond preCond = postCond;
 			
-			_actionHandler.reqSkipDialog(node, preCond, postCond, new Skip_callback() {
+			_actionHandler.reqSkipDialog(skipNode, preCond, postCond, new Skip_callback() {
 				@Override
-				public void result() throws IOException, HoareException, LexerException, ParserException {
-					callback.result(node, postCond, postCond);
+				public void result() throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
+					callback.result(skipNode, postCond, postCond);
 				}
 			});
 		}
 		
-		private void wlp_assign(SyntaxNode node, HoareCond postCond, wlp_callback callback) throws IOException, HoareException, ParserException, LexerException {
-			SyntaxNode idNode = node.findChild(_grammar.TERMINAL_ID, true);
-			SyntaxNode expNode = node.findChild(_grammar.NON_TERMINAL_EXP, true);
-			
-			String var = idNode.synthesize();
-			
-			HoareCond preCond = postCond.copy();
+		private void wlp_assign(@Nonnull Assign assignNode, @Nonnull HoareCond postCond, @Nonnull wlp_callback callback) throws IOException, HoareException, ParserException, LexerException, SemanticNode.CopyException {
+			Id varNode = assignNode.getVar();
+			Exp expNode = assignNode.getExp();
 
-			Exp exp = Exp.fromString(expNode.synthesize());
-			
-			preCond.replace(_grammar.TERMINAL_ID, var, exp.getBaseEx());
+			HoareCond preCond = (HoareCond) postCond.copy();
 
-			_actionHandler.reqAssignDialog(node, preCond, postCond, new Assign_callback() {
+			preCond = (HoareCond) preCond.replace(new IOUtil.Func<SemanticNode, SemanticNode>() {
 				@Override
-				public void result() throws IOException, HoareException, LexerException, ParserException {
-					callback.result(node, preCond, postCond);
+				public SemanticNode apply(SemanticNode child) {
+					if (child instanceof Id) {
+						if (((Id) child).getName().equals(varNode.getName())) {
+							return expNode;
+						}
+					}
+
+					return child;
 				}
-			}, var, exp);
+			});
+
+			HoareCond finalPreCond = preCond;
+
+			_actionHandler.reqAssignDialog(assignNode, preCond, postCond, new Assign_callback() {
+				@Override
+				public void result() throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
+					callback.result(assignNode, finalPreCond, postCond);
+				}
+			});
 		}
 
 		public class wlp_comp {
-			public SyntaxNode _compNode;
+			public Comp _compNode;
 			public HoareCond _postCond;
 			private wlp_callback _callback;
 
-			public SyntaxNode _firstNode;
-			public SyntaxNode _secondNode;
-
-			public HoareCond _secondPreCond;
-			private HoareCond _firstPostCond;
-			public HoareCond _firstPreCond;
+			public Integer _curPart;
+			public HoareCond[] _preConds;
+			public HoareCond[] _postConds;
 
 			public HoareCond _preCond;
 
-			private void exec_merge() throws LexerException, HoareException, ParserException, IOException {
-				_preCond = _firstPreCond;
+			private void exec_merge() throws LexerException, HoareException, ParserException, IOException, SemanticNode.CopyException {
+				_preCond = _preConds[0];
 
 				_actionHandler.reqCompMergeDialog(this, new CompMerge_callback() {
 					@Override
-					public void result() throws IOException, HoareException, LexerException, ParserException {
+					public void result() throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
 						_callback.result(_compNode, _preCond, _postCond);
 					}
 				});
 			}
 
-			private void exec_getFirst() throws LexerException, HoareException, ParserException, IOException {
-				_firstPostCond = _secondPreCond;
+			private void exec_next() throws HoareException, IOException, LexerException, ParserException, SemanticNode.CopyException {
+				if (_curPart == null) {
+					_curPart = _compNode.getChildren().size() - 1;
 
-				_actionHandler.reqCompFirstDialog(this, new CompFirst_callback() {
+					_postConds[_curPart] = _postCond;
+				} else {
+					_curPart--;
+
+					_postConds[_curPart] = _preConds[_curPart + 1];
+				}
+
+				_actionHandler.reqCompNextDialog(this, new CompNext_callback() {
 					@Override
-					public void result() throws IOException, HoareException, LexerException, ParserException {
-						wlp(_firstNode, _firstPostCond, new wlp_callback() {
+					public void result() throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
+						wlp(_compNode.getChildren().get(_curPart), _postConds[_curPart], new wlp_callback() {
 							@Override
-							public void result(SyntaxNode firstNode, HoareCond firstPreCond, HoareCond firstPostCond) throws IOException, HoareException, LexerException, ParserException {
-								_firstPreCond = firstPreCond;
+							public void result(@Nonnull SemanticNode nextNode, @Nonnull HoareCond nextPreCond, @Nonnull HoareCond nextPostCond) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
+								_preConds[_curPart] = nextPreCond;
 
-								exec_merge();
+								if (_curPart <= 0) {
+									exec_merge();
+								} else {
+									exec_next();
+								}
 							}
 						});
 					}
 				});
 			}
 
-			private void exec_getSecond() throws HoareException, IOException, LexerException, ParserException {
-				_actionHandler.reqCompSecondDialog(this, new CompSecond_callback() {
-					@Override
-					public void result() throws IOException, HoareException, LexerException, ParserException {
-						wlp(_secondNode, _postCond, new wlp_callback() {
-							@Override
-							public void result(SyntaxNode secondNode, HoareCond secondPreCond, HoareCond secondPostCond) throws IOException, HoareException, LexerException, ParserException {
-								_secondPreCond = secondPreCond;
-
-								exec_getFirst();
-							}
-						});
-					}
-				});
+			void exec() throws LexerException, HoareException, ParserException, IOException, SemanticNode.CopyException {
+				exec_next();
 			}
 
-			void exec() throws LexerException, HoareException, ParserException, IOException {
-				exec_getSecond();
-			}
-
-			wlp_comp(SyntaxNode compNode, HoareCond postCond, wlp_callback callback) {
+			wlp_comp(Comp compNode, HoareCond postCond, wlp_callback callback) {
 				_compNode = compNode;
 				_postCond = postCond;
 				_callback = callback;
+				_curPart = null;
 
-				_firstNode = _compNode.findChild(_grammar.NON_TERMINAL_CMD, true);
-				_secondNode = _compNode.findChild(_grammar.NON_TERMINAL_PROG_, true);
+				_preConds = new HoareCond[_compNode.getChildren().size()];
+				_postConds = new HoareCond[_compNode.getChildren().size()];
 			}
 		}
 
-		private void wlp_comp(SyntaxNode compNode, HoareCond postCond, wlp_callback callback) throws HoareException, IOException, LexerException, ParserException {
+		private void wlp_comp(@Nonnull Comp compNode, @Nonnull HoareCond postCond, @Nonnull wlp_callback callback) throws HoareException, IOException, LexerException, ParserException, SemanticNode.CopyException {
 			new wlp_comp(compNode, postCond, callback).exec();
 		}
 
 		public class wlp_alt {
-			public SyntaxNode _altNode;
+			public Alt _altNode;
 			public HoareCond _postCond;
 			private wlp_callback _callback;
-
-			public BoolExp _boolExp;
-			public SyntaxNode _thenProgNode;
-			public SyntaxNode _elseProgNode;
 
 			public HoareCond _thenPreCond;
 			public HoareCond _elsePreCond;
 
 			public HoareCond _preCond;
 
-			private void exec_merge() throws LexerException, HoareException, ParserException, IOException {
-				HoareCond boolExpCond = new HoareCondBoolExp(_boolExp);
+			private void exec_merge() throws LexerException, HoareException, ParserException, IOException, SemanticNode.CopyException {
+				HoareCond boolExpCond = new HoareCond(_altNode.getBoolExp());
 
-				_preCond = new HoareCondOr(new HoareCondAnd(_thenPreCond, boolExpCond), new HoareCondAnd(_elsePreCond, new HoareCondNeg(boolExpCond)));
+				_preCond = HoareCond.makeOr(HoareCond.makeAnd(_thenPreCond, boolExpCond), HoareCond.makeAnd(_elsePreCond, HoareCond.makeNeg(boolExpCond)));
 
 				_actionHandler.reqAltMergeDialog(this, new AltMerge_callback() {
 					@Override
-					public void result() throws IOException, HoareException, LexerException, ParserException {
+					public void result() throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
 						_callback.result(_altNode, _preCond, _postCond);
 					}
 				});
 			}
 
-			private void exec_getElsePreCond() throws LexerException, HoareException, ParserException, IOException {
-				_actionHandler.reqAltElseDialog(this, new AltElse_callback() {
-					@Override
-					public void result() throws IOException, HoareException, LexerException, ParserException {
-						wlp(_elseProgNode, _postCond, new wlp_callback() {
-							@Override
-							public void result(SyntaxNode elseProgNode, HoareCond elsePreCond, HoareCond elsePostCond) throws IOException, HoareException, LexerException, ParserException {
-								_elsePreCond = elsePreCond;
+			private void exec_getElsePreCond() throws LexerException, HoareException, ParserException, IOException, SemanticNode.CopyException {
+				if (_altNode.getElseProg() != null) {
+					_actionHandler.reqAltElseDialog(this, new AltElse_callback() {
+						@Override
+						public void result() throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
+							wlp(_altNode.getElseProg(), _postCond, new wlp_callback() {
+								@Override
+								public void result(@Nonnull SemanticNode elseProgNode, @Nonnull HoareCond elsePreCond, @Nonnull HoareCond elsePostCond) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
+									_elsePreCond = elsePreCond;
 
-								exec_merge();
-							}
-						});
-					}
-				});
+									exec_merge();
+								}
+							});
+						}
+					});
+				} else {
+					wlp(new Skip(), _postCond, new wlp_callback() {
+						@Override
+						public void result(@Nonnull SemanticNode elseProgNode, @Nonnull HoareCond elsePreCond, @Nonnull HoareCond elsePostCond) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
+							_elsePreCond = elsePreCond;
+
+							exec_merge();
+						}
+					});
+				}
 			}
 
-			private void exec_getThenPreCond() throws LexerException, HoareException, ParserException, IOException {
+			private void exec_getThenPreCond() throws LexerException, HoareException, ParserException, IOException, SemanticNode.CopyException {
 				_actionHandler.reqAltFirstDialog(this, new AltThen_callback() {
 					@Override
-					public void result() throws IOException, HoareException, LexerException, ParserException {
-						wlp(_thenProgNode, _postCond, new wlp_callback() {
+					public void result() throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
+						wlp(_altNode.getThenProg(), _postCond, new wlp_callback() {
 							@Override
-							public void result(SyntaxNode thenProgNode, HoareCond thenPreCond, HoareCond thenPostCond) throws IOException, HoareException, LexerException, ParserException {
+							public void result(@Nonnull SemanticNode thenProgNode, @Nonnull HoareCond thenPreCond, @Nonnull HoareCond thenPostCond) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
 								_thenPreCond = thenPreCond;
 
 								exec_getElsePreCond();
@@ -356,45 +353,38 @@ public class Hoare {
 				});
 			}
 
-			void exec() throws LexerException, HoareException, ParserException, IOException {
+			void exec() throws LexerException, HoareException, ParserException, IOException, SemanticNode.CopyException {
 				exec_getThenPreCond();
 			}
 
-			wlp_alt(SyntaxNode altNode, HoareCond postCond, wlp_callback callback) throws LexerException, ParserException {
+			wlp_alt(@Nonnull Alt altNode, @Nonnull HoareCond postCond, @Nonnull wlp_callback callback) throws LexerException, ParserException {
 				_altNode = altNode;
 				_postCond = postCond;
 				_callback = callback;
-
-				_boolExp = BoolExp.fromString(_altNode.findChild(_grammar.NON_TERMINAL_BOOL_EXP, true).synthesize());
-				_thenProgNode = _altNode.findChild(_grammar.NON_TERMINAL_PROG, true);
-				_elseProgNode = (_altNode.findChild(_grammar.NON_TERMINAL_SELECTION_ELSE, true).getSubRule().equals(_grammar.RULE_SELECTION_ELSE)) ? _altNode.findChild(_grammar.NON_TERMINAL_PROG, true) : new SyntaxNode(_grammar.NON_TERMINAL_SKIP, null);
 			}
 		}
 
-		private void wlp_alt(SyntaxNode altNode, HoareCond postCond, wlp_callback callback) throws LexerException, ParserException, IOException, HoareException {
+		private void wlp_alt(@Nonnull Alt altNode, @Nonnull HoareCond postCond, @Nonnull wlp_callback callback) throws LexerException, ParserException, IOException, HoareException, SemanticNode.CopyException {
 			new wlp_alt(altNode, postCond, callback).exec();
 		}
 
 		public class wlp_loop {
-			public SyntaxNode _loopNode;
+			public While _whileNode;
 			public HoareCond _postCond;
 			private wlp_callback _callback;
-
-			public BoolExp _boolExp;
-			public SyntaxNode _progNode;
 
 			public HoareCond _postInvariant;
 			public HoareCond _preInvariant;
 
 			public HoareCond _preCond;
 
-			private void exec_acceptInvariant() throws IOException, HoareException, LexerException, ParserException {
+			private void exec_acceptInvariant() throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
 				_preCond = _preInvariant;
 
 				_actionHandler.reqLoopAcceptInvCondDialog(this, new LoopAcceptInv_callback() {
 					@Override
-					public void result() throws HoareException, LexerException, IOException, ParserException {
-						_callback.result(_loopNode, _preCond, _postCond);
+					public void result() throws HoareException, LexerException, IOException, ParserException, SemanticNode.CopyException {
+						_callback.result(_whileNode, _preCond, _postCond);
 					}
 				});
 			}
@@ -402,23 +392,19 @@ public class Hoare {
 			private void exec_tryInvariant_checkBodyCond() throws IOException {
 				_actionHandler.reqLoopCheckBodyCondDialog(this, new LoopCheckBodyCond_callback() {
 					@Override
-					public void result(boolean yes) throws HoareException, LexerException, IOException, ParserException {
-						if (yes) {
-							exec_acceptInvariant();
-						} else {
-							exec_askInvariant();
-						}
+					public void result(boolean yes) throws HoareException, LexerException, IOException, ParserException, SemanticNode.CopyException {
+						if (yes) exec_acceptInvariant(); else exec_askInvariant();
 					}
 				});
 			}
 
-			private void exec_tryInvariant_getBodyCond() throws IOException {
+			private void exec_tryInvariant_getBodyCond() throws IOException, LexerException, HoareException, ParserException, SemanticNode.CopyException {
 				_actionHandler.reqLoopGetBodyCondDialog(this, new LoopGetBodyCond_callback() {
 					@Override
-					public void result() throws HoareException, LexerException, IOException, ParserException {
-						wlp(_progNode, _postInvariant, new wlp_callback() {
+					public void result() throws HoareException, LexerException, IOException, ParserException, SemanticNode.CopyException {
+						wlp(_whileNode.getProg(), _postInvariant, new wlp_callback() {
 							@Override
-							public void result(SyntaxNode progNode, HoareCond preInvariant, HoareCond postCond) throws IOException, HoareException, LexerException, ParserException {
+							public void result(@Nonnull SemanticNode progNode, @Nonnull HoareCond preInvariant, @Nonnull HoareCond postCond) throws IOException, HoareException, LexerException, ParserException {
 								_preInvariant = preInvariant;
 
 								exec_tryInvariant_checkBodyCond();
@@ -431,16 +417,20 @@ public class Hoare {
 			private void exec_tryInvariant() throws HoareException, IOException, LexerException, ParserException {
 				//TODO: auto-generate invariants
 
-				HoareCond matchCond = new HoareCondAnd(_postInvariant, new HoareCondNeg(new HoareCondBoolExp(_boolExp)));
+				HoareCond matchCond = HoareCond.makeAnd(_postInvariant, HoareCond.makeNeg(new HoareCond(_whileNode.getBoolExp())));
 
 				_actionHandler.reqLoopCheckPostCondDialog(this, new LoopCheckPostCond_callback() {
 					@Override
-					public void result(boolean yes) throws HoareException, LexerException, IOException, ParserException {
-						if (yes) {
-							exec_tryInvariant_getBodyCond();
-						} else {
-							exec_askInvariant();
-						}
+					public void result() throws HoareException, LexerException, IOException, ParserException, SemanticNode.CopyException {
+						HoareCond origPostCond = _postCond;
+						HoareCond newPostCond = new HoareCond(new BoolAnd(_postInvariant.getBoolExp(), new BoolNeg(_whileNode.getBoolExp())));
+
+						conseq_check_post(_whileNode, origPostCond, newPostCond, new ConseqCheck_callback() {
+							@Override
+							public void result(boolean yes) throws HoareException, LexerException, IOException, ParserException, SemanticNode.CopyException {
+								if (yes) exec_tryInvariant_getBodyCond(); else exec_askInvariant();
+							}
+						});
 					}
 				});
 			}
@@ -460,120 +450,84 @@ public class Hoare {
 				exec_askInvariant();
 			}
 
-			wlp_loop(SyntaxNode loopNode, HoareCond postCond, wlp_callback callback) {
-				_loopNode = loopNode;
+			wlp_loop(@Nonnull While whileNode, @Nonnull HoareCond postCond, @Nonnull wlp_callback callback) {
+				_whileNode = whileNode;
 				_postCond = postCond;
 				_callback = callback;
-
-				_boolExp = new BoolExp(_loopNode.findChild(_grammar.NON_TERMINAL_BOOL_EXP, true));
-				_progNode = _loopNode.findChild(_grammar.NON_TERMINAL_PROG, true);
 			}
 		}
 
-		private void wlp_loop(SyntaxNode node, HoareCond postCond, wlp_callback callback) throws HoareException, IOException {
+		private void wlp_loop(@Nonnull While node, @Nonnull HoareCond postCond, @Nonnull wlp_callback callback) throws HoareException, IOException {
 			new wlp_loop(node, postCond, callback).exec();
 		}
 
-		private void consequence_pre_check(SyntaxNode node, HoareCond origPreCond, HoareCond newPreCond, HoareCond origPostCond, HoareCond newPostCond, ConseqCheck_callback callback) throws IOException, HoareException, LexerException, ParserException {
-			_actionHandler.reqConseqPreCheckDialog(node, origPreCond, newPreCond, origPostCond, newPostCond, callback);
+		private void conseq_check_pre(@Nonnull SemanticNode node, @Nonnull HoareCond origPreCond, @Nonnull HoareCond newPreCond, @Nonnull ConseqCheck_callback callback) throws IOException, HoareException, LexerException, ParserException {
+			_actionHandler.reqConseqCheckPreDialog(node, origPreCond, newPreCond, callback);
 		}
 
-		/*private void wlp_consequence_pre(SyntaxNode node, HoareCond origPreCond, HoareCond newPreCond, HoareCond origPostCond, HoareCond newPostCond, wlp_callback callback) throws IOException, HoareException, LexerException, ParserException {
+		private void conseq_check_post(@Nonnull SemanticNode node, @Nonnull HoareCond origPostCond, @Nonnull HoareCond newPostCond, @Nonnull ConseqCheck_callback callback) throws IOException, HoareException, LexerException, ParserException {
+			_actionHandler.reqConseqCheckPostDialog(node, origPostCond, newPostCond, callback);
+		}
+
+		/*private void wlp_conseq_pre(@Nonnull SemanticNode node, @Nonnull HoareCond origPreCond, @Nonnull HoareCond newPreCond, @Nonnull HoareCond origPostCond, @Nonnull HoareCond newPostCond, @Nonnull wlp_callback callback) throws IOException, HoareException, LexerException, ParserException {
 			//TODO: for post as well, merged?
 			callback.result(node, newPreCond, origPreCond);
 		}*/
 		
-		private void wlp(SyntaxNode node, HoareCond postCondV, wlp_callback callback) throws HoareException, IOException, LexerException, ParserException {
-			_wlp_nestDepth++;
-
+		private void wlp(@Nonnull SemanticNode node, @Nonnull HoareCond postCond, @Nonnull wlp_callback callback) throws HoareException, IOException, LexerException, ParserException, SemanticNode.CopyException {
 			_currentNodeP.set(node);
-			
-			final HoareCond postCond = postCondV.copy();
 			
 			_postCondMap.put(node, postCond);
 
-			//System.out.println(StringUtil.repeat("\t", _wlp_nestDepth) + "postcond " + node);
-
 			wlp_callback retCallback = new wlp_callback() {
 				@Override
-				public void result(SyntaxNode node, HoareCond preCond, HoareCond postCond) throws IOException, HoareException, LexerException, ParserException {
+				public void result(@Nonnull SemanticNode node, @Nonnull HoareCond preCond, @Nonnull HoareCond postCond) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
 					_preCondMap.put(node, preCond);
-					_wlp_nestDepth--;
 					
 					callback.result(node, preCond, postCond);
 				}
 			};
 
-			Symbol symbol = node.getSymbol();
-
-			if (symbol.equals(_grammar.NON_TERMINAL_PROG)) {
-				SyntaxNode cmdChild = node.findChild(_grammar.NON_TERMINAL_CMD, true);
-				SyntaxNode lastChild = node.findChild(_grammar.NON_TERMINAL_PROG_, true);
-				
-				if (lastChild.findChild(_grammar.NON_TERMINAL_CMD, true) != null) {
-					wlp_comp(node, postCond, retCallback);
-				} else {
-					wlp(cmdChild, postCond, retCallback);
-				}
-			} else if (symbol.equals(_grammar.NON_TERMINAL_PROG_)) {
-				SyntaxNode cmdChild = node.findChild(_grammar.NON_TERMINAL_CMD, true);
-				SyntaxNode lastChild = node.findChild(_grammar.NON_TERMINAL_PROG_, true);
-
-				if (lastChild.findChild(_grammar.NON_TERMINAL_CMD, true) != null) {
-					wlp_comp(node, postCond, retCallback);
-				} else {
-					wlp(cmdChild, postCond, retCallback);
-				}
-			} else if (symbol.equals(_grammar.NON_TERMINAL_CMD)) {
-				wlp(node.getChildren().firstElement(), postCond, retCallback);
-			} else if (symbol.equals(_grammar.NON_TERMINAL_SKIP))
-				wlp_skip(node, postCond, retCallback);
-			else if (symbol.equals(_grammar.NON_TERMINAL_ASSIGN)) {
-				wlp_assign(node, postCond, retCallback);
-			} else if (symbol.equals(_grammar.NON_TERMINAL_ALT)) {
-				wlp_alt(node, postCond, retCallback);
-			} else if (symbol.equals(_grammar.NON_TERMINAL_WHILE)) {
-				wlp_loop(node, postCond, retCallback);
-			} else if (symbol.equals(_grammar.NON_TERMINAL_HOARE_BLOCK)) {
-				SyntaxNode progNode = node.findChild(_grammar.NON_TERMINAL_PROG, true);
-						
-				wlp(progNode, postCond, retCallback);
+			if (node instanceof Comp) {
+				wlp_comp((Comp) node, postCond, retCallback);
+			} else if (node instanceof Skip)
+				wlp_skip((Skip) node, postCond, retCallback);
+			else if (node instanceof Assign) {
+				wlp_assign((Assign) node, postCond, retCallback);
+			} else if (node instanceof Alt) {
+				wlp_alt((Alt) node, postCond, retCallback);
+			} else if (node instanceof While) {
+				wlp_loop((While) node, postCond, retCallback);
+			} else if (node instanceof HoareBlock) {
+				wlp(((HoareBlock) node).getProg(), postCond, retCallback);
 			} else {
-				throw new HoareException("no wlp for " + node + " with rule " + node.getSubRule());
+				throw new HoareException("no wlp for " + node);
 			}
 		}
 		
-		public void exec() throws IOException, HoareException, LexerException, ParserException {
-			SyntaxNode refNode = _node.getRefNode();
+		public void exec() throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
+			HoareBlock hoareBlockNode = _node.getRefNode();
 
-			_currentHoareNodeP.set(refNode);
+			_currentHoareNodeP.set(hoareBlockNode);
 			
-			SyntaxNode preNode = refNode.findChild(_grammar.NON_TERMINAL_HOARE_PRE, true);
-			SyntaxNode postNode = refNode.findChild(_grammar.NON_TERMINAL_HOARE_POST, true);
+			HoareCond preCond = hoareBlockNode.getPreCond();
+			HoareCond postCond = hoareBlockNode.getPostCond();
 			
-			HoareCond preCond = new HoareCondBoolExp(BoolExp.fromString(preNode.findChild(_grammar.NON_TERMINAL_BOOL_EXP, true).synthesize()));
-			HoareCond postCond = new HoareCondBoolExp(BoolExp.fromString(postNode.findChild(_grammar.NON_TERMINAL_BOOL_EXP, true).synthesize()));
-			
-			System.err.println(StringUtil.repeat("\t", _nestDepth) + "checking " + preCond + "->" + postCond + " at " + _node);
-			
-			_wlp_nestDepth = 0;
-			_wlp_printDepth = 0;
-			
-			wlp(refNode, postCond, new wlp_callback() {
+			wlp(hoareBlockNode, postCond, new wlp_callback() {
 				@Override
-				public void result(SyntaxNode node, HoareCond lastPreCond, HoareCond lastPostCond) throws IOException, HoareException, LexerException, ParserException {
-					System.out.println("final preCondition: " + preCond);
+				public void result(@Nonnull SemanticNode node, @Nonnull HoareCond lastPreCond, @Nonnull HoareCond lastPostCond) throws IOException, HoareException, LexerException, ParserException {
+					System.out.println("final preCondition: " + lastPreCond);
 
-					consequence_pre_check(refNode, preCond, postCond, lastPreCond, postCond, new ConseqCheck_callback() {
+					conseq_check_pre(hoareBlockNode, lastPreCond, preCond, new ConseqCheck_callback() {
                         @Override
-                        public void result(boolean yes) throws HoareException, LexerException, IOException, ParserException {
+                        public void result(boolean yes) throws HoareException, LexerException, IOException, ParserException, SemanticNode.CopyException {
                             if (yes) {
                                 System.out.println(preCond + "->" + postCond + " holds true (wlp: " + preCond + ")");
                             } else {
                                 System.out.println(preCond + "->" + postCond + " failed (wlp: " + preCond + ")");
                             }
 
-                            _actionHandler.finished(refNode, preCond, postCond, yes);
+                            _actionHandler.finished(hoareBlockNode, preCond, postCond, yes);
 
                             _callback.finished();
                         }
@@ -582,14 +536,13 @@ public class Hoare {
 			});
 		}
 		
-		public void start() throws IOException, HoareException, LexerException, ParserException {
+		public void start() throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
 			_execChainIt.next().exec();
 		}
 		
-		public Executer(HoareNode node, int nestDepth, HoareWhileGrammar grammar, ObservableMap<SyntaxNode, HoareCond> preCondMap, ObservableMap<SyntaxNode, HoareCond> postCondMap, ObjectProperty<SyntaxNode> currentNodeP, ObjectProperty<SyntaxNode> currentHoareNodeP, ActionInterface actionInterface, ExecInterface callback) throws IOException, HoareException, NoRuleException, LexerException {
+		public Executer(HoareNode node, int nestDepth, ObservableMap<SemanticNode, HoareCond> preCondMap, ObservableMap<SemanticNode, HoareCond> postCondMap, ObjectProperty<SemanticNode> currentNodeP, ObjectProperty<SemanticNode> currentHoareNodeP, ActionInterface actionInterface, ExecInterface callback) throws IOException, HoareException, NoRuleException, LexerException {
 			_node = node;
 			_nestDepth = nestDepth;
-			_grammar = grammar;
 			_preCondMap = preCondMap;
 			_postCondMap = postCondMap;
 			_currentNodeP = currentNodeP;
@@ -599,7 +552,7 @@ public class Hoare {
 			
 			ExecInterface childCallback = new ExecInterface() {
 				@Override
-				public void finished() throws HoareException, LexerException, IOException, ParserException {
+				public void finished() throws HoareException, LexerException, IOException, ParserException, SemanticNode.CopyException {
 					Executer next = _execChainIt.next();
 
 					next.exec();
@@ -607,7 +560,7 @@ public class Hoare {
 			};
 			
 			for (HoareNode child : node.getChildren()) {
-				_execChain.add(new Executer(child, nestDepth + 1, _grammar, _preCondMap, _postCondMap, _currentNodeP, _currentHoareNodeP, _actionHandler, childCallback));
+				_execChain.add(new Executer(child, nestDepth + 1, _preCondMap, _postCondMap, _currentNodeP, _currentHoareNodeP, _actionHandler, childCallback));
 			}
 			
 			_execChain.add(this);
@@ -616,22 +569,22 @@ public class Hoare {
 		}
 	}
 	
-	private Vector<Executer> _execChain;
+	private List<Executer> _execChain;
 	private Iterator<Executer> _execChainIt;
 	
-	public void exec() throws HoareException, LexerException, IOException, ParserException {
+	public void exec() throws HoareException, LexerException, IOException, ParserException, SemanticNode.CopyException {
 		System.err.println("hoaring...");
 
-		Vector<HoareNode> children = collectChildren(_syntaxTreeP.get().getRoot());
+		List<HoareNode> children = collectChildren(_semanticTreeP.get());
 
 		if (children.isEmpty()) {
 			System.err.println("no hoareBlocks");
 		} else {
-			_execChain = new Vector<>();
+			_execChain = new ArrayList<>();
 			
 			for (HoareNode child : children) {
-				if (children.lastElement().equals(child)) {
-					_execChain.add(new Executer(child, 0, _grammar, _preCondMap, _postCondMap, _currentNodeP, _currentHoareNodeP, _actionInterface, new ExecInterface() {
+				if (children.get(children.size() - 1).equals(child)) {
+					_execChain.add(new Executer(child, 0, _preCondMap, _postCondMap, _currentNodeP, _currentHoareNodeP, _actionInterface, new ExecInterface() {
 						@Override
 						public void finished() throws HoareException, NoRuleException, LexerException, IOException {
 							System.err.println("hoaring finished");
@@ -640,9 +593,9 @@ public class Hoare {
 						}
 					}));
 				} else {
-					_execChain.add(new Executer(child, 0, _grammar, _preCondMap, _postCondMap, _currentNodeP, _currentHoareNodeP, _actionInterface, new ExecInterface() {
+					_execChain.add(new Executer(child, 0, _preCondMap, _postCondMap, _currentNodeP, _currentHoareNodeP, _actionInterface, new ExecInterface() {
 						@Override
-						public void finished() throws IOException, HoareException, LexerException, ParserException {
+						public void finished() throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
 							_execChainIt.next().exec();
 						}
 					}));
@@ -655,18 +608,16 @@ public class Hoare {
 		}
 	}
 	
-	public Hoare(ObjectProperty<SyntaxTree> syntaxTreeP, ObjectProperty<ObservableMap<SyntaxNode, HoareCond>> preCondMapP, ObjectProperty<ObservableMap<SyntaxNode, HoareCond>> postCondMapP, ObjectProperty<SyntaxNode> currentNodeP, ObjectProperty<SyntaxNode> currentHoareNodeP, ActionInterface actionInterface) throws Exception {
-		_syntaxTreeP = syntaxTreeP;
+	public Hoare(ObjectProperty<SemanticNode> syntaxTreeP, ObjectProperty<ObservableMap<SemanticNode, HoareCond>> preCondMapP, ObjectProperty<ObservableMap<SemanticNode, HoareCond>> postCondMapP, ObjectProperty<SemanticNode> currentNodeP, ObjectProperty<SemanticNode> currentHoareNodeP, ActionInterface actionInterface) throws Exception {
+		_semanticTreeP = syntaxTreeP;
 		_preCondMap = preCondMapP.get();
 		_postCondMap = postCondMapP.get();
 		_currentNodeP = currentNodeP;
 		_currentHoareNodeP = currentHoareNodeP;
 		_actionInterface = actionInterface;
 
-		if (_syntaxTreeP.get() == null) throw new Exception("no syntaxTree");
+		if (_semanticTreeP.get() == null) throw new Exception("no semanticTree");
 		if (_preCondMap == null) throw new Exception("no preCondMap");
 		if (_postCondMap == null) throw new Exception("no postCondMap");
-		
-		_grammar = (HoareWhileGrammar) _syntaxTreeP.get().getGrammar();
 	}
 }

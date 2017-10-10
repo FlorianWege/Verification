@@ -5,32 +5,34 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-import core.SyntaxNode;
-
 import core.Hoare;
-import core.structures.nodes.Exp;
-import core.structures.hoareCond.HoareCond;
+import core.structures.semantics.SemanticNode;
+import core.structures.semantics.exp.Exp;
+import core.structures.semantics.exp.Id;
+import core.structures.semantics.boolExp.HoareCond;
+import core.structures.semantics.prog.Assign;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import util.ErrorUtil;
+import util.IOUtil;
+
+import javax.annotation.Nonnull;
 
 public class AssignDialog extends HoareDialog implements Initializable {
 	@FXML
 	private Button _button_continue;
 
-	private Hoare.Executer.Assign_callback _callback;
-	private String _var;
-	private Exp _exp;
+	private final Assign _assign;
+	private final Hoare.Executer.Assign_callback _callback;
 	
-	public AssignDialog(SyntaxNode node, HoareCond preCond, HoareCond postCond, Hoare.Executer.Assign_callback callback, String var, Exp exp) throws IOException {
-		super(node, preCond, postCond);
+	public AssignDialog(@Nonnull Assign assign, @Nonnull HoareCond preCond, @Nonnull HoareCond postCond, @Nonnull Hoare.Executer.Assign_callback callback) throws IOException {
+		super(assign, preCond, postCond);
 
+		_assign = assign;
 		_callback = callback;
-		_var = var;
-		_exp = exp;
 		
 		inflate(new File("AssignDialog.fxml"));
 	}
@@ -46,31 +48,57 @@ public class AssignDialog extends HoareDialog implements Initializable {
 
 		sb.addProse("using Hoare axiom 2 (assignment): {p[u:=t]} u:=t {p}");
 
-		sb.addParam("{p}", _postCond.toStringEx());
-		sb.addParam("u", _var);
-		sb.addParam("t", _exp.synthesize());
+		sb.addParam("p", styleCond(_postCond));
+		sb.addParam("u", styleNode(_assign.getVar()));
+		sb.addParam("t", styleNode(_assign.getExp()));
+
+		sb.addStep("replace occurences of u in p by t");
+
+		sb.addOutput(new IOUtil.BiFunc<SemanticNode, String, String>() {
+			@Override
+			public String apply(SemanticNode semanticNode, String s) {
+				if (semanticNode.equals(_assign.getExp())) {
+					return "<span class='output-highlight'>" + s + "</span>";
+				}
+
+				return s;
+			}
+		}, new IOUtil.BiFunc<SemanticNode, String, String>() {
+			@Override
+			public String apply(SemanticNode semanticNode, String s) {
+				return s;
+			}
+		}, new IOUtil.BiFunc<SemanticNode, String, String>() {
+			@Override
+			public String apply(SemanticNode semanticNode, String s) {
+				if (semanticNode.equals(_assign.getVar())) {
+					return "<span class='output-highlight'>" + s + "</span>";
+				}
+
+				return s;
+			}
+		});
 
 		return sb.toString();
 	}
 
 	@Override
-	public String getOutput() {
-		return _preCond.toStringEx() + " " + _node.synthesize() + " " + _postCond.toStringEx();
-	}
-
-	@Override
 	public void initialize(URL url, ResourceBundle resources) {
-		super.initialize(url, resources);
+		try {
+			super.initialize(url, resources);
 
-		_button_continue.setOnAction(new EventHandler<ActionEvent>() {
-			@Override
-			public void handle(ActionEvent event) {
-				try {
-					_callback.result();
-				} catch (Exception e) {
-					ErrorUtil.logEFX(e);
+			_button_continue.setOnAction(new EventHandler<ActionEvent>() {
+				@Override
+				public void handle(ActionEvent event) {
+					try {
+						_callback.result();
+					} catch (Exception e) {
+						ErrorUtil.logEFX(e);
+					}
 				}
-			}
-		});
+			});
+		} catch (Exception e) {
+			ErrorUtil.logEFX(e);
+		}
 	}
 }

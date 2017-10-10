@@ -1,11 +1,8 @@
 package core;
 
 import java.io.PrintStream;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.Vector;
+import java.io.Serializable;
+import java.util.*;
 
 import core.structures.LexerRule;
 import core.structures.NonTerminal;
@@ -13,13 +10,13 @@ import core.structures.ParserRule;
 import core.structures.Terminal;
 import util.StringUtil;
 
-public class Grammar {
+public class Grammar implements Serializable {
 	public Grammar() {
 	}
 	
 	private ParserTable _parserTable;
 	
-	ParserTable getParserTable() {
+	public ParserTable getParserTable() {
 		return _parserTable;
 	}
 	
@@ -28,22 +25,28 @@ public class Grammar {
 	}
 	
 	private NonTerminal _startSymbol;
+	private List<NonTerminal> _startSymbols = new ArrayList<>();
 	
-	NonTerminal getStartSymbol() {
+	public NonTerminal getStartSymbol() {
 		return _startSymbol;
 	}
-	
+
+	public List<NonTerminal> getStartSymbols() {
+		return new ArrayList<>(_startSymbols);
+	}
+
 	public void setStartSymbol(NonTerminal val) {
 		_startSymbol = val;
+		_startSymbols.add(val);
 	}
 	
-	private Map<SymbolKey, Symbol> _symbols = new LinkedHashMap<>();
+	private final Map<SymbolKey, Symbol> _symbols = new LinkedHashMap<>();
 	
 	public Map<SymbolKey, Symbol> getSymbols() {
 		return _symbols;
 	}
 	
-	private Set<Terminal> _terminals = new LinkedHashSet<>();
+	private final Set<Terminal> _terminals = new LinkedHashSet<>();
 	
 	public Set<Terminal> getTerminals() {
 		return _terminals;
@@ -64,7 +67,7 @@ public class Grammar {
 		return createTerminal(new SymbolKey(keyS));
 	}
 	
-	private Set<NonTerminal> _nonTerminals = new LinkedHashSet<>();
+	private final Set<NonTerminal> _nonTerminals = new LinkedHashSet<>();
 	
 	public Set<NonTerminal> getNonTerminals() {
 		return _nonTerminals;

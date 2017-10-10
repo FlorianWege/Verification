@@ -5,7 +5,7 @@
     <classes>
       <class name="tests.parsing.ExpParserTest"/>
       <class name="tests.parsing.FactorialParserTest"/>
-      <class name="tests.parsing.WhileParserTest"/>
+      <class name="tests.parsing.BasicGrammarTest"/>
     </classes>
   </test> <!-- Test -->
 </suite> <!-- Suite -->

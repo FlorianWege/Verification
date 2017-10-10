@@ -1,4 +1,4 @@
-.dialog > *.label.content {
+/*.dialog > *.label.content {
 	-fx-font-weight: bold;
 	-fx-alignment: center;
 	-fx-text-alignment: center;
@@ -13,7 +13,7 @@
 
 .styled-text-area * {
     -fx-text-alignment: center;
-}
+}*/
 
 .styled-text-area.success {
 	-fx-font: 50px Tahoma;
@@ -39,36 +39,106 @@ body {
     margin-bottom: 0;
 }
 
-p .prose {
+.prose {
+    text-size: 24px;
+    font-style: italic;
     text-align: center;
-    margin-top: 0;
-    margin-bottom: 0;
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
 
-p .param {
+.param-block {
     text-align: center;
-    font-size: 12px;
+    font-size: 16px;
     background-color: lightgreen;
-    margin-top: 0;
-    margin-bottom: 0;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    /*line-height: 12px;*/
 }
 
-p .step {
+.param {
     text-align: center;
-    font-size: 12px;
+    text-size: 24px;
+    background-color: white;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+.param-name {
+    font-style: italic;
+    font-weight: bold;
+}
+
+.param-val {
+    color: cornflowerblue;
+    font-weight: bold;
+    margin-left: 0em;
+}
+
+.step {
+    text-align: center;
+    font-size: 16px;
     background-color: lightblue;
-    margin-top: 0;
+    margin-top: 10px;
     margin-bottom: 0;
 }
 
-p .param {
+.result {
     text-align: center;
-    font-size: 12px;
-    background-color: rose;
+    font-size: 16px;
+    background-color: paleturquoise;
     margin-top: 0;
     margin-bottom: 0;
 }
 
-.indent {
-    margin-left: 5em;
+.output {
+    text-align: center;
+    font-size: 20px;
+    background-color: paleturquoise;
+    margin-top: 10px;
+    margin-bottom: 0;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    line-height: 200%;
+}
+
+.output-highlight {
+    color: red;
+}
+
+.keyword {
+	color: purple;
+	font-weight: bold;
+}
+
+.error {
+	color: red;
+	font-weight: bold;
+}
+
+.assertion {
+	font-weight: bold;
+}
+
+.table-header {
+    -fx-background-color: -fx-box-border, -fx-inner-border, -fx-body-color;
+    /*-fx-background-insets: 0, 0 1 1 0, 1 2 2 1;*/
+    -fx-font-weight: bold;
+    -fx-size: 2em;
+    -fx-text-fill: -fx-selection-bar-text;
+    -fx-padding: 0.166667em;
+}
+
+.table-row-cell:filled:selected {
+  -fx-background: -fx-control-inner-background ;
+  -fx-background-color: -fx-table-cell-border-color, -fx-background ;
+  -fx-background-insets: 0, 0 0 1 0 ;
+  -fx-table-cell-border-color: derive(-fx-color, 5%);
+}
+.table-row-cell:odd:filled:selected {
+  -fx-background: -fx-control-inner-background-alt ;
 }

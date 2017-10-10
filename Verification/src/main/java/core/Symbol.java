@@ -1,7 +1,9 @@
 package core;
 
-public abstract class Symbol {
-	private SymbolKey _key;
+import java.io.Serializable;
+
+public abstract class Symbol implements Serializable {
+	private final SymbolKey _key;
 	
 	public SymbolKey getKey() {
 		return _key;

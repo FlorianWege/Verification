@@ -1,28 +1,28 @@
 package core;
 
 import java.util.Iterator;
-import java.util.Vector;
+import java.util.List;
 
 import core.structures.Terminal;
 import core.structures.NonTerminal;
 import core.structures.ParserRule;
+import core.structures.syntax.SyntaxNode;
+import core.structures.syntax.SyntaxNodeTerminal;
 
 /**
  * using a grammar, takes the parser rules and converts a given String into a tree consisting of parser rules
  */
 public class Parser {
-	private Grammar _grammar;
+	private final Grammar _grammar;
 	
-	private Vector<Token> _tokens;
+	private List<Token> _tokens;
 	private Iterator<Token> _tokensItr;
 	private Token _token;
 	
 	private ParserTable _ruleMap;
 	
 	public static class ParserException extends Exception {
-		private static final long serialVersionUID = 1L;
-		
-		private Token _token;
+		private final Token _token;
 		
 		public Token getToken() {
 			return _token;
@@ -40,16 +40,14 @@ public class Parser {
 	}
 	
 	public static class NoRuleException extends ParserException {
-		private static final long serialVersionUID = 1L;
-
-		private NonTerminal _rule;
+		private final NonTerminal _rule;
 		
 		@Override
 		public String getMessage() {			
 			return String.format("line %d.%d: unexpected '%s' (%s) (no rule in %s) ", getToken().getLine() + 1, getToken().getLineOffset() + 1, getToken().getText(), getToken().getTerminal().toString(), _rule);
 		}
 		
-		NoRuleException(Token token, NonTerminal rule) {
+		public NoRuleException(Token token, NonTerminal rule) {
 			super(token);
 			
 			_rule = rule;
@@ -57,10 +55,8 @@ public class Parser {
 	}
 	
 	public static class NoMoreTokensException extends ParserException {
-		private static final long serialVersionUID = 1L;
-		
-		private NonTerminal _nonTerminal;
-		private Terminal _terminal;
+		private final NonTerminal _nonTerminal;
+		private final Terminal _terminal;
 		
 		@Override
 		public String getMessage() {
@@ -71,37 +67,32 @@ public class Parser {
 			return "no more tokens but expected " + _nonTerminal;
 		}
 		
-		NoMoreTokensException(NonTerminal nonTerminal) {
+		public NoMoreTokensException(NonTerminal nonTerminal, Terminal terminal) {
 			super(null);
-			
+
 			_nonTerminal = nonTerminal;
-		}
-		
-		NoMoreTokensException(NonTerminal nonTerminal, Terminal terminal) {
-			this(nonTerminal);
-			
 			_terminal = terminal;
+		}
+
+		public NoMoreTokensException(NonTerminal nonTerminal) {
+			this(nonTerminal, null);
 		}
 	}
 	
 	public static class SuperfluousTokenException extends ParserException {
-		private static final long serialVersionUID = 1L;
-		
 		@Override
 		public String getMessage() {
 			return "superfluous input " + getToken();
 		}
 		
-		SuperfluousTokenException(Token token) {
+		public SuperfluousTokenException(Token token) {
 			super(token);
 		}
 	}
 	
 	public static class WrongTokenException extends ParserException {
-		private static final long serialVersionUID = 1L;
-
-		private NonTerminal _rule;
-		private Symbol _childRule;
+		private final NonTerminal _rule;
+		private final Symbol _childRule;
 		
 		@Override
 		public String getMessage() {
@@ -151,7 +142,7 @@ public class Parser {
 		return node;
 	}
 	
-	public SyntaxTree parse(Vector<Token> tokens) throws ParserException {
+	public SyntaxNode parse(List<Token> tokens) throws ParserException {
 		_tokens = tokens;
 		
 		if (_tokens.isEmpty()) throw new NoMoreTokensException(_grammar.getStartSymbol());
@@ -162,13 +153,30 @@ public class Parser {
 		
 		_token = _tokensItr.next();
 
-		SyntaxNode root = getNode(_grammar.getStartSymbol());
+		NonTerminal selectedStartSymbol = _grammar.getStartSymbol();
+
+		for (NonTerminal startSymbol : _grammar.getStartSymbols()) {
+			try {
+				selectRule(startSymbol, _token);
+
+				selectedStartSymbol = startSymbol;
+			} catch (ParserException e) {
+			}
+		}
+
+		SyntaxNode root = getNode(selectedStartSymbol);
 		
 		if (!_token.getTerminal().equals(Terminal.TERMINATOR)) throw new SuperfluousTokenException(_token);
-		
-		return new SyntaxTree(_grammar, root);
+
+		return root;
 	}
-	
+
+	public SyntaxNode parse(String input) throws Lexer.LexerException, ParserException {
+		Lexer lexer = new Lexer(_grammar);
+
+		return parse(lexer.tokenize(input).getTokens());
+	}
+
 	public Parser(Grammar grammar) {
 		_grammar = grammar;
 		

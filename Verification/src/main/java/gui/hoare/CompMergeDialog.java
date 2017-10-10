@@ -5,17 +5,20 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-import core.SyntaxNode;
+import core.structures.semantics.SemanticNode;
 import org.fxmisc.richtext.StyleClassedTextArea;
 
 import core.Hoare;
-import core.structures.hoareCond.HoareCond;
+import core.structures.semantics.boolExp.HoareCond;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import util.ErrorUtil;
+import util.StringUtil;
+
+import javax.annotation.Nonnull;
 
 public class CompMergeDialog extends HoareDialog implements Initializable {
 	@FXML
@@ -23,67 +26,72 @@ public class CompMergeDialog extends HoareDialog implements Initializable {
 	@FXML
 	private Button _button_continue;
 
-	private Hoare.Executer.CompMerge_callback _callback;
-	private SyntaxNode _firstNode;
-	private SyntaxNode _secondNode;
-	private HoareCond _secondPreCond;
-	private HoareCond _firstPreCond;
+	private final Hoare.Executer.wlp_comp _comp;
+	private final Hoare.Executer.CompMerge_callback _callback;
 	
-	public CompMergeDialog(Hoare.Executer.wlp_comp comp, Hoare.Executer.CompMerge_callback callback) throws IOException {
+	public CompMergeDialog(@Nonnull Hoare.Executer.wlp_comp comp, @Nonnull Hoare.Executer.CompMerge_callback callback) throws IOException {
 		super(comp._compNode, comp._preCond, comp._postCond);
 
+		_comp = comp;
 		_callback = callback;
-		_firstNode = comp._firstNode;
-		_secondNode = comp._secondNode;
-		_secondPreCond = comp._secondPreCond;
-		_firstPreCond = comp._firstPreCond;
 		
 		inflate(new File("CompMergeDialog.fxml"));
 	}
 
 	@Override
 	public String getTitle() {
-		return "Composition (Step 3)";
+		return "Composition (Merge)";
 	}
 
 	@Override
 	public String getRationale() {
 		RationaleBuilder sb = new RationaleBuilder();
 
-		sb.addProse("using Hoare rule: {p} S1 {r}, {r} S2 {q} -> {p} S1; S2 {q}");
-		sb.addProse("with:");
+		sb.addProse("using Hoare rule 3 (composition): {p} S<sub>i</sub> {r<sub>i+1</sub>}, {r<sub>i+1</sub>} S<sub>i+1</sub> {q} " + StringUtil.bool_impl + " {p} S<sub>i</sub>; S<sub>i+1</sub> {q}");
 
-		sb.addParam("S<sub>1</sub>", styleNode(_firstNode));
-		sb.addParam("S<sub>2</sub>", styleNode(_secondNode));
-		sb.addParam("{q}", _postCond.toStringEx());
+		for (int i = 0; i < _comp._compNode.getChildren().size(); i++) {
+			sb.addParam("S<sub>" + (i + 1) + "</sub>", styleNode(_comp._compNode.getChildren().get(i)));
+		}
 
-		sb.addStep("get r = wlp(S<sub>2</sub>, q)");
-		sb.addResult(_secondPreCond.toStringEx());
-		sb.addStep("get p = wlp(S<sub>1</sub>, r)");
-		sb.addResult(_firstPreCond.toStringEx());
+		sb.addParam("q", styleCond(_postCond));
+
+		for (int i = _comp._compNode.getChildren().size() - 1; i >= _comp._curPart; i--) {
+			if (i < _comp._compNode.getChildren().size() - 1 && i >= _comp._curPart) {
+				sb.addResult(styleCond(_comp._preConds[i + 1]));
+			}
+
+			String preCondS = (i != 0) ? "r<sub>" + (_comp._compNode.getChildren().size() - i) + "</sub>" : "p";
+			String postCondS = (i != _comp._compNode.getChildren().size() - 1) ? "r<sub>" + (_comp._compNode.getChildren().size() - i - 1) + "</sub>" : "q";
+
+			sb.addStep("get " + preCondS + " = wlp(S<sub>" + (_comp._compNode.getChildren().size() - i) + "</sub>, " + postCondS + ")");
+		}
+
+		sb.addResult(styleCond(_comp._preConds[0]));
+
 		sb.addStep("merge/continue");
+
+		sb.addOutput();
 
 		return sb.toString();
 	}
 
 	@Override
-	public String getOutput() {
-		return _preCond.toStringEx() + " " + _node.synthesize() + " " + _postCond.toStringEx();
-	}
-
-	@Override
 	public void initialize(URL url, ResourceBundle resources) {
-		super.initialize(url, resources);
+		try {
+			super.initialize(url, resources);
 
-		_button_continue.setOnAction(new EventHandler<ActionEvent>() {
-			@Override
-			public void handle(ActionEvent event) {
-				try {
-					_callback.result();
-				} catch (Exception e) {
-					ErrorUtil.logEFX(e);
+			_button_continue.setOnAction(new EventHandler<ActionEvent>() {
+				@Override
+				public void handle(ActionEvent event) {
+					try {
+						_callback.result();
+					} catch (Exception e) {
+						ErrorUtil.logEFX(e);
+					}
 				}
-			}
-		});
+			});
+		} catch (Exception e) {
+			ErrorUtil.logEFX(e);
+		}
 	}
 }

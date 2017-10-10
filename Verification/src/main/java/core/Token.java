@@ -1,40 +1,49 @@
 package core;
 
+import java.io.Serializable;
+import java.util.List;
 import java.util.Vector;
 
 import core.structures.Terminal;
 import core.structures.LexerRule;
+import util.StringUtil;
 
 /**
  * token as gained by the lexer
  * a token is a concatenation of text to a lexer rule abiding entity, storing the lexer rule and the collected text 
  */
-public class Token {
-	private Terminal _terminal;
-	private LexerRule _rule;
-	private String _text;
-	
+public class Token implements Serializable {
+	private final Terminal _terminal;
+
 	public Terminal getTerminal() {
 		return _terminal;
 	}
+
+	private final LexerRule _rule;
+
+	public LexerRule getRule() {
+		return _rule;
+	}
+
+	private String _text;
 	
 	public String getText() {
 		return _text;
 	}
 	
-	private int _line;
+	private final int _line;
 	
 	public int getLine() {
 		return _line;
 	}
 	
-	private int _lineOffset;
+	private final int _lineOffset;
 	
 	public int getLineOffset() {
 		return _lineOffset;
 	}
 	
-	private int _pos;
+	private final int _pos;
 	
 	public int getPos() {
 		return _pos;
@@ -57,9 +66,15 @@ public class Token {
 		_lineOffset = lineOffset;
 		_pos = pos;
 	}
-	
-	static Token createTerminator(Vector<Token> tokens) {
-		return new Token(Terminal.TERMINATOR, null, null, tokens.lastElement() == null ? 0 : tokens.lastElement().getLine(), tokens.lastElement() == null ? 0 : tokens.lastElement().getLineOffset() + 1, tokens.lastElement() == null ? 0 : tokens.lastElement().getPos() + 1);
+
+	public Token(Terminal terminal, String text) {
+		this(terminal, null, text, 0, 0, 0);
+	}
+
+	static Token createTerminator(List<Token> tokens) {
+		Token last = tokens.get(tokens.size() - 1);
+
+		return new Token(Terminal.TERMINATOR, null, null, last == null ? 0 : last.getLine(), last == null ? 0 : last.getLineOffset() + 1, last == null ? 0 : last.getPos() + 1);
 	}
 	
 	@Override
@@ -67,7 +82,7 @@ public class Token {
 		return String.format("%s (%s)", _terminal.toString(), _text);
 	}
 	
-	String toStringVert() {
-		return String.format("%s%s(%s)", _terminal.toString(), System.lineSeparator(), _text);
+	public String toStringVert() {
+		return String.format("%s%s(%s)", _terminal.toString(), StringUtil.line_sep, _text);
 	}
 }

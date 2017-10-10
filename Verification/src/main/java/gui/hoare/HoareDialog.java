@@ -1,8 +1,8 @@
 package gui.hoare;
 
-import core.SyntaxNode;
-import core.Token;
-import core.structures.hoareCond.HoareCond;
+import core.structures.semantics.SemanticNode;
+import core.structures.semantics.boolExp.BoolExp;
+import core.structures.semantics.boolExp.HoareCond;
 import grammars.HoareWhileGrammar;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -15,12 +15,14 @@ import javafx.scene.web.WebView;
 import org.fxmisc.richtext.StyleClassedTextArea;
 import util.ErrorUtil;
 import util.IOUtil;
+import util.StringUtil;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.List;
+import java.util.ArrayList;
 import java.util.ResourceBundle;
 import java.util.regex.Pattern;
 
@@ -43,73 +45,123 @@ public abstract class HoareDialog implements Initializable {
 
     protected final HoareWhileGrammar _grammar = HoareWhileGrammar.getInstance();
 
-    protected SyntaxNode _node;
+    protected final SemanticNode _node;
 
-    public SyntaxNode getNode() {
+    public @Nonnull SemanticNode getNode() {
         return _node;
     }
 
-    protected HoareCond _preCond;
+    protected final HoareCond _preCond;
 
-    public HoareCond getPreCond() {
+    public @Nullable HoareCond getPreCond() {
         return _preCond;
     }
 
-    protected HoareCond _postCond;
+    protected final HoareCond _postCond;
 
-    public HoareCond getPostCond() {
+    public @Nullable HoareCond getPostCond() {
         return _postCond;
     }
 
-    public HoareDialog(SyntaxNode node, HoareCond preCond, HoareCond postCond) {
+    public HoareDialog(@Nonnull SemanticNode node, @Nullable HoareCond preCond, @Nullable HoareCond postCond) {
         _node = node;
         _preCond = preCond;
         _postCond = postCond;
     }
 
-    String styleNode(@Nonnull SyntaxNode node) {
-        List<Token> tokens = node.tokenize();
+    public String styleCond(@Nonnull BoolExp boolExp) {
+        return boolExp.getContentString();
+    }
 
-        while (!tokens.isEmpty() && tokens.get(0).getTerminal().isSep()) tokens.remove(0);
-        while (!tokens.isEmpty() && tokens.get(tokens.size() - 1).getTerminal().isSep()) tokens.remove(tokens.size() - 1);
+    public String styleCond(@Nonnull HoareCond cond) {
+        return cond.getContentString();
+    }
 
-        StringBuilder sb = new StringBuilder();
+    public String styleNode(@Nonnull SemanticNode node) {
+        //TODO
+        /*String ret = node.synthesize(false, true, new Function<Token, String>() {
+            @Override
+            public String apply(Token token) {
+                String text = StringUtil.escapeHTML(token.getName());
 
-        for (Token token : tokens) {
-            if (sb.length() == 0) sb.append(" ");
+                return token.getTerminal().isKeyword() ? "<span class='keyword'>" + text + "</span>" : text;
+            }
+        });*/
+        String ret = node.getContentString();
 
-            sb.append(token.getText());
-        }
+        ret = ret.replaceAll(StringUtil.line_sep, StringUtil.html_line_sep);
 
-        return sb.toString();
+        return ret;
     }
 
     protected class RationaleBuilder {
-        private StringBuilder sb = new StringBuilder();
+        protected StringBuilder _sb = new StringBuilder();
 
         @Override
         public String toString() {
-            return sb.toString();
+            endParams();
+
+            return _sb.toString();
+        }
+
+        private boolean _inParams = false;
+
+        private void endParams() {
+            if (_inParams) {
+                _inParams = false;
+
+                _sb.append("</p>");
+            }
         }
 
         public void addProse(String s) {
-            sb.append("<p class='prose'>").append(s).append("</p>");
+            endParams();
+
+            _sb.append("<p class='prose'><span class='prose'>").append(s).append("</span></p>");
         }
 
         public void addParam(String name, String val) {
-            sb.append("<p class='param'>").append(name).append("<span class='indent'>").append(val).append("</span></p>");
+            if (!_inParams) _sb.append("<p class='param-block'>"); else _sb.append(StringUtil.html_line_sep);
+
+            if (val != null && val.contains(StringUtil.html_line_sep)) val = StringUtil.html_line_sep + val;
+
+            _sb.append("<span class='param'>").append("<span class='param-name'>").append(name).append("</span>").append(": ").append("<span class='param-val'>").append(val).append("</span>").append("</span>");
+
+            _inParams = true;
         }
 
         private int _stepC = 0;
 
         public void addStep(String s) {
+            endParams();
+
             _stepC++;
 
-            sb.append("<p class='step'>" + "step ").append(_stepC).append(":").append(s).append("</p>");
+            _sb.append("<p class='step'><span class='step'>" + "step ").append(_stepC).append(":").append(s).append("</span></p>");
         }
 
-        void addResult(String s) {
-            sb.append("<p class='result'>").append(s).append("</p>");
+        public void addResult(String s) {
+            endParams();
+
+            _sb.append("<p class='result'><span class='result'>").append(s).append("</span></p>");
+        }
+
+        public void addOutput(IOUtil.BiFunc<SemanticNode, String, String> preCondMapper, IOUtil.BiFunc<SemanticNode, String, String> nodeMapper, IOUtil.BiFunc<SemanticNode, String, String> postCondMapper) {
+            endParams();
+
+            if (_preCond != null) {
+                String preCondS = (preCondMapper != null) ? _preCond.getContentString(preCondMapper) : _preCond.getContentString();
+                String nodeS = (nodeMapper != null) ? _node.getContentString(nodeMapper) : _node.getContentString();
+                String postCondS = (postCondMapper != null) ? _postCond.getContentString(postCondMapper) : _postCond.getContentString();
+
+                String s = "output:" + StringUtil.html_line_sep + preCondS + " " + nodeS + " " + postCondS;
+
+                _sb.append("<p class='output'><span class='output'>").append(s).append("</span></p>");
+            }
+        }
+
+        public void addOutput() {
+            addOutput(null, null, null);
         }
 
         public RationaleBuilder() {
@@ -118,32 +170,31 @@ public abstract class HoareDialog implements Initializable {
 
     private Parent _root;
 
-    public Parent getRoot() {
+    public @Nonnull Parent getRoot() {
         return _root;
     }
 
     private Runnable _closeHandler = null;
 
-    public void setCloseHandler(Runnable handler) {
+    public void setCloseHandler(@Nonnull Runnable handler) {
         _closeHandler = handler;
     }
 
-    void close() {
+    public void close() {
         if (_closeHandler != null) _closeHandler.run();
     }
 
     public abstract String getTitle();
     public abstract String getRationale();
-    public abstract String getOutput();
 
-    void prepareTextArea(StyleClassedTextArea textArea) {
+    public void prepareTextArea(@Nonnull StyleClassedTextArea textArea) {
         textArea.getStylesheets().add(getClass().getResource("HoareDialog.css").toExternalForm());
     }
 
-    private void setText(WebView textArea, String msg) {
+    private void setText(@Nonnull WebView textArea, @Nullable String msg) {
         if (msg != null) {
-            msg = msg.replaceAll(Pattern.quote("{"), "<b>{");
-            msg = msg.replaceAll(Pattern.quote("}"), "}</b>");
+            msg = msg.replaceAll(Pattern.quote(StringUtil.escapeHTML("{")), "<span class='assertion'>" + StringUtil.escapeHTML("{"));
+            msg = msg.replaceAll(Pattern.quote(StringUtil.escapeHTML("}")),  StringUtil.escapeHTML("}") + "</span>");
         }
 
         textArea.getEngine().loadContent(msg);
@@ -160,7 +211,7 @@ public abstract class HoareDialog implements Initializable {
     }
 
     private void updateOutput() {
-        String msg = getOutput();
+        String msg = null;
 
         _pane_output.setVisible(msg != null && !msg.isEmpty());
         _pane_output.managedProperty().bind(_pane_output.visibleProperty());
@@ -187,7 +238,7 @@ public abstract class HoareDialog implements Initializable {
             private Pane _pane_specHost;
 
             @Override
-            public void initialize(URL location, ResourceBundle resources) {
+            public void initialize(URL url, ResourceBundle resources) {
                 HoareDialog.this._label_title = _label_title;
                 HoareDialog.this._pane_rationale = _pane_rationale;
                 HoareDialog.this._textArea_rationale = _textArea_rationale;

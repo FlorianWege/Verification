@@ -12,15 +12,33 @@ import core.SymbolKey;
 public class Terminal extends Symbol {
 	public final static Terminal EPSILON = new Terminal("\u03F5");
 	public final static Terminal TERMINATOR = new Terminal("$");
-	
+
+	public Terminal(SymbolKey key) {
+		super(key);
+	}
+
+	public Terminal(String keyS) {
+		this(new SymbolKey(keyS));
+	}
+
 	public boolean hasRegexRule() {
-		for (LexerRule rule : _rules) {
-			if (rule.isRegEx()) return true;
-		}
+		for (LexerRule rule : _rules) if (rule.isRegEx()) return true;
 		
 		return false;
 	}
-	
+
+	private boolean _isKeyword = false;
+
+	public boolean isKeyword() {
+		return _isKeyword;
+	}
+
+	public Terminal setKeyword() {
+		_isKeyword = true;
+
+		return this;
+	}
+
 	@Override
 	public String toLatexString() {
 		if (hasRegexRule()) return toString();
@@ -32,16 +50,26 @@ public class Terminal extends Symbol {
 		return toString();
 	}
 	
-	private Set<LexerRule> _rules = new LinkedHashSet<>();
+	private final Set<LexerRule> _rules = new LinkedHashSet<>();
 	
 	public Set<LexerRule> getRules() {
 		return _rules;
 	}
-	
-	private boolean _skip;
+
+	public LexerRule getPrimRule() {
+		return getRules().iterator().next();
+	}
+
+	private boolean _isSkipped = false;
 	
 	public boolean isSkipped() {
-		return _skip;
+		return _isSkipped;
+	}
+
+	public Terminal setSkipped() {
+		_isSkipped = true;
+
+		return this;
 	}
 
 	private boolean _isSep = false;
@@ -50,33 +78,29 @@ public class Terminal extends Symbol {
 		return _isSep;
 	}
 
-	public void setSep() {
+	public Terminal setSep() {
 		_isSep = true;
-	}
 
-	public Terminal(SymbolKey key, boolean skip) {
-		super(key);
-
-		_skip = skip;
-	}
-	
-	public Terminal(SymbolKey key) {
-		this(key, false);
-	}
-	
-	public Terminal(String keyS) {
-		this(new SymbolKey(keyS));
+		return this;
 	}
 	
 	public void addRule(LexerRule rule) {
 		_rules.add(rule);
 	}
 
-	public void addRuleRegEx(String ruleS) {
-		addRule(new LexerRule(ruleS, true));
+	public LexerRule addRuleRegEx(String ruleS) {
+		LexerRule lexerRule = new LexerRule(ruleS, true);
+
+		addRule(lexerRule);
+
+		return lexerRule;
 	}
 	
-	public void addRule(String ruleS) {
-		addRule(new LexerRule(ruleS, false));
+	public LexerRule addRule(String ruleS) {
+		LexerRule lexerRule = new LexerRule(ruleS, false);
+
+		addRule(lexerRule);
+
+		return lexerRule;
 	}
 }

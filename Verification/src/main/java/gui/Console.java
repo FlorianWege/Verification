@@ -6,6 +6,7 @@ import javafx.scene.Parent;
 import javafx.scene.control.TextArea;
 import util.IOUtil;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -15,9 +16,11 @@ public class Console implements Initializable, JavaFXMain.PrintInterface {
 	@FXML
 	private TextArea _textArea_log;
 	
-	private Parent _root;
+	private final Parent _root;
+
+	private boolean _shown = false;
 	
-	public Parent getRoot() {
+	public @Nonnull Parent getRoot() {
 		return _root;
 	}
 	
@@ -26,11 +29,9 @@ public class Console implements Initializable, JavaFXMain.PrintInterface {
 	}
 
 	@Override
-	public void initialize(URL location, ResourceBundle resources) {
+	public void initialize(URL url, ResourceBundle resources) {
 		updateVisibility();
 	}
-
-	private boolean _shown = false;
 
 	private void updateVisibility() {
 		if (_textArea_log == null) return;

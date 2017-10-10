@@ -1,10 +1,12 @@
 package core;
 
+import java.io.Serializable;
+
 /**
  * left side of a rule
  */
-public class SymbolKey {
-	private String _name;
+public class SymbolKey implements Serializable {
+	private final String _name;
 	
 	@Override
 	public int hashCode() {

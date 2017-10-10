@@ -16,7 +16,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane prefHeight="500.0" prefWidth="750.0" stylesheets="@MainWindow.css" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane prefHeight="500.0" prefWidth="750.0" stylesheets="@MainWindow.css" xmlns="http://javafx.com/javafx/8.0.102" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <VBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <children>
@@ -64,7 +64,12 @@
                            <accelerator>
                               <KeyCodeCombination alt="UP" code="W" control="UP" meta="UP" shift="DOWN" shortcut="UP" />
                            </accelerator></CheckMenuItem>
-                    <CheckMenuItem fx:id="_menu_syntaxChart" mnemonicParsing="false" text="Syntax Chart">
+                        <CheckMenuItem fx:id="_menu_semanticTree" mnemonicParsing="false" text="Semantic Tree">
+                           <accelerator>
+                              <KeyCodeCombination alt="UP" code="W" control="UP" meta="UP" shift="DOWN" shortcut="UP" />
+                           </accelerator>
+                        </CheckMenuItem>
+                    <CheckMenuItem fx:id="_menu_treeChart" mnemonicParsing="false" text="Tree Chart">
                            <accelerator>
                               <KeyCodeCombination alt="UP" code="E" control="UP" meta="UP" shift="DOWN" shortcut="UP" />
                            </accelerator></CheckMenuItem>

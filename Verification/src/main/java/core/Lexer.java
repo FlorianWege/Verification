@@ -2,8 +2,13 @@ package core;
 
 import core.structures.LexerRule;
 import core.structures.Terminal;
+import util.StringUtil;
 
+import javax.annotation.Nonnull;
+import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -12,9 +17,9 @@ import java.util.regex.Pattern;
  * using a specified grammar, takes the lexer rules and converts a String into a list of tokens
  */
 public class Lexer {
-	private Grammar _grammar;
+	private final Grammar _grammar;
 	
-	public Lexer(Grammar grammar) {
+	public Lexer(@Nonnull Grammar grammar) {
 		_grammar = grammar;
 	}
 	
@@ -23,27 +28,25 @@ public class Lexer {
 	}
 	
 	public class LexerException extends Exception {
-		private static final long serialVersionUID = 1L;
-		
-		private int _y;
+		private final int _y;
 		
 		public int getLine() {
 			return _y;
 		}
 		
-		private int _x;
+		private final int _x;
 		
 		public int getLineOffset() {
 			return _x;
 		}
 		
-		private int _curPos;
+		private final int _curPos;
 		
 		public int getCurPos() {
 			return _curPos;
 		}
 		
-		private String _inputString;
+		private final String _inputString;
 		
 		public String getInputString() {
 			return _inputString;
@@ -51,7 +54,7 @@ public class Lexer {
 		
 		@Override
 		public String getMessage() {
-			return String.format("cannot find token at pos %d.%d (%d): >>%s<<", _y + 1, _x + 1, _curPos, _inputString.substring(_curPos));
+			return String.format("cannot findType token at pos %d.%d (%d): >>%s<<", _y + 1, _x + 1, _curPos, _inputString.substring(_curPos));
 		}
 		
 		public LexerException(int y, int x, int curPos, String inputString) {
@@ -72,7 +75,7 @@ public class Lexer {
 			
 			line = line.replaceAll("//.*$", "");
 			
-			if (sb.length() > 0) sb.append(System.lineSeparator());
+			if (sb.length() > 0) sb.append(StringUtil.line_sep);
 			
 			sb.append(line);
 		}
@@ -81,29 +84,29 @@ public class Lexer {
 	}
 	
 	public static class LexerResult {
-		private Vector<Token> _tokens;
+		private final List<Token> _tokens;
 		
-		public Vector<Token> getTokens() {
+		public List<Token> getTokens() {
 			return _tokens;
 		}
 		
-		public void print() {
-			System.out.println("tokens:");
+		public void print(PrintStream stream) {
+			stream.println("tokens:");
 			
 			for (int i = 0; i < getTokens().size(); i++) {
-				System.out.println("#" + i + ": " + getTokens().get(i).getTerminal().getKey() + "->" + getTokens().get(i).getText());
+				stream.println("#" + i + ": " + getTokens().get(i).getTerminal().getKey() + "->" + getTokens().get(i).getText());
 			}
 		}
 		
-		LexerResult(Vector<Token> tokens) {
-			_tokens = new Vector<>(tokens);
+		LexerResult(List<Token> tokens) {
+			_tokens = new ArrayList<>(tokens);
 		}
 	}
 	
 	public LexerResult tokenize(String s) throws LexerException {
 		s = removeComments(s);
 		
-		Vector<Terminal> terminals = new Vector<>(_grammar.getTerminals());
+		List<Terminal> terminals = new ArrayList<>(_grammar.getTerminals());
 		
 		terminals.sort(new Comparator<Terminal>() {
 			private boolean isRegEx(Terminal terminal) {
@@ -123,7 +126,7 @@ public class Lexer {
 			}
 		});
 		
-		Terminal wsRule = new Terminal(new SymbolKey("WS"), true);
+		Terminal wsRule = new Terminal(new SymbolKey("WS")).setSkipped();
 		
 		wsRule.addRule(new LexerRule("\\s+", true));
 		
@@ -132,8 +135,8 @@ public class Lexer {
 		int curPos = 0; Vector<Token> tokens = new Vector<>(); int x = 0; int y = 0;
 		
 		while (curPos < s.length()) {
-			if ((s.length() - curPos >= System.lineSeparator().length()) && s.substring(curPos, curPos + System.lineSeparator().length()).equals(System.lineSeparator())) {
-				curPos += System.lineSeparator().length(); x = 0; y++;
+			if ((s.length() - curPos >= StringUtil.line_sep.length()) && s.substring(curPos, curPos + StringUtil.line_sep.length()).equals(StringUtil.line_sep)) {
+				curPos += StringUtil.line_sep.length(); x = 0; y++;
 				
 				continue;
 			}
@@ -163,8 +166,8 @@ public class Lexer {
 				String text = s.substring(curPos, curPos + curLen);
 				
 				for (int i = 0; i < text.length();) {
-					if ((text.length() - i >= System.lineSeparator().length()) && text.substring(i, i + System.lineSeparator().length()).equals(System.lineSeparator())) {
-						i += System.lineSeparator().length();
+					if ((text.length() - i >= StringUtil.line_sep.length()) && text.substring(i, i + StringUtil.line_sep.length()).equals(StringUtil.line_sep)) {
+						i += StringUtil.line_sep.length();
 					} else {
 						i++;
 					}

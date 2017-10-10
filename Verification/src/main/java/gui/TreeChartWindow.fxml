@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane fx:id="_pane_root" prefHeight="300.0" prefWidth="500.0" xmlns="http://javafx.com/javafx/8.0.102" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <TabPane fx:id="_tabPane" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <tabs>
+          <Tab fx:id="_tab_syntax" text="Syntax">
+               <content>
+                  <HBox prefHeight="100.0" prefWidth="200.0">
+                     <children>
+                        <ScrollPane fx:id="_scrollPane_syntax" prefHeight="200.0" prefWidth="200.0" HBox.hgrow="ALWAYS">
+                           <content>
+                              <Pane fx:id="_pane_syntax" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" />
+                           </content>
+                        </ScrollPane>
+                        <VBox>
+                           <children>
+                              <VBox fx:id="_pane_syntax_checkBoxes" minWidth="200.0" prefHeight="300.0" style="-fx-background-color: #DDDDFF;" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </HBox>
+               </content>
+            </Tab>
+          <Tab fx:id="_tab_semantic" text="Semantic">
+               <content>
+                  <HBox prefHeight="100.0" prefWidth="200.0">
+                     <children>
+                        <ScrollPane fx:id="_scrollPane_semantic" prefHeight="200.0" prefWidth="200.0" HBox.hgrow="ALWAYS">
+                           <content>
+                              <Pane fx:id="_pane_semantic" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" />
+                           </content>
+                        </ScrollPane>
+                        <VBox>
+                           <children>
+                              <VBox fx:id="_pane_semantic_checkBoxes" minWidth="200.0" prefHeight="300.0" style="-fx-background-color: #DDDDFF;" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </HBox>
+               </content>
+            </Tab>
+        </tabs>
+      </TabPane>
+   </children>
+</AnchorPane>

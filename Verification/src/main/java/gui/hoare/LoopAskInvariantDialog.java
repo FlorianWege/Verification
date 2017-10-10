@@ -2,9 +2,11 @@ package gui.hoare;
 
 import core.*;
 import core.Hoare.Executer.LoopAskInv_callback;
-import core.structures.hoareCond.HoareCond;
-import core.structures.hoareCond.HoareCondBoolExp;
-import core.structures.nodes.BoolExp;
+import core.structures.semantics.SemanticNode;
+import core.structures.semantics.boolExp.HoareCond;
+import core.structures.semantics.boolExp.BoolExp;
+import core.structures.semantics.prog.Prog;
+import grammars.BoolExpGrammar;
 import gui.ExtendedCodeArea;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -15,6 +17,7 @@ import org.fxmisc.richtext.CodeArea;
 import util.ErrorUtil;
 import util.StringUtil;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -26,37 +29,35 @@ public class LoopAskInvariantDialog extends HoareDialog implements Initializable
 	@FXML
 	private Button _button_suggest;
 
-	private LoopAskInv_callback _callback;
-	private BoolExp _boolExp;
-	private SyntaxNode _progNode;
+	private final Hoare.Executer.wlp_loop _loop;
+	private final LoopAskInv_callback _callback;
 
 	private ExtendedCodeArea _extendedCodeArea_invariant;
 	
-	public LoopAskInvariantDialog(Hoare.Executer.wlp_loop loop, LoopAskInv_callback callback) throws IOException {
-		super(loop._loopNode, null, loop._postCond);
+	public LoopAskInvariantDialog(@Nonnull Hoare.Executer.wlp_loop loop, @Nonnull LoopAskInv_callback callback) throws IOException {
+		super(loop._whileNode, null, loop._postCond);
 
+		_loop = loop;
 		_callback = callback;
-		_boolExp = loop._boolExp;
-		_progNode = loop._progNode;
 
 		inflate(new File("LoopAskInvariantDialog.fxml"));
 	}
 
 	@Override
 	public String getTitle() {
-		return "Loop (Step 1)";
+		return "While (Step 1)";
 	}
 
 	@Override
 	public String getRationale() {
 		RationaleBuilder sb = new RationaleBuilder();
 
-		sb.addProse("using Hoare rule 5 (loop): {p" + StringUtil.bool_and + "B} S {p} -> {p} while B do S od {p" + StringUtil.bool_and + StringUtil.bool_neg + "B}");
-		sb.addProse("p" + StringUtil.bool_and + StringUtil.bool_neg + "B" + " -> q");
+		sb.addProse("using Hoare rule 5 (loop): {p" + StringUtil.bool_and + "B} S {p} " + StringUtil.bool_impl + " {p} while B do S od {p" + StringUtil.bool_and + StringUtil.bool_neg + "B}");
+		sb.addProse("p" + StringUtil.bool_and + StringUtil.bool_neg + "B" + StringUtil.bool_impl + "q");
 
-		sb.addParam("B", _boolExp.getBase().synthesize());
-		sb.addParam("S", _progNode.synthesize());
-		sb.addParam("q", _postCond.toStringEx());
+		sb.addParam("B", styleNode(_loop._whileNode.getBoolExp()));
+		sb.addParam("S", styleNode(_loop._whileNode.getProg()));
+		sb.addParam("q", styleCond(_postCond));
 
 		sb.addStep("get alleged invariant {p*}");
 
@@ -64,41 +65,40 @@ public class LoopAskInvariantDialog extends HoareDialog implements Initializable
 	}
 
 	@Override
-	public String getOutput() {
-		return null;
-	}
-
-	@Override
 	public void initialize(URL url, ResourceBundle resources) {
-		super.initialize(url, resources);
+		try {
+			super.initialize(url, resources);
 
-		_extendedCodeArea_invariant = new ExtendedCodeArea(_codeArea_invariant);
+			_extendedCodeArea_invariant = new ExtendedCodeArea(_codeArea_invariant, null, null, ExtendedCodeArea.Type.CODE);
 
-		_button_suggest.setOnAction(new EventHandler<ActionEvent>() {
-			@Override
-			public void handle(ActionEvent event) {
-				try {
+			_button_suggest.setOnAction(new EventHandler<ActionEvent>() {
+				@Override
+				public void handle(ActionEvent event) {
 					try {
-						_extendedCodeArea_invariant.setErrorPos(null);
+						try {
+							_extendedCodeArea_invariant.setErrorPos(null);
 
-						HoareCond invariant = new HoareCondBoolExp(BoolExp.fromString(_codeArea_invariant.getText()));
+							HoareCond invariant = new HoareCond((BoolExp) SemanticNode.fromString(_codeArea_invariant.getText(), BoolExpGrammar.getInstance()));
 
-						close();
+							close();
 
-						_callback.result(invariant);
-					} catch (Lexer.LexerException e) {
-						_extendedCodeArea_invariant.setErrorPos(e.getCurPos(), true);
-					} catch (Parser.ParserException e) {
-						Token token = e.getToken();
+							_callback.result(invariant);
+						} catch (Lexer.LexerException e) {
+							_extendedCodeArea_invariant.setErrorPos(e.getCurPos(), true);
+						} catch (Parser.ParserException e) {
+							Token token = e.getToken();
 
-						int pos = (token != null) ? token.getPos() : 0;
+							int pos = (token != null) ? token.getPos() : 0;
 
-						_extendedCodeArea_invariant.setErrorPos(pos, true);
+							_extendedCodeArea_invariant.setErrorPos(pos, true);
+						}
+					} catch (Exception e) {
+						ErrorUtil.logEFX(e);
 					}
-				} catch (Exception e) {
-					ErrorUtil.logEFX(e);
 				}
-			}
-		});
+			});
+		} catch (Exception e) {
+			ErrorUtil.logEFX(e);
+		}
 	}
 }

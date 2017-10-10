@@ -21,7 +21,7 @@ public class NonTerminal extends Symbol {
 		return "<" + toString() + ">";
 	}
 	
-	private Set<ParserRule> _rules = new LinkedHashSet<>();
+	private final Set<ParserRule> _rules = new LinkedHashSet<>();
 	
 	public Set<ParserRule> getRules() {
 		return new LinkedHashSet<>(_rules);

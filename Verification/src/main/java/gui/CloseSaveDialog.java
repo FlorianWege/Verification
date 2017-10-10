@@ -4,13 +4,15 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
+import util.ErrorUtil;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
 public class CloseSaveDialog implements Initializable {
-	private Alert _alert;
+	private final Alert _alert;
 
 	public interface CloseSaveInterface {
 		void result(CloseSaveDialog.Result result);
@@ -40,7 +42,7 @@ public class CloseSaveDialog implements Initializable {
 		}
 	}
 	
-	CloseSaveDialog(FileTab tab, CloseSaveInterface callback) throws IOException {
+	CloseSaveDialog(@Nonnull FileTab tab, @Nonnull CloseSaveInterface callback) throws IOException {
 		_alert = new Alert(AlertType.CONFIRMATION, ((tab.getName() != null) ? tab.getName() : tab.getFile().getName()) + " has been edited. Do you want to save it before closing?");
 		_callback = callback;
 		

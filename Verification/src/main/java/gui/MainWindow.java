@@ -3,8 +3,6 @@ package gui;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.ResourceBundle;
 import java.util.Vector;
 
@@ -30,11 +28,14 @@ import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import util.ErrorUtil;
 import util.IOUtil;
+
+import javax.annotation.Nonnull;
 
 public class MainWindow implements Initializable, JavaFXMain.PrintInterface, JavaFXMain.StopInterface {
 	@FXML
@@ -55,7 +56,9 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 	@FXML
 	private CheckMenuItem _menu_syntaxTree;
 	@FXML
-	private CheckMenuItem _menu_syntaxChart;
+	private CheckMenuItem _menu_semanticTree;
+	@FXML
+	private CheckMenuItem _menu_treeChart;
 	@FXML
 	private CheckMenuItem _menu_console;
 
@@ -81,19 +84,19 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 	@FXML
 	private Button _button_hoare_abort;
 
-	private Stage _stage;
+	private final Stage _stage;
 
-	private FileChooser _diag_open = new FileChooser();
-	private FileChooser _diag_save = new FileChooser();
+	private final FileChooser _diag_open = new FileChooser();
+	private final FileChooser _diag_save = new FileChooser();
 
-	private Console _console;
+	private final Console _console;
 
 	public interface ActionInterface {
 		void parse() throws Exception;
 		void hoare() throws Exception;
 	}
 
-	MainWindow(Stage stage) throws IOException {
+	public MainWindow(@Nonnull Stage stage) throws IOException {
 		_stage = stage;
 		
 		_stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
@@ -113,11 +116,11 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 					}
 				}
 				
-				if (_closeWantsCancel) {
-					event.consume();
-				}
+				if (_closeWantsCancel) event.consume();
 			}
 		});
+
+		_console = new Console();
 
 		_stage.getIcons().add(new Image(getClass().getClassLoader().getResourceAsStream("icon.png")));
 		_stage.setScene(IOUtil.inflateFXML(new File("MainWindow.fxml"), this));
@@ -125,18 +128,14 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 		_stage.show();
 
 		_stage.getScene().getStylesheets().add(getClass().getResource("Highlight.css").toExternalForm());
+
+		_stage.getScene().addEventFilter(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
+			@Override
+			public void handle(KeyEvent event) {
+				if (event.isAltDown()) event.consume();
+			}
+		});
 	}
-	
-	private Collection<File> files = Arrays.asList(
-		new File("Alt.txt"),
-		new File("Div.txt"),
-		new File("Factorial.txt"),
-		new File("Factorial2.txt"),
-		new File("Euclid.txt"),
-		new File("Assign.txt"),
-		new File("AssignNested.txt"),
-		new File("Power.txt")
-	);
 
 	private double _split_main_dividerPos = 0.8D;
 
@@ -157,15 +156,13 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 				});
 			}
 		} else {
-			if (_split_main.getItems().contains(_console.getRoot())) {
-				_split_main.getItems().remove(_console.getRoot());
-			}
+			if (_split_main.getItems().contains(_console.getRoot())) _split_main.getItems().remove(_console.getRoot());
 		}
 		
 		_console.setVisible(show);
 	}
 	
-	private void addButtonAccelerator(Button button, KeyCodeCombination keyCodeCombination) {
+	private void addButtonAccelerator(@Nonnull Button button, @Nonnull KeyCodeCombination keyCodeCombination) {
 		assert(button != null);
 		assert(keyCodeCombination != null);
 		
@@ -206,9 +203,11 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 		if ((tab == null) || !(tab instanceof FileTab)) {
 			_button_parse.setDisable(true);
 			_menu_parse.setDisable(true);
+			_menu_parse_auto.setDisable(true);
 		} else {
 			_button_parse.setDisable(((FileTab) tab).isParsed());
 			_menu_parse.setDisable(((FileTab) tab).isParsed());
+			_menu_parse_auto.setDisable(((FileTab) tab).isAutoParsing());
 		}
 	}
 	
@@ -233,7 +232,30 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
-				addButtonAccelerator(_button_parse, new KeyCodeCombination(KeyCode.P, KeyCombination.CONTROL_DOWN));
+				try {
+					addButtonAccelerator(_button_parse, new KeyCodeCombination(KeyCode.P, KeyCombination.CONTROL_DOWN));
+				} catch (Exception e) {
+					ErrorUtil.logEFX(e);
+				}
+			}
+		});
+
+		_menu_parse_auto.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				try {
+					Tab tab = _tabPane_files.getSelectionModel().getSelectedItem();
+
+					if (tab instanceof FileTab) {
+						try {
+							((FileTab) tab).setAutoParsing(_menu_parse_auto.isSelected());
+						} catch (AutoParseException e) {
+							ErrorUtil.logE(e);
+						}
+					}
+				} catch (Exception e) {
+					ErrorUtil.logEFX(e);
+				}
 			}
 		});
 		
@@ -336,7 +358,7 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 		updateHoare();
 	}
 	
-	private void saveFileTab(FileTab tab) throws IOException {
+	private void saveFileTab(@Nonnull FileTab tab) throws IOException {
 		if (tab.isInternalFile() || (tab.getFile() == null)) {
 			_menu_saveAs.fire();
 		} else {
@@ -346,7 +368,7 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 	
 	private boolean _closeWantsCancel = false;
 	
-	private void closeTab(Tab tab) throws IOException {
+	private void closeTab(@Nonnull Tab tab) throws IOException {
 		_tabPane_files.getSelectionModel().select(tab);
 		
 		if (tab instanceof FileTab && !((FileTab) tab).isSaved()) {
@@ -381,7 +403,7 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 		}
 	}
 	
-	private void addFileTab(FileTab tab) {
+	private void addFileTab(@Nonnull FileTab tab) {
 		if (_tabPane_files.getTabs().contains(tab)) return;
 		
 		ContextMenu conMenu = new ContextMenu();
@@ -440,8 +462,6 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 		_tabPane_files.getTabs().add(tab);
 		
 		_tabPane_files.getSelectionModel().select(tab);
-		
-		tab.setMainWindow(this);
 	}
 	
 	private File _savesDir = new File("save");
@@ -449,17 +469,12 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 	private void updateTabVisibility() {
 		for (Tab tab : _tabPane_files.getTabs()) {
 			if (tab instanceof FileTab) {
-				((FileTab) tab).showTokens(_menu_tokens.isSelected());
-			}
-		}
-		for (Tab tab : _tabPane_files.getTabs()) {
-			if (tab instanceof FileTab) {
-				((FileTab) tab).showSyntaxTree(_menu_syntaxTree.isSelected());
-			}
-		}
-		for (Tab tab : _tabPane_files.getTabs()) {
-			if (tab instanceof FileTab) {
-				((FileTab) tab).showSyntaxChart(tab.equals(_tabPane_files.getSelectionModel().getSelectedItem()) && _menu_syntaxChart.isSelected());
+				FileTab fileTab = (FileTab) tab;
+
+				fileTab.showTokens(_menu_tokens.isSelected());
+				fileTab.showSyntaxTree(_menu_syntaxTree.isSelected());
+				fileTab.showSemanticTree(_menu_semanticTree.isSelected());
+				fileTab.showTreeChartWindow(tab.equals(_tabPane_files.getSelectionModel().getSelectedItem()) && _menu_treeChart.isSelected());
 			}
 		}
 	}
@@ -504,7 +519,7 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 			@Override
 			public void handle(ActionEvent event) {
 				try {
-					if (!_savesDir.mkdirs()) throw new Exception("could not create " + _savesDir);
+					_savesDir.mkdirs(); if (!_savesDir.exists()) throw new Exception("could not create " + _savesDir);
 					
 					File file = _diag_open.showOpenDialog(_stage);
 					
@@ -545,7 +560,7 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 			}
 		});
 
-		for (File file : files) {
+		for (File file : IOUtil.getCodeFiles()) {
 			MenuItem fileItem = new MenuItem(file.getName());
 			
 			_menu_openPreset.getItems().add(fileItem);
@@ -608,9 +623,9 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 					
 					if ((tab != null) && (tab instanceof FileTab)) {
 						_diag_save.setTitle("Save code");
-						_diag_save.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Text", "*.txt"));
+						_diag_save.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Code", "*.c"));
 						
-						if (!_savesDir.mkdirs()) throw new Exception("could not create " + _savesDir);
+						_savesDir.mkdirs(); if (!_savesDir.exists()) throw new Exception("could not create " + _savesDir);
 						
 						File file = _diag_save.showSaveDialog(_stage);
 						
@@ -654,7 +669,17 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 				}
 			}
 		});
-		_menu_syntaxChart.setOnAction(new EventHandler<ActionEvent>() {
+		_menu_semanticTree.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				try {
+					updateTabVisibility();
+				} catch (Exception e) {
+					ErrorUtil.logEFX(e);
+				}
+			}
+		});
+		_menu_treeChart.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {
 				try {
@@ -693,16 +718,14 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 	}
 	
 	@Override
-	public void initialize(URL location, ResourceBundle resources) {
-		initMenu();
-		initParse();
-		initHoare();
-		
+	public void initialize(URL url, ResourceBundle resources) {
 		try {
-			_console = new Console();
-			
+			initMenu();
+			initParse();
+			initHoare();
+
 			updateConsole();
-		} catch (IOException e) {
+		} catch (Exception e) {
 			ErrorUtil.logEFX(e);
 		}
 	}

@@ -8,19 +8,20 @@ import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 
+import javax.annotation.Nonnull;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URL;
 import java.util.ResourceBundle;
 
 public class ErrorDialog implements Initializable {
-	private Alert _alert;
+	private final Alert _alert;
 
 	public void show() {
 		_alert.showAndWait();
 	}
 
-	public ErrorDialog(Exception e) {
+	public ErrorDialog(@Nonnull Exception e) {
 		_alert = new Alert(AlertType.ERROR, e.getMessage());
 		
 		GridPane expContent = new GridPane();

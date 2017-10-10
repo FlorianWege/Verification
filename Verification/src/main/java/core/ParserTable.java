@@ -5,10 +5,11 @@ import core.structures.ParserRule;
 import core.structures.Terminal;
 
 import java.io.PrintStream;
+import java.io.Serializable;
 import java.util.*;
 
-public class ParserTable {
-	private Map<NonTerminal, Map<Terminal, ParserRule>> _map = new HashMap<>();
+public class ParserTable implements Serializable {
+	private final Map<NonTerminal, Map<Terminal, ParserRule>> _map = new HashMap<>();
 	
 	public ParserRule get(NonTerminal parserRule, Terminal lexerRule) {
 		if (!_map.containsKey(parserRule)) return null;
@@ -44,7 +45,7 @@ public class ParserTable {
 		}
 	}
 	
-	//private Map<NonTerminal, Set<Terminal>> _followMap = new LinkedHashMap<>();
+	//private final Map<NonTerminal, Set<Terminal>> _followMap = new LinkedHashMap<>();
 	
 	private Set<Terminal> getFollow(NonTerminal nonTerminal, Grammar grammar, Set<NonTerminal> recursiveSet) {
 		//if (_followMap.containsKey(nonTerminal)) return _followMap.get(nonTerminal);
@@ -120,7 +121,7 @@ public class ParserTable {
 		return ret;
 	}
 	
-	//private Map<NonTerminal, Set<Terminal>> _firstMap = new LinkedHashMap<>();
+	//private final Map<NonTerminal, Set<Terminal>> _firstMap = new LinkedHashMap<>();
 	
 	private Set<Terminal> getFirst(NonTerminal nonTerminal, Set<NonTerminal> recursiveSet) {
 		//if (_firstMap.containsKey(nonTerminal)) return _firstMap.get(nonTerminal);
@@ -144,16 +145,16 @@ public class ParserTable {
 		return getFirst(nonTerminal, new LinkedHashSet<>());
 	}
 	
-	ParserTable(Grammar g) {
+	public ParserTable(Grammar grammar) {
 		Map<NonTerminal, Set<Terminal>> firstMap = new LinkedHashMap<>();
 		Map<NonTerminal, Set<Terminal>> followMap = new LinkedHashMap<>();
 		
-		for (NonTerminal p : g.getNonTerminals()) {
+		for (NonTerminal p : grammar.getNonTerminals()) {
 			firstMap.put(p, getFirst(p));
-			followMap.put(p, getFollow(p, g));
+			followMap.put(p, getFollow(p, grammar));
 		}
 		
-		for (NonTerminal p : g.getNonTerminals()) {
+		for (NonTerminal p : grammar.getNonTerminals()) {
 			for (ParserRule r : p.getRules()) {
 				List<Symbol> symbols = r.getSymbols();
 				

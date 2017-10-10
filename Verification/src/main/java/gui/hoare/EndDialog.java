@@ -1,8 +1,11 @@
 package gui.hoare;
 
+import core.structures.semantics.SemanticNode;
+import core.structures.semantics.boolExp.HoareCond;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import org.fxmisc.richtext.StyleClassedTextArea;
+import util.ErrorUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,10 +16,10 @@ public class EndDialog extends HoareDialog implements Initializable {
 	@FXML
 	private StyleClassedTextArea _textArea_result;
 	
-	private boolean _success;
+	private final boolean _success;
 	
-	public EndDialog(boolean success) throws IOException {
-		super(null, null, null);
+	public EndDialog(SemanticNode node, HoareCond preCond, HoareCond postCond, boolean success) throws IOException {
+		super(node, preCond, postCond);
 
 		_success = success;
 		
@@ -34,24 +37,23 @@ public class EndDialog extends HoareDialog implements Initializable {
 	}
 
 	@Override
-	public String getOutput() {
-		return null;
-	}
-
-	@Override
 	public void initialize(URL url, ResourceBundle resources) {
-		super.initialize(url, resources);
+		try {
+			super.initialize(url, resources);
 
-		prepareTextArea(_textArea_result);
+			prepareTextArea(_textArea_result);
 
-		if (_success) {
-			_textArea_result.getStyleClass().add("success");
-			
-			_textArea_result.replaceText("success");
-		} else {
-			_textArea_result.getStyleClass().add("failure");
-			
-			_textArea_result.replaceText("failure");
+			if (_success) {
+				_textArea_result.getStyleClass().add("success");
+
+				_textArea_result.replaceText("success");
+			} else {
+				_textArea_result.getStyleClass().add("failure");
+
+				_textArea_result.replaceText("failure");
+			}
+		} catch (Exception e) {
+			ErrorUtil.logEFX(e);
 		}
 	}
 }

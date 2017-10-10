@@ -8,8 +8,7 @@
    <children>
       <HBox>
          <children>
-            <Button fx:id="_button_accept" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Accept" HBox.hgrow="ALWAYS" />
-            <Button fx:id="_button_reject" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Reject" HBox.hgrow="ALWAYS" />
+            <Button fx:id="_button_continue" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Continue" HBox.hgrow="ALWAYS" />
          </children>
       </HBox>
    </children>

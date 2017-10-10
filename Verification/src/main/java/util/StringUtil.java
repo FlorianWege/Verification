@@ -9,10 +9,16 @@ import core.structures.Terminal;
 import javafx.util.Pair;
 
 public class StringUtil {
-	public static Character bool_and = '\u2227';
-	public static Character bool_or = '\u2228';
-	public static Character bool_neg = '\u00AC';
-	public static String html_tab = "&nbsp;";
+	public static final String bool_and = "\u2227";
+	public static final String bool_or = "\u2228";
+	public static final String bool_neg = "\u00AC";
+	public static final String bool_impl = "\u2192";
+	public static final String bool_eq = "\u2194";
+	public static final String bool_impl_meta = "\u21D2";
+	public static final String bool_eq_meta = "\u21D4";
+	public static final String html_tab = "&nbsp;";
+	public static final String html_line_sep = "<br>";
+	public static final String line_sep = System.lineSeparator();
 
 	public static String repeat(String s, int repeat) {
 		if (repeat < 1) return "";
@@ -48,6 +54,8 @@ public class StringUtil {
 	}
 
 	public static String escapeHTML(String s) {
-		return HtmlEscapers.htmlEscaper().escape(s);
+		String ret = HtmlEscapers.htmlEscaper().escape(s);
+
+		return ret.replaceAll(StringUtil.line_sep, "<br>");
 	}
 }

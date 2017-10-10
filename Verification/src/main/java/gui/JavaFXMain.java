@@ -6,6 +6,8 @@ import java.io.PrintStream;
 import javafx.application.Application;
 import javafx.stage.Stage;
 
+import javax.annotation.Nonnull;
+
 public class JavaFXMain extends Application {
 	public interface PrintInterface {
 		void writeToOut(String s);
@@ -38,19 +40,19 @@ public class JavaFXMain extends Application {
 		System.setErr(printStreamErr);
 	}
 	
-	private MainWindow _mainWindow = null;
-	
 	public interface StopInterface {
 		void onStop();
 	}
-	
+
+	private MainWindow _mainWindow = null;
+
 	@Override
 	public void stop() {
 		_mainWindow.onStop();
 	}
 	
 	@Override
-	public void start(Stage primaryStage) throws IOException {
+	public void start(@Nonnull Stage primaryStage) throws IOException {
 		wrapPrintStreams();
 
 		_mainWindow = new MainWindow(primaryStage);
