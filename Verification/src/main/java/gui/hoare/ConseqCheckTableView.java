@@ -1,9 +1,10 @@
 package gui.hoare;
 
-import core.structures.semantics.boolExp.*;
-import javafx.application.Platform;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
+import core.structures.semantics.boolExp.BoolAnd;
+import core.structures.semantics.boolExp.BoolExp;
+import core.structures.semantics.boolExp.BoolImpl;
+import core.structures.semantics.boolExp.BoolOr;
+import gui.ExtendedCodeArea;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -11,42 +12,53 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
+import javafx.scene.control.ContentDisplay;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
 import javafx.util.Callback;
-import util.ErrorUtil;
+import org.fxmisc.richtext.CodeArea;
 import util.IOUtil;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.*;
+import java.util.ResourceBundle;
 
 public class ConseqCheckTableView implements Initializable {
     @FXML
-    private TableView<MatrixRow> _tableView_matrix;
+    private TableView<SplitRow> _tableView_split;
     @FXML
-    private TableColumn<MatrixRow, BoolExp> _tableCol_matrix_p;
+    private TableColumn<SplitRow, BoolExp> _tableCol_split;
+    @FXML
+    private TableColumn<SplitRow, BoolExp> _tableCol_split_calc;
+    @FXML
+    private TableColumn<SplitRow, BoolExp> _tableCol_split_user;
 
     @FXML
-    private TableView<ListRow> _tableView_list;
+    private TableView<SplitRow> _tableView_and;
     @FXML
-    private TableColumn<ListRow, BoolExp> _tableCol_list_p0;
+    private TableColumn<SplitRow, BoolExp> _tableCol_and;
     @FXML
-    private TableColumn<ListRow, BoolExp> _tableCol_list_p;
+    private TableColumn<SplitRow, BoolExp> _tableCol_and_calc;
     @FXML
-    private TableColumn<ListRow, CellData> _tableCol_list_checked;
+    private TableColumn<SplitRow, BoolExp> _tableCol_and_user;
 
-    private ObservableList<MatrixRow> _matrix_items = FXCollections.observableArrayList();
-    private ObservableList<ListRow> _list_items = FXCollections.observableArrayList();
-    private BoolList _origBoolList;
-    private BoolList _newBoolList;
+    @FXML
+    private TableView<SplitRow> _tableView_or;
+    @FXML
+    private TableColumn<SplitRow, BoolExp> _tableCol_or;
+    @FXML
+    private TableColumn<SplitRow, BoolExp> _tableCol_or_calc;
+
+    private final BoolImpl _origImpl;
+    private final BoolOr _or;
+
+    private ObservableList<SplitRow> _split_items = FXCollections.observableArrayList();
 
     private Scene _scene;
 
@@ -54,373 +66,85 @@ public class ConseqCheckTableView implements Initializable {
         return _scene.getRoot();
     }
 
-    public ConseqCheckTableView(BoolList origBoolList, BoolList newBoolList) throws IOException {
-        _origBoolList = origBoolList;
-        _newBoolList = newBoolList;
+    public ConseqCheckTableView(BoolImpl origImpl) throws IOException {
+        _origImpl = origImpl;
 
-        _scene = IOUtil.inflateFXML(new File("ConseqCheckMatrixView.fxml"), this);
+        _scene = IOUtil.inflateFXML(new File("ConseqCheckTableView.fxml"), this);
 
-        _tableView_matrix.getStylesheets().add(getClass().getResource("HoareDialog.css").toExternalForm());
+        _or = new BoolOr(_origImpl.split(true, false));
 
-        /*WebView header = new WebView();
-
-        header.getEngine().load("<html><body><p>p\\p<sub>0</sub><p></body></html>");
-
-        header.setPrefHeight(Region.USE_COMPUTED_SIZE);
-        header.setPrefWidth(Region.USE_COMPUTED_SIZE);*/
-
-        StackPane cornerPane = new StackPane();
-
-        TextField pText = new TextField();
-        TextField p0Text = new TextField();
-
-        pText.setAlignment(Pos.BOTTOM_CENTER);
-        p0Text.setAlignment(Pos.CENTER_RIGHT);
-
-        cornerPane.getChildren().add(pText);
-        cornerPane.getChildren().add(p0Text);
-
-        _tableCol_matrix_p.setGraphic(cornerPane);
-
-        _tableCol_matrix_p.setCellFactory(new Callback<TableColumn<MatrixRow, BoolExp>, TableCell<MatrixRow, BoolExp>>() {
+        _tableCol_split.setCellFactory(new Callback<TableColumn<SplitRow, BoolExp>, TableCell<SplitRow, BoolExp>>() {
             @Override
-            public TableCell<MatrixRow, BoolExp> call(TableColumn<MatrixRow, BoolExp> param) {
-                return new MatrixBoolExpCell();
+            public TableCell<SplitRow, BoolExp> call(TableColumn<SplitRow, BoolExp> param) {
+                return new SplitBoolExpCell();
             }
         });
-        _tableCol_matrix_p.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<MatrixRow, BoolExp>, ObservableValue<BoolExp>>() {
+        _tableCol_split.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<SplitRow, BoolExp>, ObservableValue<BoolExp>>() {
             @Override
-            public ObservableValue<BoolExp> call(TableColumn.CellDataFeatures<MatrixRow, BoolExp> param) {
-                return new SimpleObjectProperty<>(param.getValue()._newPart);
+            public ObservableValue<BoolExp> call(TableColumn.CellDataFeatures<SplitRow, BoolExp> param) {
+                return new SimpleObjectProperty<>(param.getValue()._impl);
             }
         });
 
-        for (BoolExp origPart : _origBoolList.getBoolExps()) {
-            MatrixCol col = new MatrixCol(origPart);
-
-            _tableView_matrix.getColumns().add(col);
-
-            col.setCellFactory(new Callback<TableColumn<MatrixRow, CellData>, TableCell<MatrixRow, CellData>>() {
-                @Override
-                public TableCell<MatrixRow, CellData> call(TableColumn<MatrixRow, CellData> param) {
-                    return new MatrixCheckCell();
-                }
-            });
-            col.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<MatrixRow, CellData>, ObservableValue<CellData>>() {
-                @Override
-                public ObservableValue<CellData> call(TableColumn.CellDataFeatures<MatrixRow, CellData> param) {
-                    return new SimpleObjectProperty<>(getCellData(col._origPart, param.getValue()._newPart));
-                }
-            });
-        }
-
-        for (BoolExp newPart : _newBoolList.getBoolExps()) {
-            MatrixRow row = new MatrixRow(newPart);
-
-            _matrix_items.add(row);
-        }
-
-        _tableCol_list_p0.setCellFactory(new Callback<TableColumn<ListRow, BoolExp>, TableCell<ListRow, BoolExp>>() {
+        _tableCol_split_calc.setCellFactory(new Callback<TableColumn<SplitRow, BoolExp>, TableCell<SplitRow, BoolExp>>() {
             @Override
-            public TableCell<ListRow, BoolExp> call(TableColumn<ListRow, BoolExp> param) {
-                return new ListBoolExpCell();
+            public TableCell<SplitRow, BoolExp> call(TableColumn<SplitRow, BoolExp> param) {
+                return new SplitBoolExpCell();
             }
         });
-        _tableCol_list_p0.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<ListRow, BoolExp>, ObservableValue<BoolExp>>() {
+        _tableCol_split_calc.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<SplitRow, BoolExp>, ObservableValue<BoolExp>>() {
             @Override
-            public ObservableValue<BoolExp> call(TableColumn.CellDataFeatures<ListRow, BoolExp> param) {
-                return new SimpleObjectProperty<>(param.getValue()._origPart);
-            }
-        });
-        _tableCol_list_p.setCellFactory(new Callback<TableColumn<ListRow, BoolExp>, TableCell<ListRow, BoolExp>>() {
-            @Override
-            public TableCell<ListRow, BoolExp> call(TableColumn<ListRow, BoolExp> param) {
-                return new ListBoolExpCell();
-            }
-        });
-        _tableCol_list_p.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<ListRow, BoolExp>, ObservableValue<BoolExp>>() {
-            @Override
-            public ObservableValue<BoolExp> call(TableColumn.CellDataFeatures<ListRow, BoolExp> param) {
-                return new SimpleObjectProperty<>(param.getValue()._newPart);
-            }
-        });
-        _tableCol_list_checked.setCellFactory(new Callback<TableColumn<ListRow, CellData>, TableCell<ListRow, CellData>>() {
-            @Override
-            public TableCell<ListRow, CellData> call(TableColumn<ListRow, CellData> param) {
-                return new ListCheckCell();
-            }
-        });
-        _tableCol_list_checked.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<ListRow, CellData>, ObservableValue<CellData>>() {
-            @Override
-            public ObservableValue<CellData> call(TableColumn.CellDataFeatures<ListRow, CellData> param) {
-                return new SimpleObjectProperty<>(getCellData(param.getValue()._origPart, param.getValue()._newPart));
+            public ObservableValue<BoolExp> call(TableColumn.CellDataFeatures<SplitRow, BoolExp> param) {
+                return new SimpleObjectProperty<>(param.getValue()._calc);
             }
         });
 
-        for (BoolExp origPart : _origBoolList.getBoolExps()) {
-            for (BoolExp newPart : _newBoolList.getBoolExps()) {
-                ListRow row = new ListRow(origPart, newPart);
+        _tableCol_split_user.setCellFactory(new Callback<TableColumn<SplitRow, BoolExp>, TableCell<SplitRow, BoolExp>>() {
+            @Override
+            public TableCell<SplitRow, BoolExp> call(TableColumn<SplitRow, BoolExp> param) {
+                return new SplitCodeCell();
+            }
+        });
+        _tableCol_split_user.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<SplitRow, BoolExp>, ObservableValue<BoolExp>>() {
+            @Override
+            public ObservableValue<BoolExp> call(TableColumn.CellDataFeatures<SplitRow, BoolExp> param) {
+                return new SimpleObjectProperty<>(param.getValue()._user);
+            }
+        });
 
-                _list_items.add(row);
+        for (BoolExp orPart : _or.getBoolExps()) {
+            BoolAnd and = new BoolAnd(orPart);
+
+            for (BoolExp andPart : and.getBoolExps()) {
+                _split_items.add(new SplitRow(andPart));
             }
         }
 
-        for (BoolExp origPart : _origBoolList.getBoolExps()) {
-            for (BoolExp newPart : _newBoolList.getBoolExps()) {
-                solve(origPart, newPart);
-            }
-        }
-    }
+        _tableView_split.setItems(_split_items);
 
-    private class Solver {
-        private BoolExp _origPart;
-        private BoolExp _newPart;
+        _tableView_split.setFixedCellSize(50D);
+        _tableView_split.prefHeightProperty().bind(_tableView_split.fixedCellSizeProperty().multiply(_tableView_split.getItems().size() + 1).add(10D));
 
-        private BoolExp _origPartEx;
-        private BoolExp _newPartEx;
-
-        private Thread _thread;
-
-        private void removeShared() {
-            BoolAnd origPartAnd = new BoolAnd(_origPartEx);
-            BoolAnd newPartAnd = new BoolAnd(_newPartEx);
-
-            Set<BoolExp> shared = new LinkedHashSet<>();
-
-            for (BoolExp part : origPartAnd.getBoolExps()) {
-                if (newPartAnd.getBoolExps().contains(part)) shared.add(part);
-            }
-
-            BoolAnd origPartAndNew = new BoolAnd();
-            BoolAnd newPartAndNew = new BoolAnd();
-
-            for (BoolExp part : origPartAnd.getBoolExps()) {
-                if (!shared.contains(part)) origPartAndNew.addBoolExp(origPartAnd);
-            }
-            for (BoolExp part : newPartAnd.getBoolExps()) {
-                if (!shared.contains(part)) newPartAndNew.addBoolExp(newPartAnd);
-            }
-
-            _origPartEx = origPartAndNew.reduce();
-            _newPartEx = newPartAndNew.reduce();
-        }
-
-        private boolean check() {
-            //equal shape
-            if (_origPartEx.getContentString().equals(_newPartEx.getContentString())) return true;
-
-            removeShared();
-
-            return false;
-        }
-
-        private void exec() {
-            getCellData(_origPart, _newPart)._solving.set(true);
-
-            _thread.start();
-        }
-
-        public Solver(BoolExp origPart, BoolExp newPart) {
-            _origPart = origPart;
-            _newPart = newPart;
-
-            _thread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    _origPartEx = (BoolExp) origPart.copy();
-                    _newPartEx = (BoolExp) newPart.copy();
-
-                    if (_origPartEx instanceof BoolOr) {
-                        //is DNF
-
-                        _origPartEx = _origPartEx.reduce();
-                        _newPartEx = _newPartEx.reduce();
-
-                        if (_origPartEx instanceof BoolAnd) _origPartEx = new BoolNeg(_origPartEx).reduce();
-
-                        _origPartEx.order();
-                        _newPartEx.order();
-
-                        if (check()) {
-                            Platform.runLater(new Runnable() {
-                                @Override
-                                public void run() {
-                                    getCellData(origPart, newPart)._auto.set(true);
-                                }
-                            });
-
-                            return;
-                        }
-
-                        BoolAnd newCNF = newPart.makeCNF();
-                    }
-                }
-            });
-        }
-    }
-
-    private void solve(BoolExp origPart, BoolExp newPart) {
-        new Solver(origPart, newPart).exec();
-    }
-
-    private class MatrixCol extends TableColumn<MatrixRow, CellData> {
-        public BoolExp _origPart;
-
-        public MatrixCol(BoolExp origPart) {
-            super(origPart.getContentString());
-
-            _origPart = origPart;
-        }
+        //_tableView_split.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
+        _tableCol_split.prefWidthProperty().bind(_tableView_split.widthProperty().multiply(0.3D));
+        _tableCol_split_calc.prefWidthProperty().bind(_tableView_split.widthProperty().multiply(0.3D));
+        _tableCol_split_user.prefWidthProperty().bind(_tableView_split.widthProperty().multiply(0.3D));
     }
 
     private abstract class Row {
     }
 
-    private class ListRow extends Row {
-        public BoolExp _origPart;
-        public BoolExp _newPart;
+    private class SplitRow extends Row {
+        public BoolExp _impl;
+        public BoolExp _calc;
+        public BoolExp _user;
 
-        public ListRow(BoolExp origPart, BoolExp newPart) {
-            _origPart = origPart;
-            _newPart = newPart;
-        }
-    }
+        public SplitRow(BoolExp impl) {
+            _impl = impl;
 
-    private class MatrixRow extends Row {
-        public BoolExp _newPart;
-
-        public MatrixRow(BoolExp newPart) {
-            _newPart = newPart;
-        }
-    }
-
-    private class CellData {
-        public BooleanProperty _auto = new SimpleBooleanProperty(false);
-        public BooleanProperty _user = new SimpleBooleanProperty(false);
-
-        private BooleanProperty _solving = new SimpleBooleanProperty(false);
-
-        public CellData() {
-        }
-    }
-
-    private Map<BoolExp, Map<BoolExp, CellData>> _cellDataMap = new LinkedHashMap<>();
-
-    private CellData getCellData(BoolExp origPart, BoolExp newPart) {
-        if (!_cellDataMap.containsKey(origPart)) _cellDataMap.put(origPart, new LinkedHashMap<>());
-
-        Map<BoolExp, CellData> sub = _cellDataMap.get(origPart);
-
-        if (!sub.containsKey(newPart)) sub.put(newPart, new CellData());
-
-        return sub.get(newPart);
-    }
-
-    private abstract class CheckCell<RowType> extends TableCell<RowType, CellData> {
-        private StackPane _stackPane;
-        private HBox _box;
-        private CheckBox _checkBox_auto;
-        private CheckBox _checkBox_user;
-        private ProgressIndicator _progressIndicator;
-
-        private BooleanProperty _checkBox_auto_binding;
-        private BooleanProperty _checkBox_user_binding;
-
-        private boolean _setup = false;
-
-        private void setup() {
-            if (_setup) return;
-
-            _setup = true;
-
-            _stackPane = new StackPane();
-
-            _box = new HBox();
-
-            /*_box.setMinWidth(Region.USE_COMPUTED_SIZE);
-            _box.setMinHeight(Region.USE_COMPUTED_SIZE);
-            _box.setPrefWidth(Region.USE_COMPUTED_SIZE);
-            _box.setPrefHeight(Region.USE_COMPUTED_SIZE);*/
-            _box.setMaxWidth(Region.USE_PREF_SIZE);
-            _box.setMaxHeight(Region.USE_PREF_SIZE);
-            _box.setBackground(new Background(new BackgroundFill(Color.RED, CornerRadii.EMPTY, Insets.EMPTY)));
-            StackPane.setAlignment(_box, Pos.CENTER);
-            _stackPane.getChildren().add(_box);
-
-            _checkBox_auto = new CheckBox();
-            _checkBox_user = new CheckBox();
-
-            _box.getChildren().add(_checkBox_auto);
-            _box.getChildren().add(_checkBox_user);
-
-            _checkBox_auto.selectedProperty().addListener(new ChangeListener<Boolean>() {
-                @Override
-                public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-                    updateBackground();
-                }
-            });
-            _checkBox_user.selectedProperty().addListener(new ChangeListener<Boolean>() {
-                @Override
-                public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-                    updateBackground();
-                }
-            });
-
-            _progressIndicator = new ProgressIndicator();
-
-            _stackPane.getChildren().add(_progressIndicator);
-        }
-
-        public CheckCell() {
-        }
-
-        private void updateBackground() {
-            if (_checkBox_auto.isSelected()) {
-                _box.setBackground(new Background(new BackgroundFill(Color.GREEN, CornerRadii.EMPTY, Insets.EMPTY)));
-            } else if (_checkBox_user.isSelected()) {
-                _box.setBackground(new Background(new BackgroundFill(Color.GREENYELLOW, CornerRadii.EMPTY, Insets.EMPTY)));
-            } else {
-                _box.setBackground(new Background(new BackgroundFill(Color.TRANSPARENT, CornerRadii.EMPTY, Insets.EMPTY)));
-            }
-        }
-
-        @Override
-        protected void updateItem(CellData item, boolean empty) {
-            super.updateItem(item, empty);
-
-            if (empty || item == null) {
-                setText(null);
-                setGraphic(null);
-            } else {
-                setup();
-
-                if (_checkBox_auto_binding != null) _checkBox_auto.selectedProperty().unbindBidirectional(_checkBox_auto_binding);
-                if (_checkBox_user_binding != null) _checkBox_user.selectedProperty().unbindBidirectional(_checkBox_user_binding);
-                _progressIndicator.visibleProperty().unbind();
-
-                _checkBox_auto_binding = item._auto;
-                _checkBox_user_binding = item._user;
-
-                _checkBox_auto.selectedProperty().bindBidirectional(_checkBox_auto_binding);
-                _checkBox_user.selectedProperty().bindBidirectional(_checkBox_user_binding);
-                _progressIndicator.visibleProperty().bind(item._solving);
-
-                setText(null);
-                setGraphic(_stackPane);
-                setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
-            }
-        }
-    }
-
-    private class MatrixCheckCell extends CheckCell<MatrixRow> {
-        public MatrixCheckCell() {
-            super();
-        }
-    }
-
-    private class ListCheckCell extends CheckCell<ListRow> {
-        public ListCheckCell() {
-            super();
+            _calc = _impl.reduce();
+            System.out.println("test " + _impl + " ---> " + _calc);
+            _user = null;
         }
     }
 
@@ -473,25 +197,67 @@ public class ConseqCheckTableView implements Initializable {
         }
     }
 
-    private class MatrixBoolExpCell extends BoolExpCell<MatrixRow> {
-        public MatrixBoolExpCell() {
+    private class SplitBoolExpCell extends BoolExpCell<SplitRow> {
+        public SplitBoolExpCell() {
             super();
         }
     }
 
-    private class ListBoolExpCell extends BoolExpCell<ListRow> {
-        public ListBoolExpCell() {
+    private abstract class CodeCell<RowType> extends TableCell<RowType, BoolExp> {
+        private HBox _box;
+        private ExtendedCodeArea _codeArea;
+
+        private boolean _setup = false;
+
+        public void setup() {
+            if (_setup) return;
+
+            _setup = true;
+
+            _box = new HBox();
+
+            _box.getStylesheets().add(getClass().getResource("HoareDialog.css").toExternalForm());
+            _box.getStyleClass().add("table-header");
+
+            _codeArea = new ExtendedCodeArea(new CodeArea(), null, null, ExtendedCodeArea.Type.CODE);
+
+            _box.getChildren().add(_codeArea.getTextArea());
+
+            _codeArea.getTextArea().textProperty().addListener(new ChangeListener<String>() {
+                @Override
+                public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                }
+            });
+        }
+
+        public CodeCell() {
+        }
+
+        @Override
+        protected void updateItem(BoolExp item, boolean empty) {
+            super.updateItem(item, empty);
+
+            /*if (empty || item == null) {
+                setText(null);
+                setGraphic(null);
+            } else {*/
+                setup();
+                System.out.println("update");
+                setText(null);
+                setGraphic(_box);
+                setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+            //}
+        }
+    }
+
+    private class SplitCodeCell extends CodeCell<SplitRow> {
+        public SplitCodeCell() {
             super();
         }
     }
 
     @Override
     public void initialize(URL url, ResourceBundle resources) {
-        try {
-            _tableView_matrix.setItems(_matrix_items);
-            _tableView_list.setItems(_list_items);
-        } catch (Exception e) {
-            ErrorUtil.logEFX(e);
-        }
+
     }
 }
