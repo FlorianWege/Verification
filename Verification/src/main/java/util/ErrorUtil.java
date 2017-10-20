@@ -1,10 +1,10 @@
 package util;
 
-import java.io.IOException;
-
 import gui.ErrorDialog;
 
 import javax.annotation.Nonnull;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 public class ErrorUtil {
 	public static void log(String msg) {
@@ -16,7 +16,13 @@ public class ErrorUtil {
 	}
 	
 	public static void logE(@Nonnull Exception e) {
-		e.printStackTrace();
+		StringWriter stringWriter = new StringWriter();
+
+		PrintWriter printWriter = new PrintWriter(stringWriter);
+
+		e.printStackTrace(printWriter);
+
+		System.out.println("error: " + stringWriter.toString());
 	}
 	
 	public static void logEFX(@Nonnull Exception e) {

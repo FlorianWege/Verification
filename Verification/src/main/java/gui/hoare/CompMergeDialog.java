@@ -1,24 +1,20 @@
 package gui.hoare;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.ResourceBundle;
-
-import core.structures.semantics.SemanticNode;
-import org.fxmisc.richtext.StyleClassedTextArea;
-
 import core.Hoare;
-import core.structures.semantics.boolExp.HoareCond;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
+import org.fxmisc.richtext.StyleClassedTextArea;
 import util.ErrorUtil;
 import util.StringUtil;
 
 import javax.annotation.Nonnull;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.ResourceBundle;
 
 public class CompMergeDialog extends HoareDialog implements Initializable {
 	@FXML
@@ -26,10 +22,10 @@ public class CompMergeDialog extends HoareDialog implements Initializable {
 	@FXML
 	private Button _button_continue;
 
-	private final Hoare.Executer.wlp_comp _comp;
-	private final Hoare.Executer.CompMerge_callback _callback;
+	private final Hoare.wlp_comp _comp;
+	private final Hoare.CompMerge_callback _callback;
 	
-	public CompMergeDialog(@Nonnull Hoare.Executer.wlp_comp comp, @Nonnull Hoare.Executer.CompMerge_callback callback) throws IOException {
+	public CompMergeDialog(@Nonnull Hoare.wlp_comp comp, @Nonnull Hoare.CompMerge_callback callback) throws IOException {
 		super(comp._compNode, comp._preCond, comp._postCond);
 
 		_comp = comp;
@@ -47,7 +43,7 @@ public class CompMergeDialog extends HoareDialog implements Initializable {
 	public String getRationale() {
 		RationaleBuilder sb = new RationaleBuilder();
 
-		sb.addProse("using Hoare rule 3 (composition): {p} S<sub>i</sub> {r<sub>i+1</sub>}, {r<sub>i+1</sub>} S<sub>i+1</sub> {q} " + StringUtil.bool_impl + " {p} S<sub>i</sub>; S<sub>i+1</sub> {q}");
+		sb.addProse("using Hoare rule 3 (composition): {p} S<sub>i</sub> {r<sub>i+1</sub>}, {r<sub>i+1</sub>} S<sub>i+1</sub> {q} " + StringUtil.bool_impl_meta + " {p} S<sub>i</sub>; S<sub>i+1</sub> {q}");
 
 		for (int i = 0; i < _comp._compNode.getChildren().size(); i++) {
 			sb.addParam("S<sub>" + (i + 1) + "</sub>", styleNode(_comp._compNode.getChildren().get(i)));

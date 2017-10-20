@@ -1,19 +1,18 @@
 package core.structures.syntax;
 
-import java.io.PrintStream;
-import java.io.Serializable;
-import java.util.*;
-import java.util.function.Function;
-import java.util.function.UnaryOperator;
-
 import com.google.common.collect.Lists;
 import core.Symbol;
 import core.SymbolKey;
 import core.Token;
+import core.structures.ParserRule;
 import core.structures.TNode;
 import core.structures.Terminal;
-import core.structures.ParserRule;
 import util.StringUtil;
+
+import java.io.Serializable;
+import java.util.*;
+import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 public class SyntaxNode extends TNode<SyntaxNode> implements Serializable {
 	private final List<SyntaxNode> _children = new ArrayList<>();

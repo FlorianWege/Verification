@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+
+<TableView fx:id="_tableView" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="400.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8.0.151">
+  <columns>
+    <TableColumn fx:id="_tableCol_source" prefWidth="200.0" text="source" />
+    <TableColumn fx:id="_tableCol_reduced" prefWidth="200.0" text="reduced">
+         <columns>
+            <TableColumn fx:id="_tableCol_reduced_auto" prefWidth="100.0" text="auto" />
+            <TableColumn fx:id="_tableCol_reduced_user" prefWidth="100.0" text="user" />
+         </columns></TableColumn>
+  </columns>
+</TableView>

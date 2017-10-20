@@ -1,7 +1,9 @@
 package gui.hoare;
 
 import core.Hoare;
-import core.structures.semantics.boolExp.HoareCond;
+import core.Lexer;
+import core.Parser;
+import core.structures.semantics.prog.HoareCond;
 import core.structures.semantics.prog.Skip;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -20,9 +22,13 @@ public class SkipDialog extends HoareDialog implements Initializable {
 	@FXML
 	private Button _button_continue;
 
-	private final Hoare.Executer.Skip_callback _callback;
-	
-	public SkipDialog(@Nonnull Skip skip, @Nonnull HoareCond preCond, @Nonnull HoareCond postCond, @Nonnull Hoare.Executer.Skip_callback callback) throws IOException {
+	private final Callback _callback;
+
+	public interface Callback {
+		void result() throws Lexer.LexerException, Hoare.HoareException, Parser.ParserException, IOException;
+	}
+
+	public SkipDialog(@Nonnull Skip skip, @Nonnull HoareCond preCond, @Nonnull HoareCond postCond, @Nonnull Callback callback) throws IOException {
 		super(skip, preCond, postCond);
 
 		_callback = callback;

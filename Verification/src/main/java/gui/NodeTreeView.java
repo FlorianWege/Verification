@@ -1,7 +1,6 @@
 package gui;
 
 import core.structures.TNode;
-import core.structures.syntax.SyntaxNodeTerminal;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -16,8 +15,6 @@ import javafx.scene.paint.Color;
 import javafx.util.Callback;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Predicate;
 
 public abstract class NodeTreeView<T extends TNode<T>> {

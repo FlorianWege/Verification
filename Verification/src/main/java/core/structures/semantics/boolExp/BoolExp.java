@@ -1,8 +1,9 @@
 package core.structures.semantics.boolExp;
 
+import core.Lexer;
+import core.Parser;
 import core.structures.semantics.SemanticNode;
-import core.structures.semantics.exp.*;
-import util.StringUtil;
+import grammars.BoolExpGrammar;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -12,6 +13,34 @@ import java.util.function.UnaryOperator;
 public abstract class BoolExp extends SemanticNode {
 	public abstract BoolExp reduce();
 	public abstract void order();
+
+	@Override
+	public int hashCode() {
+		BoolExp copy = (BoolExp) copy();
+
+		copy.order();
+
+		return copy.toString().hashCode();
+	}
+
+	private boolean superEquals(Object other) {
+		return super.equals(other);
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		if (other instanceof BoolExp) {
+			BoolExp thisCopy = (BoolExp) copy();
+			BoolExp otherCopy = (BoolExp) ((BoolExp) other).copy();
+
+			thisCopy.order();
+			otherCopy.order();
+
+			return thisCopy.superEquals(otherCopy);
+		}
+
+		return super.equals(other);
+	}
 
 	public abstract int comp(BoolExp b);
 
@@ -143,8 +172,6 @@ public abstract class BoolExp extends SemanticNode {
 			}
 		}
 
-		ret.print();
-
 		if (!ret.equals(this)) {
 			ret.getChildren().replaceAll(new UnaryOperator<SemanticNode>() {
 				@Override
@@ -271,5 +298,9 @@ public abstract class BoolExp extends SemanticNode {
 
 	public String parenthesize(String s) {
 		return _grammar.TERMINAL_BRACKET_OPEN.getPrimRule() + s + _grammar.TERMINAL_BRACKET_CLOSE.getPrimRule();
+	}
+
+	public static BoolExp fromString(String s) throws Lexer.LexerException, Parser.ParserException {
+		return (BoolExp) fromString(s, BoolExpGrammar.getInstance());
 	}
 }

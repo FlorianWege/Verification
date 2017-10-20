@@ -1,5 +1,10 @@
 package util;
 
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+
+import javax.annotation.Nonnull;
 import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -7,15 +12,12 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-
-import javax.annotation.Nonnull;
 
 public class IOUtil {
 	public static String getResourceAsString(@Nonnull String name) throws IOException, URISyntaxException {
@@ -227,7 +229,7 @@ public class IOUtil {
 			ObjectInputStream in = new ObjectInputStream(fbos.getInputStream());
 			obj = in.readObject();
 		} catch(IOException | ClassNotFoundException e) {
-			e.printStackTrace();
+			ErrorUtil.logE(e);
 		}
 
 		return obj;

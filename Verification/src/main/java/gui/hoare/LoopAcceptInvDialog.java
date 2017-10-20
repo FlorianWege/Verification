@@ -1,9 +1,9 @@
 package gui.hoare;
 
 import core.Hoare;
-import core.structures.semantics.boolExp.HoareCond;
-import core.structures.semantics.boolExp.BoolExp;
-import core.structures.semantics.prog.Prog;
+import core.Lexer;
+import core.Parser;
+import core.structures.semantics.prog.HoareCond;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -18,16 +18,20 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class LoopAcceptInvariantDialog extends HoareDialog implements Initializable {
+public class LoopAcceptInvDialog extends HoareDialog implements Initializable {
 	@FXML
 	private Button _button_continue;
 
-	private final Hoare.Executer.wlp_loop _loop;
-	private final Hoare.Executer.LoopAcceptInv_callback _callback;
+	private final Hoare.wlp_loop _loop;
+	private final Callback _callback;
 	private final HoareCond _postInvariant;
 	private final HoareCond _preInvariant;
 
-	public LoopAcceptInvariantDialog(@Nonnull Hoare.Executer.wlp_loop loop, @Nonnull Hoare.Executer.LoopAcceptInv_callback callback) throws IOException {
+	public interface Callback {
+		void result() throws Lexer.LexerException, Hoare.HoareException, Parser.ParserException, IOException;
+	}
+
+	public LoopAcceptInvDialog(@Nonnull Hoare.wlp_loop loop, @Nonnull Callback callback) throws IOException {
 		super(loop._whileNode, loop._preCond, loop._postCond);
 
 		_loop = loop;
@@ -35,7 +39,7 @@ public class LoopAcceptInvariantDialog extends HoareDialog implements Initializa
 		_postInvariant = loop._postInvariant;
 		_preInvariant = loop._preInvariant;
 		
-		inflate(new File("LoopAcceptInvariantDialog.fxml"));
+		inflate(new File("LoopAcceptInvDialog.fxml"));
 	}
 
 	@Override
@@ -47,7 +51,7 @@ public class LoopAcceptInvariantDialog extends HoareDialog implements Initializa
 	public String getRationale() {
 		RationaleBuilder sb = new RationaleBuilder();
 
-		sb.addProse("using Hoare rule 5 (loop): {p" + StringUtil.bool_and + "B} S {p} " + StringUtil.bool_impl + " {p} while B do S od {p" + StringUtil.bool_and + StringUtil.bool_neg + "B}");
+		sb.addProse("using Hoare rule 5 (loop): {p" + StringUtil.bool_and + "B} S {p} " + StringUtil.bool_impl_meta + " {p} while B do S od {p" + StringUtil.bool_and + StringUtil.bool_neg + "B}");
 		sb.addProse("p" + StringUtil.bool_and + StringUtil.bool_neg + "B" + StringUtil.bool_impl + "q");
 
 		sb.addParam("B", styleNode(_loop._whileNode.getBoolExp()));

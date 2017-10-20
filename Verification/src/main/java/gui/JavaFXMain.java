@@ -1,12 +1,11 @@
 package gui;
 
-import java.io.IOException;
-import java.io.PrintStream;
-
 import javafx.application.Application;
 import javafx.stage.Stage;
 
 import javax.annotation.Nonnull;
+import java.io.IOException;
+import java.io.PrintStream;
 
 public class JavaFXMain extends Application {
 	public interface PrintInterface {
@@ -20,7 +19,7 @@ public class JavaFXMain extends Application {
 		
 		PrintStream printStreamOut = new PrintStream(stdOut) {
 			@Override
-			public void write(byte[] buf, int off, int len) {
+			public void write(@Nonnull byte[] buf, int off, int len) {
 				if (_mainWindow != null) _mainWindow.writeToOut(new String(buf, off, len));
 				
 				super.write(buf, off, len);
@@ -29,7 +28,7 @@ public class JavaFXMain extends Application {
 		
 		PrintStream printStreamErr = new PrintStream(stdErr) {
 			@Override
-			public void write(byte[] buf, int off, int len) {
+			public void write(@Nonnull byte[] buf, int off, int len) {
 				if (_mainWindow != null) _mainWindow.writeToErr(new String(buf, off, len));
 				
 				super.write(buf, off, len);

@@ -1,13 +1,9 @@
 package core.structures.semantics.exp;
 
-import core.structures.Terminal;
 import core.structures.semantics.SemanticNode;
-import javafx.util.Pair;
 import util.IOUtil;
-import util.StringUtil;
 
 import javax.annotation.Nonnull;
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.function.Predicate;
@@ -51,8 +47,27 @@ public class Sum extends Exp {
         _children.clear();
 
         for (Exp exp : exps) {
-            addExp(new ExpNeg(exp));
+            addExp(exp.makeNeg());
         }
+    }
+
+    public void cleanMu() {
+        _children.removeIf(new Predicate<SemanticNode>() {
+            @Override
+            public boolean test(SemanticNode semanticNode) {
+                if (semanticNode instanceof ExpMu) return true;
+
+                if (semanticNode instanceof Prod) {
+                    Prod prod = (Prod) semanticNode.copy();
+
+                    prod.cutLit();
+
+                    if (prod.reduce() instanceof ExpMu) return true;
+                }
+
+                return false;
+            }
+        });
     }
 
     @Override
@@ -64,7 +79,6 @@ public class Sum extends Exp {
 
             boolean isNeg = false;
 
-            if (exp instanceof ExpNeg) exp = new Prod(new ExpLit(-1), exp);
             if (exp instanceof ExpLit && ((ExpLit) exp).isNeg()) {
                 ((ExpLit) exp).neg();
 
@@ -162,14 +176,16 @@ public class Sum extends Exp {
         Map<Exp, Prod> idMap = new LinkedHashMap<>();
 
         for (Exp exp : newSum.getExps()) {
-            if (exp instanceof ExpNeg) exp = new Prod(new ExpLit(-1), ((ExpNeg) exp).getExp());
-
             Prod prod = !(exp instanceof Prod) ? new Prod(exp) : (Prod) exp;
 
             ExpLit lit = prod.cutLit();
 
-            if (idMap.containsKey(prod)) {
-                ExpLit prev = idMap.get(prod).cutLit();
+            Exp key = (Exp) prod.copy();
+
+            key.order();
+
+            if (idMap.containsKey(key)) {
+                ExpLit prev = idMap.get(key).cutLit();
 
                 lit.add(prev);
             }
@@ -178,7 +194,7 @@ public class Sum extends Exp {
 
             newProd.addExp(lit);
 
-            idMap.put(prod, newProd);
+            idMap.put(key, newProd);
         }
 
         newSum = new Sum();

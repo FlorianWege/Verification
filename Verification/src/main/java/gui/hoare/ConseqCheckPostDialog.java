@@ -1,14 +1,17 @@
 package gui.hoare;
 
 import core.Hoare;
+import core.Lexer;
+import core.Parser;
 import core.structures.semantics.SemanticNode;
 import core.structures.semantics.boolExp.*;
+import core.structures.semantics.prog.HoareCond;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
-import javafx.scene.control.Tab;
+import javafx.scene.layout.Pane;
 import util.ErrorUtil;
 import util.StringUtil;
 
@@ -20,9 +23,7 @@ import java.util.ResourceBundle;
 
 public class ConseqCheckPostDialog extends HoareDialog implements Initializable {
 	@FXML
-	private Tab _tab_cnf;
-	@FXML
-	private Tab _tab_dnf;
+	private Pane _pane_tableHost;
 
 	@FXML
 	private Button _button_yes;
@@ -31,15 +32,27 @@ public class ConseqCheckPostDialog extends HoareDialog implements Initializable 
 
 	private final HoareCond _origPostCond;
 	private final HoareCond _newPostCond;
-	private final Hoare.Executer.ConseqCheck_callback _callback;
+	private final Callback _callback;
 
 	private final BoolAnd _origPostCNF;
 	private final BoolOr _origPostDNF;
 	private final BoolAnd _newPostCNF;
 	private final BoolOr _newPostDNF;
 
-	public ConseqCheckPostDialog(@Nonnull SemanticNode node, @Nonnull HoareCond origPostCond, @Nonnull HoareCond newPostCond, @Nonnull Hoare.Executer.ConseqCheck_callback callback) throws IOException {
+	private final BoolImpl _impl;
+	private final BoolExp _split;
+
+	public interface Callback {
+		void result(BoolExp boolExp) throws Lexer.LexerException, Hoare.HoareException, Parser.ParserException, IOException;
+	}
+
+	public ConseqCheckPostDialog(@Nonnull SemanticNode node, @Nonnull HoareCond origPostCond, @Nonnull HoareCond newPostCond, Callback callback) throws IOException {
 		super(node, null, null);
+
+		HoareCond tmpCond = origPostCond;
+
+		origPostCond = newPostCond;
+		newPostCond = tmpCond;
 
 		_origPostCond = origPostCond;
 		_newPostCond = newPostCond;
@@ -51,7 +64,11 @@ public class ConseqCheckPostDialog extends HoareDialog implements Initializable 
 		_newPostCNF = _newPostCond.getBoolExp().makeCNF();
 		_newPostDNF = _newPostCond.getBoolExp().makeDNF();
 
-		inflate(new File("ConseqCheckPreDialog.fxml"));
+		_impl = new BoolImpl(_origPostCond.getBoolExp(), _newPostCond.getBoolExp());
+
+		_split = _impl.split(true, false);
+
+		inflate(new File("ConseqCheckPostDialog.fxml"));
 	}
 
 	@Override
@@ -69,33 +86,23 @@ public class ConseqCheckPostDialog extends HoareDialog implements Initializable 
 		sb.addParam("q<sub>0</sub>", styleCond(_origPostCond));
 		sb.addParam("q", styleCond(_newPostCond));
 
-		sb.addStep("Does q<sub>0</sub> imply q? (reduce them)");
+		/*sb.addStep("Does q<sub>0</sub> imply q? (reduce them)");
 
-		BoolExp origPostCond = _origPostCond.getBoolExp().reduce();
-		BoolExp newPostCond = _newPostCond.getBoolExp().reduce();
-
-		sb.addParam("q<sub>0</sub>'", styleCond(origPostCond));
-		sb.addParam("q'", styleCond(newPostCond));
+		sb.addParam("q<sub>0</sub>'", styleCond(_origPostCond.getBoolExp().reduce()));
+		sb.addParam("q'", styleCond(_newPostCond.getBoolExp().reduce()));*/
 
 		sb.addStep("transform left side to CNF, right side to DNF");
 
-		BoolExp origPostCondCNF = origPostCond.makeCNF();
-		BoolExp newPostCondDNF = newPostCond.makeDNF();
-
-		sb.addParam("CNF(q<sub>0</sub>')", styleCond(origPostCondCNF));
-		sb.addParam("DNF(q')", styleCond(newPostCondDNF));
+		sb.addParam("CNF(q<sub>0</sub>')", styleCond(_origPostCNF));
+		sb.addParam("DNF(q')", styleCond(_newPostDNF));
 
 		sb.addStep("merge to implication");
 
-		HoareCond impl = new HoareCond(new BoolImpl(origPostCond, newPostCond));
-
-		sb.addParam("impl", styleCond(impl));
+		sb.addParam("impl", styleCond(_impl));
 
 		sb.addStep("split implication");
 
-		HoareCond splitImpl = new HoareCond(impl.getBoolExp().reduce());
-
-		sb.addParam("split", styleCond(splitImpl));
+		sb.addParam("split", styleCond(_split));
 
 		sb.addParam("CNF(q<sub>0</sub>)", styleCond(_origPostCNF));
 		sb.addParam("CNF(q)", styleCond(_newPostCNF));
@@ -115,7 +122,7 @@ public class ConseqCheckPostDialog extends HoareDialog implements Initializable 
 				@Override
 				public void handle(ActionEvent event) {
 					try {
-						_callback.result(true);
+						_callback.result(new BoolLit(true));
 					} catch (Exception e) {
 						ErrorUtil.logEFX(e);
 					}
@@ -126,15 +133,27 @@ public class ConseqCheckPostDialog extends HoareDialog implements Initializable 
 				@Override
 				public void handle(ActionEvent event) {
 					try {
-						_callback.result(false);
+						_callback.result(new BoolLit(false));
 					} catch (Exception e) {
 						ErrorUtil.logEFX(e);
 					}
 				}
 			});
 
-			_tab_cnf.setContent(new ConseqCheckTableView(_origPostCNF, _newPostCNF).getRoot());
-			_tab_dnf.setContent(new ConseqCheckTableView(_origPostDNF, _newPostDNF).getRoot());
+			ConseqCheckTableView tableView = new ConseqCheckTableView(new ConseqCheckTableView.Callback() {
+				@Override
+				public void result(BoolExp boolExp) {
+					try {
+						_callback.result(boolExp);
+					} catch (Exception e) {
+						ErrorUtil.logEFX(e);
+					}
+				}
+			});
+
+			_pane_tableHost.getChildren().add(tableView.getRoot());
+
+			tableView.setBoolImpl(_impl);
 		} catch (Exception e) {
 			ErrorUtil.logEFX(e);
 		}

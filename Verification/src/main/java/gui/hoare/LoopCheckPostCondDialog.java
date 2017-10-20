@@ -1,8 +1,12 @@
 package gui.hoare;
 
 import core.Hoare;
-import core.structures.semantics.boolExp.*;
-import core.structures.semantics.prog.Prog;
+import core.Lexer;
+import core.Parser;
+import core.structures.semantics.boolExp.BoolAnd;
+import core.structures.semantics.boolExp.BoolImpl;
+import core.structures.semantics.boolExp.BoolNeg;
+import core.structures.semantics.prog.HoareCond;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -21,11 +25,15 @@ public class LoopCheckPostCondDialog extends HoareDialog implements Initializabl
 	@FXML
 	private Button _button_continue;
 
-	private final Hoare.Executer.wlp_loop _loop;
-	private final Hoare.Executer.LoopCheckPostCond_callback _callback;
+	private final Hoare.wlp_loop _loop;
+	private final Callback _callback;
 	private final HoareCond _postInvariant;
 
-	public LoopCheckPostCondDialog(@Nonnull Hoare.Executer.wlp_loop loop, @Nonnull Hoare.Executer.LoopCheckPostCond_callback callback) throws IOException {
+	public interface Callback {
+		void result() throws Lexer.LexerException, Hoare.HoareException, Parser.ParserException, IOException;
+	}
+
+	public LoopCheckPostCondDialog(@Nonnull Hoare.wlp_loop loop, @Nonnull Callback callback) throws IOException {
 		super(loop._whileNode, null, loop._postCond);
 
 		_loop = loop;
@@ -44,7 +52,7 @@ public class LoopCheckPostCondDialog extends HoareDialog implements Initializabl
 	public String getRationale() {
 		RationaleBuilder sb = new RationaleBuilder();
 
-		sb.addProse("using Hoare rule 5 (loop): {p" + StringUtil.bool_and + "B} S {p} " + StringUtil.bool_impl + " {p} while B do S od {p" + StringUtil.bool_and + StringUtil.bool_neg + "B}");
+		sb.addProse("using Hoare rule 5 (loop): {p" + StringUtil.bool_and + "B} S {p} " + StringUtil.bool_impl_meta + " {p} while B do S od {p" + StringUtil.bool_and + StringUtil.bool_neg + "B}");
 		sb.addProse("p" + StringUtil.bool_and + StringUtil.bool_neg + "B" + StringUtil.bool_impl + "q");
 
 		sb.addParam("B", styleNode(_loop._whileNode.getBoolExp()));

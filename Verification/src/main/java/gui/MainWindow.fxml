@@ -85,6 +85,7 @@
                         <CheckMenuItem fx:id="_menu_parse_auto" mnemonicParsing="false" text="Auto Parse" />
                         <MenuItem fx:id="_menu_hoare" mnemonicParsing="false" text="Verify" />
                         <MenuItem fx:id="_menu_hoare_abort" mnemonicParsing="false" text="Abort Verification" />
+                        <CheckMenuItem fx:id="_menu_testPlayground" mnemonicParsing="false" text="Testing Playground" />
                     </items>
                   </Menu>
               </menus>

@@ -1,20 +1,25 @@
 package core;
 
-import java.util.Iterator;
-import java.util.List;
-
-import core.structures.Terminal;
 import core.structures.NonTerminal;
 import core.structures.ParserRule;
+import core.structures.Terminal;
 import core.structures.syntax.SyntaxNode;
 import core.structures.syntax.SyntaxNodeTerminal;
+
+import javax.annotation.Nonnull;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * using a grammar, takes the parser rules and converts a given String into a tree consisting of parser rules
  */
 public class Parser {
 	private final Grammar _grammar;
-	
+
+	public @Nonnull Grammar getGrammar() {
+		return _grammar;
+	}
+
 	private List<Token> _tokens;
 	private Iterator<Token> _tokensItr;
 	private Token _token;
@@ -99,7 +104,7 @@ public class Parser {
 			return String.format("line %d.%d: wrong token %s expected %s (in rule %s)", getToken().getLine(), getToken().getLineOffset(), getToken(), _childRule, _rule);
 		}
 		
-		WrongTokenException(Token token, NonTerminal rule, Symbol childRule) {
+		public WrongTokenException(Token token, NonTerminal rule, Symbol childRule) {
 			super(token);
 
 			_rule = rule;
@@ -160,7 +165,7 @@ public class Parser {
 				selectRule(startSymbol, _token);
 
 				selectedStartSymbol = startSymbol;
-			} catch (ParserException e) {
+			} catch (ParserException ignored) {
 			}
 		}
 
@@ -177,7 +182,7 @@ public class Parser {
 		return parse(lexer.tokenize(input).getTokens());
 	}
 
-	public Parser(Grammar grammar) {
+	public Parser(@Nonnull Grammar grammar) {
 		_grammar = grammar;
 		
 		_ruleMap = _grammar.getParserTable();

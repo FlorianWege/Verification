@@ -1,12 +1,11 @@
 package core;
 
+import core.structures.LexerRule;
+import core.structures.Terminal;
+import util.StringUtil;
+
 import java.io.Serializable;
 import java.util.List;
-import java.util.Vector;
-
-import core.structures.Terminal;
-import core.structures.LexerRule;
-import util.StringUtil;
 
 /**
  * token as gained by the lexer

@@ -1,11 +1,5 @@
 package gui;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.ResourceBundle;
-import java.util.Vector;
-
 import gui.CloseSaveDialog.Result;
 import gui.FileTab.AutoParseException;
 import javafx.application.Platform;
@@ -15,15 +9,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckMenuItem;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.SplitPane;
-import javafx.scene.control.Tab;
-import javafx.scene.control.TabPane;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
@@ -36,6 +22,11 @@ import util.ErrorUtil;
 import util.IOUtil;
 
 import javax.annotation.Nonnull;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.ResourceBundle;
+import java.util.Vector;
 
 public class MainWindow implements Initializable, JavaFXMain.PrintInterface, JavaFXMain.StopInterface {
 	@FXML
@@ -70,6 +61,8 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 	private MenuItem _menu_hoare;
 	@FXML
 	private MenuItem _menu_hoare_abort;
+	@FXML
+	private CheckMenuItem _menu_testPlayground;
 	
 	@FXML
 	private SplitPane _split_main;
@@ -163,9 +156,6 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 	}
 	
 	private void addButtonAccelerator(@Nonnull Button button, @Nonnull KeyCodeCombination keyCodeCombination) {
-		assert(button != null);
-		assert(keyCodeCombination != null);
-		
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
@@ -357,7 +347,17 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 		
 		updateHoare();
 	}
-	
+
+	private TestPlaygroundWindow _testPlaygroundWindow;
+
+	private void initTestPlayground() throws IOException {
+		_testPlaygroundWindow = new TestPlaygroundWindow();
+
+		_testPlaygroundWindow.getStage();
+
+		_menu_testPlayground.selectedProperty().bindBidirectional(_testPlaygroundWindow.getShownProperty());
+	}
+
 	private void saveFileTab(@Nonnull FileTab tab) throws IOException {
 		if (tab.isInternalFile() || (tab.getFile() == null)) {
 			_menu_saveAs.fire();
@@ -723,6 +723,7 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 			initMenu();
 			initParse();
 			initHoare();
+			initTestPlayground();
 
 			updateConsole();
 		} catch (Exception e) {

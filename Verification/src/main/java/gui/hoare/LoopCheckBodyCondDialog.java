@@ -1,9 +1,9 @@
 package gui.hoare;
 
 import core.Hoare;
-import core.structures.semantics.boolExp.HoareCond;
-import core.structures.semantics.boolExp.BoolExp;
-import core.structures.semantics.prog.Prog;
+import core.Lexer;
+import core.Parser;
+import core.structures.semantics.prog.HoareCond;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -24,12 +24,16 @@ public class LoopCheckBodyCondDialog extends HoareDialog implements Initializabl
 	@FXML
 	private Button _button_reject;
 
-	private final Hoare.Executer.wlp_loop _loop;
-	private final Hoare.Executer.LoopCheckBodyCond_callback _callback;
+	private final Hoare.wlp_loop _loop;
+	private final Callback _callback;
 	private final HoareCond _postInvariant;
 	private final HoareCond _preInvariant;
 
-	public LoopCheckBodyCondDialog(@Nonnull Hoare.Executer.wlp_loop loop, @Nonnull Hoare.Executer.LoopCheckBodyCond_callback callback) throws IOException {
+	public interface Callback {
+		void result(boolean yes) throws Lexer.LexerException, Hoare.HoareException, Parser.ParserException, IOException;
+	}
+
+	public LoopCheckBodyCondDialog(@Nonnull Hoare.wlp_loop loop, @Nonnull Callback callback) throws IOException {
 		super(loop._whileNode, null, loop._postCond);
 
 		_loop = loop;
@@ -49,7 +53,7 @@ public class LoopCheckBodyCondDialog extends HoareDialog implements Initializabl
 	public String getRationale() {
 		RationaleBuilder sb = new RationaleBuilder();
 
-		sb.addProse("using Hoare rule 5 (loop): {p" + StringUtil.bool_and + "B} S {p} " + StringUtil.bool_impl + " {p} while B do S od {p" + StringUtil.bool_and + StringUtil.bool_neg + "B}");
+		sb.addProse("using Hoare rule 5 (loop): {p" + StringUtil.bool_and + "B} S {p} " + StringUtil.bool_impl_meta + " {p} while B do S od {p" + StringUtil.bool_and + StringUtil.bool_neg + "B}");
 		sb.addProse("p" + StringUtil.bool_and + StringUtil.bool_neg + "B" + StringUtil.bool_impl + "q");
 
 		sb.addParam("B", styleNode(_loop._whileNode.getBoolExp()));

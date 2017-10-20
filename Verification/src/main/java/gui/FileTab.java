@@ -1,33 +1,20 @@
 package gui;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.net.URL;
-import java.util.*;
-
 import core.*;
-import core.structures.semantics.SemanticNode;
-import core.structures.semantics.prog.Assign;
-import core.structures.semantics.prog.Skip;
-import core.structures.syntax.SyntaxNode;
-import gui.hoare.*;
-import org.fxmisc.richtext.CodeArea;
-
-import core.Hoare.Executer.Assign_callback;
-import core.Hoare.Executer.CompMerge_callback;
-import core.Hoare.Executer.CompNext_callback;
-import core.Hoare.Executer.Skip_callback;
-import core.Hoare.Executer.LoopAskInv_callback;
 import core.Hoare.HoareException;
 import core.Lexer.LexerException;
 import core.Lexer.LexerResult;
 import core.Parser.ParserException;
-import core.structures.semantics.boolExp.HoareCond;
+import core.structures.semantics.SemanticNode;
+import core.structures.semantics.boolExp.BoolExp;
+import core.structures.semantics.boolExp.BoolImpl;
+import core.structures.semantics.boolExp.BoolLit;
+import core.structures.semantics.prog.Assign;
+import core.structures.semantics.prog.HoareCond;
+import core.structures.semantics.prog.Skip;
+import core.structures.syntax.SyntaxNode;
 import grammars.HoareWhileGrammar;
+import gui.hoare.*;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -38,15 +25,11 @@ import javafx.collections.ObservableMap;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Scene;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.SplitPane;
-import javafx.scene.control.Tab;
-import javafx.scene.control.TabPane;
-import javafx.scene.control.Tooltip;
-import javafx.scene.control.TreeView;
+import javafx.scene.control.*;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
+import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.StyleClassedTextArea;
 import util.ErrorUtil;
 import util.IOUtil;
@@ -54,6 +37,12 @@ import util.StringUtil;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.*;
+import java.net.URL;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.ResourceBundle;
+import java.util.Set;
 
 public class FileTab extends Tab implements Initializable, MainWindow.ActionInterface {
 	@FXML
@@ -324,7 +313,12 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 	@Override
 	public void initialize(URL url, ResourceBundle resources) {
 		try {
-			_extendedCodeArea_code = new ExtendedCodeArea(_codeArea_code, _currentNodeP, _currentHoareNodeP, ExtendedCodeArea.Type.CODE);
+			_extendedCodeArea_code = new ExtendedCodeArea(_codeArea_code);
+
+			_extendedCodeArea_code.setCurrentNodeP(_currentNodeP, _currentHoareNodeP);
+			_extendedCodeArea_code.enableArrows(true);
+			_extendedCodeArea_code.setLineNumbers(ExtendedCodeArea.NumType.EXTENDED);
+			_extendedCodeArea_code.setParser(new Parser(HoareWhileGrammar.getInstance()));
 	
 			if (_file != null) {
 				if (_isInternalFile) {
@@ -364,11 +358,19 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 				}
 			});
 			
-			_extendedCodeArea_tokens = new ExtendedCodeArea(_textArea_tokens, _currentNodeP, _currentHoareNodeP, ExtendedCodeArea.Type.TOKEN);
+			_extendedCodeArea_tokens = new ExtendedCodeArea(_textArea_tokens);
+
+			_extendedCodeArea_tokens.setCurrentNodeP(_currentNodeP, _currentHoareNodeP);
+			_extendedCodeArea_tokens.enableArrows(true);
+			_extendedCodeArea_tokens.setLineNumbers(ExtendedCodeArea.NumType.EXTENDED);
 			
 			updateVisibility();
 			
-			_extendedCodeArea_hoare = new ExtendedCodeArea(_codeArea_hoare, _currentNodeP, _currentHoareNodeP, ExtendedCodeArea.Type.HOARE);
+			_extendedCodeArea_hoare = new ExtendedCodeArea(_codeArea_hoare);
+
+			_extendedCodeArea_hoare.setCurrentNodeP(_currentNodeP, _currentHoareNodeP);
+			_extendedCodeArea_hoare.setLineNumbers(ExtendedCodeArea.NumType.EXTENDED);
+			_extendedCodeArea_hoare.setParser(new Parser(HoareWhileGrammar.getInstance()));
 		} catch (Exception e) {
 			ErrorUtil.logEFX(e);
 		}
@@ -568,7 +570,11 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 		try {
 			_pane_hoare_dialogHost.getChildren().clear();
 			
-			Hoare hoare = new Hoare(_semanticTreeP, _preCondMapP, _postCondMapP, _currentNodeP, _currentHoareNodeP, new Hoare.ActionInterface() {
+			HoareExecuter hoareExecuter = new HoareExecuter(_semanticTreeP, _currentHoareNodeP, new HoareExecuter.ActionInterface() {
+				private void print(String s) {
+					System.out.println(s);
+				}
+
 				private String nodeSynthesize(@Nonnull SemanticNode node) {
 					String ret = node.synthesize(false, false, null);
 
@@ -590,13 +596,13 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 				}
 
 				@Override
-				public void reqSkipDialog(Skip skip, HoareCond preCond, HoareCond postCond, Skip_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
+				public void reqSkipDialog(Skip skip, HoareCond preCond, HoareCond postCond, Hoare.Skip_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
 					if (_checkBox_hoare_auto.isSelected()) {
 						callback.result();
 					} else {
-						HoareDialog dialog = new SkipDialog(skip, preCond, postCond, new Skip_callback() {
+						HoareDialog dialog = new SkipDialog(skip, preCond, postCond, new SkipDialog.Callback() {
 							@Override
-							public void result() throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
+							public void result() throws LexerException, HoareException, ParserException, IOException {
 								callback.result();
 							}
 						});
@@ -606,23 +612,13 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 				}
 
 				@Override
-				public void reqAssignDialog(Assign assign, HoareCond preCond, HoareCond postCond, Assign_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
-					/*println_begin();
-					
-					println("apply assignment rule:");
-					println("\t" + postCond.toStringEx(var + ":=" + exp.synthesize()) + " " + var + "=" + exp.synthesize() + " " + postCond.toStringEx());
-					println("\t->" + preCond.toStringEx() + " " + var + "=" + exp.synthesize() + " " + postCond.toStringEx());*/
-					
+				public void reqAssignDialog(Assign assign, HoareCond preCond, HoareCond postCond, Hoare.Assign_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
 					if (_checkBox_hoare_auto.isSelected()) {
-						//println_end();
-						
 						callback.result();
 					} else {
-						HoareDialog dialog = new AssignDialog(assign, preCond, postCond, new Assign_callback() {
+						HoareDialog dialog = new AssignDialog(assign, preCond, postCond, new AssignDialog.Callback() {
 							@Override
-							public void result() throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
-								//println_end();
-								
+							public void result() throws LexerException, HoareException, ParserException, IOException {
 								callback.result();
 							}
 						});
@@ -632,13 +628,13 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 				}
 
 				@Override
-				public void reqCompNextDialog(Hoare.Executer.wlp_comp comp, CompNext_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
+				public void reqCompNextDialog(Hoare.wlp_comp comp, Hoare.CompNext_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
 					if (_checkBox_hoare_auto.isSelected()) {
 						callback.result();
 					} else {
-						HoareDialog dialog = new CompNextDialog(comp, new CompNext_callback() {
+						HoareDialog dialog = new CompNextDialog(comp, new CompNextDialog.Callback() {
 							@Override
-							public void result() throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
+							public void result() throws LexerException, HoareException, ParserException, IOException {
 								callback.result();
 							}
 						});
@@ -648,7 +644,7 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 				}
 
 				@Override
-				public void reqCompMergeDialog(Hoare.Executer.wlp_comp comp, CompMerge_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
+				public void reqCompMergeDialog(Hoare.wlp_comp comp, Hoare.CompMerge_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
 					if (_checkBox_hoare_auto.isSelected()) {
 						callback.result();
 					} else {
@@ -659,43 +655,58 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 				}
 
 				@Override
-				public void reqAltFirstDialog(Hoare.Executer.wlp_alt alt, Hoare.Executer.AltThen_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
+				public void reqAltFirstDialog(Hoare.wlp_alt alt, Hoare.AltThen_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
 					if (_checkBox_hoare_auto.isSelected()) {
 						callback.result();
 					} else {
-						HoareDialog dialog = new AltThenDialog(alt, callback);
+						HoareDialog dialog = new AltThenDialog(alt, new AltThenDialog.Callback() {
+							@Override
+							public void result() throws LexerException, HoareException, ParserException, IOException {
+								callback.result();
+							}
+						});
 
 						pushDialog(dialog);
 					}
 				}
 
 				@Override
-				public void reqAltElseDialog(Hoare.Executer.wlp_alt alt, Hoare.Executer.AltElse_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
+				public void reqAltElseDialog(Hoare.wlp_alt alt, Hoare.AltElse_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
 					if (_checkBox_hoare_auto.isSelected()) {
 						callback.result();
 					} else {
-						HoareDialog dialog = new AltElseDialog(alt, callback);
+						HoareDialog dialog = new AltElseDialog(alt, new AltElseDialog.Callback() {
+							@Override
+							public void result() throws LexerException, HoareException, ParserException, IOException {
+								callback.result();
+							}
+						});
 
 						pushDialog(dialog);
 					}
 				}
 
 				@Override
-				public void reqAltMergeDialog(Hoare.Executer.wlp_alt alt, Hoare.Executer.AltMerge_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
+				public void reqAltMergeDialog(Hoare.wlp_alt alt, Hoare.AltMerge_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
 					if (_checkBox_hoare_auto.isSelected()) {
 						callback.result();
 					} else {
-						HoareDialog dialog = new AltMergeDialog(alt, callback);
+						HoareDialog dialog = new AltMergeDialog(alt, new AltMergeDialog.Callback() {
+							@Override
+							public void result() throws LexerException, HoareException, ParserException, IOException {
+								callback.result();
+							}
+						});
 
 						pushDialog(dialog);
 					}
 				}
 
 				@Override
-				public void reqLoopAskInvDialog(Hoare.Executer.wlp_loop loop, Hoare.Executer.LoopAskInv_callback callback) throws IOException {
-					HoareDialog dialog = new LoopAskInvariantDialog(loop, new LoopAskInv_callback() {
+				public void reqLoopAskInvDialog(Hoare.wlp_loop loop, Hoare.LoopAskInv_callback callback) throws IOException {
+					HoareDialog dialog = new LoopAskInvDialog(loop, new LoopAskInvDialog.Callback() {
 						@Override
-						public void result(HoareCond postInvariant) throws HoareException, LexerException, IOException, ParserException {
+						public void result(@Nonnull HoareCond postInvariant) throws LexerException, HoareException, ParserException, IOException {
 							callback.result(postInvariant);
 						}
 					});
@@ -704,46 +715,38 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 				}
 
 				@Override
-				public void reqLoopCheckPostCondDialog(Hoare.Executer.wlp_loop loop, Hoare.Executer.LoopCheckPostCond_callback callback) throws IOException {
-					HoareDialog dialog = new LoopCheckPostCondDialog(loop, callback);
-
-					pushDialog(dialog);
-				}
-
-				@Override
-				public void reqLoopGetBodyCondDialog(Hoare.Executer.wlp_loop loop, Hoare.Executer.LoopGetBodyCond_callback callback) throws IOException, LexerException, HoareException, ParserException, SemanticNode.CopyException {
-					if (_checkBox_hoare_auto.isSelected()) {
-						callback.result();
-					} else {
-						HoareDialog dialog = new LoopGetBodyCondDialog(loop, callback);
-
-						pushDialog(dialog);
-					}
-				}
-
-				@Override
-				public void reqLoopCheckBodyCondDialog(Hoare.Executer.wlp_loop loop, Hoare.Executer.LoopCheckBodyCond_callback callback) throws IOException {
-					HoareDialog dialog = new LoopCheckBodyCondDialog(loop, callback);
-
-					pushDialog(dialog);
-				}
-
-				@Override
-				public void reqLoopAcceptInvCondDialog(Hoare.Executer.wlp_loop loop, Hoare.Executer.LoopAcceptInv_callback callback) throws IOException, LexerException, HoareException, ParserException, SemanticNode.CopyException {
-					if (_checkBox_hoare_auto.isSelected()) {
-						callback.result();
-					} else {
-						HoareDialog dialog = new LoopAcceptInvariantDialog(loop, callback);
-
-						pushDialog(dialog);
-					}
-				}
-
-				@Override
-				public void reqConseqCheckPreDialog(SemanticNode node, HoareCond origPreCond, HoareCond newPreCond, Hoare.Executer.ConseqCheck_callback callback) throws IOException {
-					HoareDialog dialog = new ConseqCheckPreDialog(node, origPreCond, newPreCond, new Hoare.Executer.ConseqCheck_callback() {
+				public void reqLoopCheckPostCondDialog(Hoare.wlp_loop loop, Hoare.LoopCheckPostCond_callback callback) throws IOException {
+					HoareDialog dialog = new LoopCheckPostCondDialog(loop, new LoopCheckPostCondDialog.Callback() {
 						@Override
-						public void result(boolean yes) throws HoareException, LexerException, IOException, ParserException, SemanticNode.CopyException {
+						public void result() throws LexerException, HoareException, ParserException, IOException {
+							callback.result();
+						}
+					});
+
+					pushDialog(dialog);
+				}
+
+				@Override
+				public void reqLoopGetBodyCondDialog(Hoare.wlp_loop loop, Hoare.LoopGetBodyCond_callback callback) throws IOException, LexerException, HoareException, ParserException, SemanticNode.CopyException {
+					if (_checkBox_hoare_auto.isSelected()) {
+						callback.result();
+					} else {
+						HoareDialog dialog = new LoopGetBodyCondDialog(loop, new LoopGetBodyCondDialog.Callback() {
+							@Override
+							public void result() throws LexerException, HoareException, ParserException, IOException {
+								callback.result();
+							}
+						});
+
+						pushDialog(dialog);
+					}
+				}
+
+				@Override
+				public void reqLoopCheckBodyCondDialog(Hoare.wlp_loop loop, Hoare.LoopCheckBodyCond_callback callback) throws IOException {
+					HoareDialog dialog = new LoopCheckBodyCondDialog(loop, new LoopCheckBodyCondDialog.Callback() {
+						@Override
+						public void result(boolean yes) throws LexerException, HoareException, ParserException, IOException {
 							callback.result(yes);
 						}
 					});
@@ -752,15 +755,75 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 				}
 
 				@Override
-				public void reqConseqCheckPostDialog(SemanticNode node, HoareCond origPostCond, HoareCond newPostCond, Hoare.Executer.ConseqCheck_callback callback) throws IOException {
-					HoareDialog dialog = new ConseqCheckPostDialog(node, origPostCond, newPostCond, new Hoare.Executer.ConseqCheck_callback() {
-						@Override
-						public void result(boolean yes) throws HoareException, LexerException, IOException, ParserException, SemanticNode.CopyException {
-							callback.result(yes);
-						}
-					});
+				public void reqLoopAcceptInvCondDialog(Hoare.wlp_loop loop, Hoare.LoopAcceptInv_callback callback) throws IOException, LexerException, HoareException, ParserException, SemanticNode.CopyException {
+					if (_checkBox_hoare_auto.isSelected()) {
+						callback.result();
+					} else {
+						HoareDialog dialog = new LoopAcceptInvDialog(loop, new LoopAcceptInvDialog.Callback() {
+							@Override
+							public void result() throws LexerException, HoareException, ParserException, IOException {
+								callback.result();
+							}
+						});
 
-					pushDialog(dialog);
+						pushDialog(dialog);
+					}
+				}
+
+				@Override
+				public void reqConseqCheckPreDialog(SemanticNode node, HoareCond origPreCond, HoareCond newPreCond, Hoare.ConseqCheck_callback callback) throws IOException, LexerException, ParserException, HoareException {
+					if (_checkBox_hoare_auto.isSelected()) {
+						BoolImpl impl = new BoolImpl(origPreCond.getBoolExp(), newPreCond.getBoolExp());
+
+						BoolExp implReduced = impl.reduce();
+
+						print("preCheck " + impl + "->" + implReduced);
+
+						callback.result(implReduced.equals(new BoolLit(true)));
+					} else {
+						HoareDialog dialog = new ConseqCheckPreDialog(node, origPreCond, newPreCond, new ConseqCheckPreDialog.Callback() {
+							@Override
+							public void result(BoolExp boolExp) throws LexerException, HoareException, ParserException, IOException {
+								callback.result(boolExp.equals(new BoolLit(true)));
+							}
+						});
+
+						pushDialog(dialog);
+					}
+				}
+
+				@Override
+				public void reqConseqCheckPostDialog(SemanticNode node, HoareCond origPostCond, HoareCond newPostCond, Hoare.ConseqCheck_callback callback) throws IOException, HoareException, ParserException, LexerException {
+					if (_checkBox_hoare_auto.isSelected()) {
+						BoolImpl impl = new BoolImpl(newPostCond.getBoolExp(), origPostCond.getBoolExp());
+
+						BoolExp implReduced = impl.reduce();
+
+						System.out.println("postCheck " + impl + "->" + implReduced);
+
+						callback.result(implReduced.equals(new BoolLit(true)));
+					} else {
+						HoareDialog dialog = new ConseqCheckPostDialog(node, origPostCond, newPostCond, new ConseqCheckPostDialog.Callback() {
+							@Override
+							public void result(BoolExp boolExp) throws LexerException, HoareException, ParserException, IOException {
+								callback.result(boolExp.equals(new BoolLit(true)));
+							}
+						});
+
+						pushDialog(dialog);
+					}
+				}
+
+				@Override
+				public void beginNode(SemanticNode node, HoareCond postCond) {
+					_currentNodeP.set(node);
+
+					_postCondMapP.get().put(node, postCond);
+				}
+
+				@Override
+				public void endNode(SemanticNode node, HoareCond preCond) {
+					_preCondMapP.get().put(node, preCond);
 				}
 
 				@Override
@@ -774,7 +837,7 @@ public class FileTab extends Tab implements Initializable, MainWindow.ActionInte
 				}
 			});
 			
-			hoare.exec();
+			hoareExecuter.exec();
 		} catch (Exception e) {
 			setHoaring(false);
 			

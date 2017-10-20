@@ -1,15 +1,28 @@
 package core.structures.semantics.exp;
 
+import core.Lexer;
+import core.Parser;
 import core.structures.semantics.SemanticNode;
-import util.IOUtil;
+import grammars.ExpGrammar;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public abstract class Exp extends SemanticNode {
+    public Exp makeNeg() {
+        Prod ret = new Prod(this);
+
+        ret.neg();
+
+        return ret;
+    }
+
+    public Exp makeInv() {
+        Pow ret = new Pow(this, new ExpLit(-1));
+
+        return ret;
+    }
+
     public abstract Exp reduce();
     public abstract void order();
 
@@ -22,9 +35,7 @@ public abstract class Exp extends SemanticNode {
         types.add(ExpLit.class);
         types.add(Id.class);
         types.add(Sum.class);
-        types.add(ExpNeg.class);
         types.add(Prod.class);
-        types.add(ExpInv.class);
         types.add(Pow.class);
         types.add(Fact.class);
 
@@ -36,5 +47,9 @@ public abstract class Exp extends SemanticNode {
 
     public String parenthesize(String s) {
         return _grammar.TERMINAL_PAREN_OPEN.getPrimRule() + s + _grammar.TERMINAL_PAREN_CLOSE.getPrimRule();
+    }
+
+    public static Exp fromString(String s) throws Lexer.LexerException, Parser.ParserException {
+        return (Exp) SemanticNode.fromString(s, ExpGrammar.getInstance());
     }
 }

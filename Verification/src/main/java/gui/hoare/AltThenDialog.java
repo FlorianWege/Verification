@@ -1,6 +1,8 @@
 package gui.hoare;
 
 import core.Hoare;
+import core.Lexer;
+import core.Parser;
 import core.structures.semantics.prog.Skip;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -20,10 +22,14 @@ public class AltThenDialog extends HoareDialog implements Initializable {
 	@FXML
 	private Button _button_continue;
 
-	private final Hoare.Executer.wlp_alt _alt;
-	private final Hoare.Executer.AltThen_callback _callback;
+	private final Hoare.wlp_alt _alt;
+	private final Callback _callback;
 
-	public AltThenDialog(@Nonnull Hoare.Executer.wlp_alt alt, @Nonnull Hoare.Executer.AltThen_callback callback) throws IOException {
+	public interface Callback {
+		void result() throws Lexer.LexerException, Hoare.HoareException, Parser.ParserException, IOException;
+	}
+
+	public AltThenDialog(@Nonnull Hoare.wlp_alt alt, @Nonnull Callback callback) throws IOException {
 		super(alt._altNode, null, alt._postCond);
 
 		_alt = alt;
@@ -41,7 +47,7 @@ public class AltThenDialog extends HoareDialog implements Initializable {
 	public String getRationale() {
 		RationaleBuilder sb = new RationaleBuilder();
 
-		sb.addProse("using Hoare rule 4 (conditional): " + "{p" + StringUtil.bool_and + "B} S<sub>1</sub> {q}, {p" + StringUtil.bool_and + StringUtil.bool_neg + "B} S<sub>2</sub>{q}" + StringUtil.bool_impl + "{p} if B then S<sub>1</sub> else S<sub>2</sub> fi {q}");
+		sb.addProse("using Hoare rule 4 (conditional): " + "{p" + StringUtil.bool_and + "B} S<sub>1</sub> {q}, {p" + StringUtil.bool_and + StringUtil.bool_neg + "B} S<sub>2</sub>{q}" + StringUtil.bool_impl_meta + "{p} if B then S<sub>1</sub> else S<sub>2</sub> fi {q}");
 
 		sb.addParam("B", styleNode(_alt._altNode.getBoolExp()));
 		sb.addParam("S<sub>1</sub>", styleNode(_alt._altNode.getThenProg()));

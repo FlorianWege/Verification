@@ -1,37 +1,29 @@
 package gui.hoare;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.ResourceBundle;
-
 import core.Hoare;
 import core.Lexer;
 import core.Parser;
 import core.structures.semantics.SemanticNode;
-import core.structures.semantics.boolExp.BoolAnd;
-import core.structures.semantics.boolExp.BoolExp;
-import core.structures.semantics.boolExp.BoolOr;
-import core.structures.semantics.boolExp.HoareCond;
-import core.structures.syntax.SyntaxNode;
-import grammars.BoolExpGrammar;
+import core.structures.semantics.boolExp.*;
+import core.structures.semantics.prog.HoareCond;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
-import javafx.scene.control.Tab;
-import javafx.scene.control.TabPane;
+import javafx.scene.layout.Pane;
 import util.ErrorUtil;
 import util.StringUtil;
 
 import javax.annotation.Nonnull;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.ResourceBundle;
 
 public class ConseqCheckPreDialog extends HoareDialog implements Initializable {
 	@FXML
-	private Tab _tab_cnf;
-	@FXML
-	private Tab _tab_dnf;
+	private Pane _pane_tableHost;
 
 	@FXML
 	private Button _button_yes;
@@ -40,14 +32,21 @@ public class ConseqCheckPreDialog extends HoareDialog implements Initializable {
 
 	private final HoareCond _origPreCond;
 	private final HoareCond _newPreCond;
-	private final Hoare.Executer.ConseqCheck_callback _callback;
+	private final Callback _callback;
 
 	private final BoolAnd _origPreCNF;
 	private final BoolOr _origPreDNF;
 	private final BoolAnd _newPreCNF;
 	private final BoolOr _newPreDNF;
 
-	public ConseqCheckPreDialog(@Nonnull SemanticNode node, @Nonnull HoareCond origPreCond, @Nonnull HoareCond newPreCond, @Nonnull Hoare.Executer.ConseqCheck_callback callback) throws IOException {
+	private final BoolImpl _impl;
+	private final BoolExp _split;
+
+	public interface Callback {
+		void result(BoolExp boolExp) throws Lexer.LexerException, Hoare.HoareException, Parser.ParserException, IOException;
+	}
+
+	public ConseqCheckPreDialog(@Nonnull SemanticNode node, @Nonnull HoareCond origPreCond, @Nonnull HoareCond newPreCond, Callback callback) throws IOException {
 		super(node, null, null);
 
 		_origPreCond = origPreCond;
@@ -59,6 +58,10 @@ public class ConseqCheckPreDialog extends HoareDialog implements Initializable {
 
 		_newPreCNF = _newPreCond.getBoolExp().makeCNF();
 		_newPreDNF = _newPreCond.getBoolExp().makeDNF();
+
+		_impl = new BoolImpl(_origPreCond.getBoolExp(), _newPreCond.getBoolExp());
+
+		_split = _impl.split(true, false);
 
 		inflate(new File("ConseqCheckPreDialog.fxml"));
 	}
@@ -72,7 +75,7 @@ public class ConseqCheckPreDialog extends HoareDialog implements Initializable {
 	public String getRationale() {
 		RationaleBuilder sb = new RationaleBuilder();
 
-		sb.addProse("using Hoare rule 6 (consequence): p" + StringUtil.bool_impl + "p<sub>0</sub>, {p<sub>0</sub>} S {q<sub>0</sub>}, q<sub>0</sub> " + StringUtil.bool_impl_meta + "q" + StringUtil.bool_impl + "{p} S {q}");
+		sb.addProse("using Hoare rule 6 (consequence): p" + StringUtil.bool_impl + "p<sub>0</sub>, {p<sub>0</sub>} S {q<sub>0</sub>}, q<sub>0</sub> " + StringUtil.bool_impl + "q" + StringUtil.bool_impl_meta + "{p} S {q}");
 		sb.addProse("with q<sub>0</sub>" + StringUtil.bool_eq + "q: p" + StringUtil.bool_impl + "p<sub>0</sub>, {p<sub>0</sub>} S {q} " + StringUtil.bool_impl_meta + "{p} S {q}");
 
 		sb.addParam("p", styleCond(_newPreCond));
@@ -86,6 +89,24 @@ public class ConseqCheckPreDialog extends HoareDialog implements Initializable {
 		sb.addParam("DNF(p)", styleCond(_newPreDNF));
 		sb.addParam("DNF(p<sub>0</sub>)", styleCond(_origPreDNF));
 
+		sb.addStep("merge to implication");
+
+		sb.addParam("impl", styleCond(_impl));
+
+		sb.addStep("split implication");
+
+		sb.addParam("split", styleCond(_split));
+
+		BoolOr splitOr = new BoolOr(_split);
+
+		for (BoolExp orPart : splitOr.getBoolExps()) {
+			BoolAnd splitAnd = new BoolAnd(orPart);
+
+			for (BoolExp andPart : splitAnd.getBoolExps()) {
+
+			}
+		}
+
 		return sb.toString();
 	}
 
@@ -98,7 +119,7 @@ public class ConseqCheckPreDialog extends HoareDialog implements Initializable {
 				@Override
 				public void handle(ActionEvent event) {
 					try {
-						_callback.result(true);
+						_callback.result(new BoolLit(true));
 					} catch (Exception e) {
 						ErrorUtil.logEFX(e);
 					}
@@ -109,15 +130,27 @@ public class ConseqCheckPreDialog extends HoareDialog implements Initializable {
 				@Override
 				public void handle(ActionEvent event) {
 					try {
-						_callback.result(false);
+						_callback.result(new BoolLit(false));
 					} catch (Exception e) {
 						ErrorUtil.logEFX(e);
 					}
 				}
 			});
 
-			_tab_cnf.setContent(new ConseqCheckTableView(_origPreCNF, _newPreCNF).getRoot());
-			_tab_dnf.setContent(new ConseqCheckTableView(_origPreDNF, _newPreDNF).getRoot());
+			ConseqCheckTableView tableView = new ConseqCheckTableView(new ConseqCheckTableView.Callback() {
+				@Override
+				public void result(BoolExp boolExp) {
+					try {
+						_callback.result(boolExp);
+					} catch (Exception e) {
+						ErrorUtil.logEFX(e);
+					}
+				}
+			});
+
+			_pane_tableHost.getChildren().add(tableView.getRoot());
+
+			tableView.setBoolImpl(_impl);
 		} catch (Exception e) {
 			ErrorUtil.logEFX(e);
 		}

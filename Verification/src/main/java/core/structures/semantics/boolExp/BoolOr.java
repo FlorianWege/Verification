@@ -1,17 +1,12 @@
 package core.structures.semantics.boolExp;
 
 import core.structures.semantics.SemanticNode;
-import core.structures.semantics.exp.*;
-import javafx.util.Pair;
+import core.structures.semantics.exp.Exp;
+import core.structures.semantics.exp.Sum;
 import util.IOUtil;
 
 import javax.annotation.Nonnull;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.function.Function;
-import java.util.function.UnaryOperator;
+import java.util.*;
 
 public class BoolOr extends BoolList {
     @Override
@@ -71,40 +66,107 @@ public class BoolOr extends BoolList {
 
     @Override
     public BoolExp reduce() {
-        List<BoolExp> boolExps = getBoolExps();
+        BoolOr copy = (BoolOr) copy();
 
-        boolExps.replaceAll(new UnaryOperator<BoolExp>() {
-            @Override
-            public BoolExp apply(BoolExp boolExp) {
-                return boolExp.reduce();
-            }
-        });
+        boolean containsAnd = false;
 
+        for (BoolExp part : copy.getBoolExps()) {
+            if (part instanceof BoolAnd) containsAnd = true;
+        }
+
+        if (containsAnd) {
+            BoolAnd cnf = copy.makeCNF();
+
+            System.out.println("cnf " + cnf);
+
+            copy = cnf.reduce().makeDNF();
+
+            System.out.println("DNF is " + copy);
+        }
+
+        //reduce parts and unwrap nested
+        BoolOr tmpOr = new BoolOr();
+
+        for (BoolExp boolExp : copy.getBoolExps()) {
+            tmpOr.addBoolExp(boolExp.reduce());
+        }
+
+        //idempotency
+        Set<BoolExp> boolExps = new LinkedHashSet<>(tmpOr.getBoolExps());
+
+        //search true
         boolean hasTrue = false;
 
         for (BoolExp boolExp : boolExps) {
             if (boolExp instanceof BoolLit && ((BoolLit) boolExp).getVal()) hasTrue = true;
         }
 
-        List<BoolExp> newBoolExps = new ArrayList<>();
+        //true found, nothing to do
+        if (hasTrue) return new BoolLit(true);
+        System.out.println(boolExps);
+        //search for complements
+        for (BoolExp boolExp : boolExps) {
+            boolExp = (BoolExp) boolExp.copy();
 
-        if (hasTrue) {
-            return new BoolLit(true);
-        } else {
-            for (BoolExp boolExp : boolExps) {
-                if (boolExp instanceof BoolLit) continue;
+            if (boolExp instanceof ExpComp && ((ExpComp) boolExp).getExpOp().getType().equals(ExpCompOp.Type.EQUAL)) {
+                Exp leftExp = ((ExpComp) boolExp).getLeftExp();
+                Exp rightExp = ((ExpComp) boolExp).getRightExp();
 
-                newBoolExps.add(boolExp);
+                if (leftExp instanceof Sum) ((Sum) leftExp).cleanMu();
+                if (rightExp instanceof Sum) ((Sum) rightExp).cleanMu();
+
+                BoolExp reducedBoolExp = new ExpComp(leftExp, new ExpCompOp(ExpCompOp.Type.UNEQUAL), rightExp).reduce();
+                BoolExp reducedBoolExp2 = new ExpComp(leftExp, new ExpCompOp(ExpCompOp.Type.EQUAL), rightExp).reduce();
+
+                reducedBoolExp = new BoolOr(reducedBoolExp);
+                reducedBoolExp2 = new BoolOr(reducedBoolExp2);
+
+                List<BoolExp> parts = ((BoolOr) reducedBoolExp).getBoolExps();
+                List<BoolExp> parts2 = ((BoolOr) reducedBoolExp2).getBoolExps();
+
+                //all parts of reduction contained?
+                if (boolExps.containsAll(parts) && boolExps.containsAll(parts2)) {
+                    return new BoolLit(true);
+                }
             }
-
-            if (newBoolExps.isEmpty()) return new BoolLit(false);
         }
 
+        List<BoolExp> newBoolExps = new ArrayList<>();
+
+        //avoid unnecessary falses
+        for (BoolExp boolExp : boolExps) {
+            if (boolExp instanceof BoolLit) continue;
+
+            newBoolExps.add(boolExp);
+        }
+
+        //complete reduction?
+        if (newBoolExps.isEmpty()) return new BoolLit(false);
+        if (newBoolExps.size() == 1) return newBoolExps.get(0);
+
+        //reassemble
         BoolOr ret = new BoolOr();
 
         for (BoolExp boolExp : newBoolExps) {
             ret.addChild(boolExp);
         }
+
+        /*BoolOr dnf = ret;
+        System.out.println("ret " + dnf);
+
+        BoolAnd cnf = dnf.makeCNF();
+
+        System.out.println("cnf " + cnf);
+
+        dnf = cnf.makeDNF();
+
+        System.out.println("dnf " + dnf);*/
+
+        /*if (!(dnf.equals(ret))) {
+
+
+            return dnf.reduce();
+        }*/
 
         return ret;
     }

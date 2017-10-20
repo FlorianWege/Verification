@@ -66,7 +66,7 @@ public abstract class SemanticNode extends TNode<SemanticNode> implements Serial
 
     @Override
     public String getTreeText() {
-        return !getChildren().isEmpty() ? getTypeName().toString() : getChildName() + ": " + getContentString();
+        return !getChildren().isEmpty() ? getTypeName() : getChildName() + ": " + getContentString();
     }
 
     @Override
@@ -147,11 +147,7 @@ public abstract class SemanticNode extends TNode<SemanticNode> implements Serial
         if (symbol.equals(_grammar.NON_TERMINAL_BOOL_EXP) && subRule.equals(_grammar.RULE_BOOL_OR)) {
             SyntaxNode orSyntaxNode = syntaxNode.findChild(_grammar.NON_TERMINAL_BOOL_OR);
 
-            if (orSyntaxNode != null) {
-                SemanticNode orNode = transform(orSyntaxNode);
-
-                newNode = orNode;
-            }
+            if (orSyntaxNode != null) newNode = transform(orSyntaxNode);
         } else if (symbol.equals(_grammar.NON_TERMINAL_BOOL_OR) || symbol.equals(_grammar.NON_TERMINAL_BOOL_OR_)) {
             if (subRule.equals(_grammar.RULE_BOOL_AND_BOOL_OR_) || subRule.equals(_grammar.RULE_OP_OR_BOOL_AND_BOOL_OR_)) {
                 BoolOr boolOrNode = new BoolOr();
@@ -225,18 +221,16 @@ public abstract class SemanticNode extends TNode<SemanticNode> implements Serial
                 SyntaxNode rightExpSyntaxNode = syntaxNode.findChild(_grammar.NON_TERMINAL_EXP, 1);
 
                 if ((leftExpSyntaxNode != null) && (expCompOpSyntaxNode != null) && (rightExpSyntaxNode != null)) {
-                    SemanticNode leftExpNode = transform(leftExpSyntaxNode);
-                    SemanticNode expCompOpNode = transform(expCompOpSyntaxNode);
-                    SemanticNode rightExpNode = transform(rightExpSyntaxNode);
+                    Exp leftExpNode = (Exp) transform(leftExpSyntaxNode);
+                    ExpCompOp expCompOpNode = (ExpCompOp) transform(expCompOpSyntaxNode);
+                    Exp rightExpNode = (Exp) transform(rightExpSyntaxNode);
 
-                    newNode = new ExpComp((Exp) leftExpNode, (ExpCompOp) expCompOpNode, (Exp) rightExpNode);
+                    newNode = new ExpComp(leftExpNode, expCompOpNode, rightExpNode);
                 }
             } else if (subRule.equals(_grammar.RULE_PAREN_BOOL_EXP)) {
                 SyntaxNode boolExpSyntaxNode = syntaxNode.findChild(_grammar.NON_TERMINAL_BOOL_EXP);
 
-                if (boolExpSyntaxNode != null) {
-                    newNode = transform(boolExpSyntaxNode);
-                }
+                if (boolExpSyntaxNode != null) newNode = transform(boolExpSyntaxNode);
             }
         } else if (symbol.equals(_grammar.TERMINAL_BOOL_LIT)) {
             newNode = new BoolLit((SyntaxNodeTerminal) syntaxNode);
@@ -255,21 +249,23 @@ public abstract class SemanticNode extends TNode<SemanticNode> implements Serial
                 SyntaxNode prodSyntaxNode = syntaxNode.findChild(_grammar.NON_TERMINAL_PROD);
 
                 if (prodSyntaxNode != null) {
-                    SemanticNode prodNode = transform(prodSyntaxNode);
+                    Exp prodNode = (Exp) transform(prodSyntaxNode);
 
                     if (prodNode != null) {
-                        if (!positive) prodNode = new ExpNeg((Exp) prodNode);
+                        Exp exp = prodNode;
 
-                        sumNode.addExp((Exp) prodNode);
+                        if (!positive) exp = exp.makeNeg();
+
+                        sumNode.addExp(exp);
                     }
                 }
 
                 SyntaxNode sum_SyntaxNode = syntaxNode.findChild(_grammar.NON_TERMINAL_SUM_);
 
                 if (sum_SyntaxNode != null) {
-                    SemanticNode sum_Node = transform(sum_SyntaxNode);
+                    Exp sum_Node = (Exp) transform(sum_SyntaxNode);
 
-                    if (sum_Node != null) sumNode.addExp((Exp) sum_Node);
+                    if (sum_Node != null) sumNode.addExp(sum_Node);
                 }
 
                 if (sumNode.getExps().size() > 1) {
@@ -287,21 +283,23 @@ public abstract class SemanticNode extends TNode<SemanticNode> implements Serial
                 SyntaxNode powSyntaxNode = syntaxNode.findChild(_grammar.NON_TERMINAL_POW);
 
                 if (powSyntaxNode != null) {
-                    SemanticNode powNode = transform(powSyntaxNode);
+                    Exp powNode = (Exp) transform(powSyntaxNode);
 
                     if (powNode != null) {
-                        if (!positive) powNode = new ExpInv((Exp) powNode);
+                        Exp exp = powNode;
 
-                        prodNode.addExp((Exp) powNode);
+                        if (!positive) exp = powNode.makeInv();
+
+                        prodNode.addExp(exp);
                     }
                 }
 
                 SyntaxNode prod_SyntaxNode = syntaxNode.findChild(_grammar.NON_TERMINAL_PROD_);
 
                 if (prod_SyntaxNode != null) {
-                    SemanticNode prod_Node = transform(prod_SyntaxNode);
+                    Exp prod_Node = (Exp) transform(prod_SyntaxNode);
 
-                    if (prod_Node != null) prodNode.addExp((Exp) prod_Node);
+                    if (prod_Node != null) prodNode.addExp(prod_Node);
                 }
 
                 if (prodNode.getExps().size() > 1) {
@@ -314,14 +312,14 @@ public abstract class SemanticNode extends TNode<SemanticNode> implements Serial
             SyntaxNode factSyntaxNode = syntaxNode.findChild(_grammar.NON_TERMINAL_FACT);
 
             if (factSyntaxNode != null) {
-                SemanticNode factNode = transform(factSyntaxNode);
+                Exp factNode = (Exp) transform(factSyntaxNode);
 
                 SyntaxNode pow_SyntaxNode = syntaxNode.findChild(_grammar.NON_TERMINAL_POW_);
 
                 if (pow_SyntaxNode != null) {
-                    SemanticNode pow_Node = transform(pow_SyntaxNode);
+                    Exp pow_Node = (Exp) transform(pow_SyntaxNode);
 
-                    if (pow_Node != null) newNode = new Pow((Exp) factNode, (Exp) pow_Node); else newNode = factNode;
+                    if (pow_Node != null) newNode = new Pow(factNode, pow_Node); else newNode = factNode;
                 } else {
                     newNode = factNode;
                 }
@@ -336,9 +334,7 @@ public abstract class SemanticNode extends TNode<SemanticNode> implements Serial
             if (expElemSyntaxNode != null) {
                 SyntaxNode fact_SyntaxNode = syntaxNode.findChild(_grammar.NON_TERMINAL_FACT_);
 
-                SemanticNode expElemNode = transform(expElemSyntaxNode);
-
-                Exp exp = (Exp) expElemNode;
+                Exp exp = (Exp) transform(expElemSyntaxNode);
 
                 while (fact_SyntaxNode != null && fact_SyntaxNode.getSubRule().equals(_grammar.RULE_OP_FACT_FACT_)) {
                     fact_SyntaxNode = fact_SyntaxNode.findChild(_grammar.NON_TERMINAL_FACT_);
@@ -376,13 +372,9 @@ public abstract class SemanticNode extends TNode<SemanticNode> implements Serial
                 newNode = transform(expSyntaxNode);
             }
         } else if (symbol.equals(_grammar.TERMINAL_ID)) {
-            SemanticNode idNode = new Id(((SyntaxNodeTerminal) syntaxNode).getToken().getText());
-
-            newNode = idNode;
+            newNode = new Id(((SyntaxNodeTerminal) syntaxNode).getToken().getText());
         } else if (symbol.equals(_grammar.TERMINAL_EXP_LIT)) {
-            SemanticNode numNode = new ExpLit(new BigInteger(((SyntaxNodeTerminal) syntaxNode).getToken().getText()), BigInteger.ONE);
-
-            newNode = numNode;
+            newNode = new ExpLit(new BigInteger(((SyntaxNodeTerminal) syntaxNode).getToken().getText()), BigInteger.ONE);
         } else if (symbol.equals(_grammar.NON_TERMINAL_PARAM_LIST) && subRule.equals(_grammar.RULE_PARENS_PARAM_PARAM_LIST_)) {
             SyntaxNode paramSyntaxNode = syntaxNode.findChild(_grammar.NON_TERMINAL_PARAM);
 
@@ -420,9 +412,7 @@ public abstract class SemanticNode extends TNode<SemanticNode> implements Serial
                 newNode = paramListNode;
             }
         } else if (symbol.equals(_grammar.NON_TERMINAL_PARAM) && subRule.equals(_grammar.RULE_EXP)) {
-            Param expNode = (Param) transform(syntaxNode.findChild(_grammar.NON_TERMINAL_EXP));
-
-            newNode = expNode;
+            newNode = transform(syntaxNode.findChild(_grammar.NON_TERMINAL_EXP));
         }
 
         if (symbol.equals(_grammar.NON_TERMINAL_PROG) || symbol.equals(_grammar.NON_TERMINAL_PROG_)) {
@@ -546,22 +536,6 @@ public abstract class SemanticNode extends TNode<SemanticNode> implements Serial
         return newNode;
     }
 
-    private static @Nonnull List<SemanticNode> transform(@Nonnull List<SyntaxNode> syntaxNodes) {
-        List<SemanticNode> ret = new ArrayList<>();
-
-        for (SyntaxNode syntaxNode : syntaxNodes) {
-            if (syntaxNode instanceof SyntaxNodeTerminal) continue;
-
-            SemanticNode node = transform(syntaxNode);
-
-            if (node == null) continue;
-
-            ret.add(node);
-        }
-
-        return ret;
-    }
-
     public SyntaxNode getSyntax() {
         return _syntax;
     }
@@ -578,7 +552,7 @@ public abstract class SemanticNode extends TNode<SemanticNode> implements Serial
         } catch (Exception e) {
             throw new CopyException(e);
         }
-    };
+    }
 
     public static @Nonnull SemanticNode fromSyntax(@Nonnull SyntaxNode node) {
         return transform(node);

@@ -54,7 +54,7 @@ public class Lexer {
 		
 		@Override
 		public String getMessage() {
-			return String.format("cannot findType token at pos %d.%d (%d): >>%s<<", _y + 1, _x + 1, _curPos, _inputString.substring(_curPos));
+			return String.format("cannot find token at pos %d.%d (%d): >>%s<<", _y + 1, _x + 1, _curPos, _inputString.substring(_curPos));
 		}
 		
 		public LexerException(int y, int x, int curPos, String inputString) {

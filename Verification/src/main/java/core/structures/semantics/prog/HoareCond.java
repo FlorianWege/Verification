@@ -1,14 +1,13 @@
-package core.structures.semantics.boolExp;
+package core.structures.semantics.prog;
 
 import core.structures.semantics.SemanticNode;
+import core.structures.semantics.boolExp.BoolAnd;
 import core.structures.semantics.boolExp.BoolExp;
-import grammars.BoolExpGrammar;
-import grammars.HoareWhileGrammar;
+import core.structures.semantics.boolExp.BoolNeg;
+import core.structures.semantics.boolExp.BoolOr;
 import util.IOUtil;
 
 import javax.annotation.Nonnull;
-import java.util.function.Function;
-import java.util.function.UnaryOperator;
 
 public class HoareCond extends SemanticNode {
 	private BoolExp _boolExp;
@@ -58,9 +57,8 @@ public class HoareCond extends SemanticNode {
 	@Nonnull
 	@Override
 	public SemanticNode replace(@Nonnull IOUtil.Func<SemanticNode, SemanticNode> replaceFunc) {
-		System.out.println("replace hoarecond " + _boolExp.getContentString());
 		_boolExp = (BoolExp) _boolExp.replace(replaceFunc);
-		System.out.println("replace hoarecondB " + _boolExp.getContentString());
+
 		return replaceFunc.apply(this);
 	}
 }

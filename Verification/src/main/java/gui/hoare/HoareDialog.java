@@ -2,7 +2,7 @@ package gui.hoare;
 
 import core.structures.semantics.SemanticNode;
 import core.structures.semantics.boolExp.BoolExp;
-import core.structures.semantics.boolExp.HoareCond;
+import core.structures.semantics.prog.HoareCond;
 import grammars.HoareWhileGrammar;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -22,7 +22,6 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.ResourceBundle;
 import java.util.regex.Pattern;
 

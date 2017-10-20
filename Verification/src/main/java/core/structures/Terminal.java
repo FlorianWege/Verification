@@ -42,12 +42,8 @@ public class Terminal extends Symbol {
 	@Override
 	public String toLatexString() {
 		if (hasRegexRule()) return toString();
-		
-		for (LexerRule rule : _rules) {
-			return rule.toString();
-		}
-		
-		return toString();
+
+		return getPrimRule().toString();
 	}
 	
 	private final Set<LexerRule> _rules = new LinkedHashSet<>();

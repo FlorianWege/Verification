@@ -1,9 +1,11 @@
-package util;
+package latex;
 
 import grammars.HoareWhileGrammar;
+import org.testng.annotations.Test;
 
 public class PrintGrammarLatex {
-	public static void main(String[] args) {
+	@Test()
+	public void test() {
 		new HoareWhileGrammar().printLatex(System.out);
 	}
 }

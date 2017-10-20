@@ -34,7 +34,7 @@ public class Pow extends Exp {
         if (!(_base instanceof ExpElem) && _base.compPrecedence(this) < 0) baseS = parenthesize(baseS);
         if (!(_exponent instanceof ExpElem) && _exponent.compPrecedence(this) < 0) exponentS = parenthesize(exponentS);
 
-        return baseS + _grammar.TERMINAL_OP_POW.getPrimRule() + exponentS;
+        return mapper.apply(this, baseS + _grammar.TERMINAL_OP_POW.getPrimRule() + exponentS);
     }
 
     @Nonnull

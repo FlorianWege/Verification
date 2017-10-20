@@ -1,9 +1,9 @@
 package gui.hoare;
 
 import core.Hoare;
-import core.structures.semantics.boolExp.HoareCond;
-import core.structures.semantics.boolExp.BoolExp;
-import core.structures.semantics.prog.Prog;
+import core.Lexer;
+import core.Parser;
+import core.structures.semantics.prog.HoareCond;
 import core.structures.semantics.prog.Skip;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -23,11 +23,15 @@ public class AltElseDialog extends HoareDialog implements Initializable {
 	@FXML
 	private Button _button_continue;
 
-	private final Hoare.Executer.wlp_alt _alt;
-	private final Hoare.Executer.AltElse_callback _callback;
+	private final Hoare.wlp_alt _alt;
+	private final Callback _callback;
 	private final HoareCond _firstPreCond;
 
-	public AltElseDialog(@Nonnull Hoare.Executer.wlp_alt alt, @Nonnull Hoare.Executer.AltElse_callback callback) throws IOException {
+	public interface Callback {
+		void result() throws Lexer.LexerException, Hoare.HoareException, Parser.ParserException, IOException;
+	}
+
+	public AltElseDialog(@Nonnull Hoare.wlp_alt alt, @Nonnull Callback callback) throws IOException {
 		super(alt._altNode, null, alt._postCond);
 
 		_alt = alt;

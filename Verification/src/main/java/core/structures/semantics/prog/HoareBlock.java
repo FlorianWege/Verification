@@ -1,7 +1,6 @@
 package core.structures.semantics.prog;
 
 import core.structures.semantics.SemanticNode;
-import core.structures.semantics.boolExp.HoareCond;
 import util.IOUtil;
 
 import javax.annotation.Nonnull;

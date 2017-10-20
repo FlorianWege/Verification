@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.layout.VBox?>
+
+<TitledPane fx:id="_titledPane" animated="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="&lt;and&gt;" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8.0.151">
+  <content>
+      <VBox fx:id="_box" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" />
+  </content>
+</TitledPane>

@@ -4,7 +4,6 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
-import util.ErrorUtil;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;

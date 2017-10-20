@@ -1,22 +1,10 @@
 package gui;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.ResourceBundle;
-import java.util.function.Predicate;
-
-import core.structures.syntax.SyntaxNode;
-import core.structures.syntax.SyntaxNodeTerminal;
 import core.structures.NonTerminal;
 import core.structures.semantics.SemanticNode;
-import core.structures.semantics.boolExp.HoareCond;
+import core.structures.semantics.prog.HoareCond;
+import core.structures.syntax.SyntaxNode;
+import core.structures.syntax.SyntaxNodeTerminal;
 import grammars.HoareWhileGrammar;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
@@ -32,14 +20,13 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
-import javafx.scene.control.*;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyCombination;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
-import javafx.scene.layout.CornerRadii;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.scene.text.Font;
@@ -53,6 +40,11 @@ import util.ErrorUtil;
 import util.IOUtil;
 
 import javax.annotation.Nonnull;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.*;
+import java.util.function.Predicate;
 
 public class TreeChartWindow implements Initializable {
 	@FXML
@@ -102,9 +94,9 @@ public class TreeChartWindow implements Initializable {
 
 		_stage = new Stage();
 
-		_stage.setTitle("Syntax Chart");
+		_stage.getIcons().add(new Image(getClass().getClassLoader().getResourceAsStream("icon.png")));
 		_stage.setScene(IOUtil.inflateFXML(new File("TreeChartWindow.fxml"), this));
-		//_stage.setAlwaysOnTop(true);
+		_stage.setTitle("Syntax Chart");
 		
 		_stage.getScene().getAccelerators().putAll(accelerators);
 		
@@ -600,7 +592,23 @@ public class TreeChartWindow implements Initializable {
 		
 		updateTree();
 	}
-	
+
+	private TreeNode<SyntaxNode> getTreeSyntaxNode(SemanticNode semanticNode) {
+		if (semanticNode == null) return null;
+
+		if (!_syntax_nodeMap.containsKey(semanticNode)) return null;
+
+		return _syntax_nodeMap.get(semanticNode);
+	}
+
+	private TreeNode<SemanticNode> getTreeSemanticNode(SemanticNode semanticNode) {
+		if (semanticNode == null) return null;
+
+		if (!_semantic_nodeMap.containsKey(semanticNode)) return null;
+
+		return _semantic_nodeMap.get(semanticNode);
+	}
+
 	@Override
 	public void initialize(URL url, ResourceBundle resources) {
 		try {
@@ -634,14 +642,14 @@ public class TreeChartWindow implements Initializable {
 			_currentNodeP.addListener(new ChangeListener<SemanticNode>() {
 				@Override
 				public void changed(ObservableValue<? extends SemanticNode> obs, SemanticNode oldVal, SemanticNode newVal) {
-					TreeNode<SyntaxNode> oldSyntaxNode = _syntax_nodeMap.get(oldVal);
-					TreeNode<SyntaxNode> newSyntaxNode = _syntax_nodeMap.get(newVal);
+					TreeNode<SyntaxNode> oldSyntaxNode = getTreeSyntaxNode(oldVal);
+					TreeNode<SyntaxNode> newSyntaxNode = getTreeSyntaxNode(newVal);
 
 					if (oldSyntaxNode != null) oldSyntaxNode.update();
 					if (newSyntaxNode != null) newSyntaxNode.update();
 
-					TreeNode<SemanticNode> oldSemanticNode = _semantic_nodeMap.get(oldVal);
-					TreeNode<SemanticNode> newSemanticNode = _semantic_nodeMap.get(newVal);
+					TreeNode<SemanticNode> oldSemanticNode = getTreeSemanticNode(oldVal);
+					TreeNode<SemanticNode> newSemanticNode = getTreeSemanticNode(newVal);
 
 					if (oldSemanticNode != null) oldSemanticNode.update();
 					if (newSemanticNode != null) newSemanticNode.update();
@@ -650,14 +658,14 @@ public class TreeChartWindow implements Initializable {
 			_currentHoareNodeP.addListener(new ChangeListener<SemanticNode>() {
 				@Override
 				public void changed(ObservableValue<? extends SemanticNode> obs, SemanticNode oldVal, SemanticNode newVal) {
-					TreeNode<SyntaxNode> oldSyntaxNode = _syntax_nodeMap.get(oldVal);
-					TreeNode<SyntaxNode> newSyntaxNode = _syntax_nodeMap.get(newVal);
+					TreeNode<SyntaxNode> oldSyntaxNode = getTreeSyntaxNode(oldVal);
+					TreeNode<SyntaxNode> newSyntaxNode = getTreeSyntaxNode(newVal);
 
 					if (oldSyntaxNode != null) oldSyntaxNode.update();
 					if (newSyntaxNode != null) newSyntaxNode.update();
 
-					TreeNode<SemanticNode> oldSemanticNode = _semantic_nodeMap.get(oldVal);
-					TreeNode<SemanticNode> newSemanticNode = _semantic_nodeMap.get(newVal);
+					TreeNode<SemanticNode> oldSemanticNode = getTreeSemanticNode(oldVal);
+					TreeNode<SemanticNode> newSemanticNode = getTreeSemanticNode(newVal);
 
 					if (oldSemanticNode != null) oldSemanticNode.update();
 					if (newSemanticNode != null) newSemanticNode.update();

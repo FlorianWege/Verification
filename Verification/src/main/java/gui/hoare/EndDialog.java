@@ -1,7 +1,7 @@
 package gui.hoare;
 
 import core.structures.semantics.SemanticNode;
-import core.structures.semantics.boolExp.HoareCond;
+import core.structures.semantics.prog.HoareCond;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import org.fxmisc.richtext.StyleClassedTextArea;

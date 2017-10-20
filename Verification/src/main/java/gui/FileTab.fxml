@@ -13,7 +13,7 @@
 <?import org.fxmisc.richtext.CodeArea?>
 <?import org.fxmisc.richtext.StyleClassedTextArea?>
 
-<AnchorPane prefHeight="500.0" prefWidth="750.0" stylesheets="@MainWindow.css" xmlns="http://javafx.com/javafx/8.0.102" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane prefHeight="500.0" prefWidth="750.0" stylesheets="@MainWindow.css" xmlns="http://javafx.com/javafx/8.0.151" xmlns:fx="http://javafx.com/fxml/1">
    <children>
 		<SplitPane fx:id="_split_main" dividerPositions="0.35" maxHeight="1.7976931348623157E308" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" VBox.vgrow="ALWAYS">
 	      <items>
@@ -57,24 +57,22 @@
                         <VBox prefHeight="200.0" prefWidth="100.0">
                            <children>
                               <Label alignment="CENTER" maxWidth="1.7976931348623157E308" text="Hoare" />
-                              <SplitPane dividerPositions="0.2" orientation="VERTICAL" VBox.vgrow="ALWAYS">
-                                <items>
+                              <VBox VBox.vgrow="ALWAYS">
+                                 <children>
                                     <VBox>
                                        <children>
+                                          <CheckBox fx:id="_checkBox_hoare_auto" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="automatically continue when possible" />
                                           <HBox>
                                              <children>
-                                                <CheckBox fx:id="_checkBox_hoare_auto" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="automatically continue when possible" HBox.hgrow="ALWAYS" />
+                                                <Label text="current postcondition:" />
+                                                <StyleClassedTextArea fx:id="_textArea_hoare_postCond" maxWidth="1.7976931348623157E308" prefHeight="20.0" />
                                              </children>
                                           </HBox>
-                                          <Label text="current node:" />
-                                          <CodeArea fx:id="_codeArea_hoare" editable="false" VBox.vgrow="ALWAYS" />
-                                          <Label text="current postcondition:" />
-                                          <StyleClassedTextArea fx:id="_textArea_hoare_postCond" prefHeight="20.0" />
                                        </children>
                                     </VBox>
-                                    <StackPane fx:id="_pane_hoare_dialogHost" />
-                                </items>
-                              </SplitPane>
+                                    <StackPane fx:id="_pane_hoare_dialogHost" VBox.vgrow="ALWAYS" />
+                                 </children>
+                              </VBox>
                            </children>
                         </VBox>
                      </content>

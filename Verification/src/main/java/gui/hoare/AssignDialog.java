@@ -1,16 +1,11 @@
 package gui.hoare;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.ResourceBundle;
-
 import core.Hoare;
+import core.Lexer;
+import core.Parser;
 import core.structures.semantics.SemanticNode;
-import core.structures.semantics.exp.Exp;
-import core.structures.semantics.exp.Id;
-import core.structures.semantics.boolExp.HoareCond;
 import core.structures.semantics.prog.Assign;
+import core.structures.semantics.prog.HoareCond;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -20,15 +15,23 @@ import util.ErrorUtil;
 import util.IOUtil;
 
 import javax.annotation.Nonnull;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.ResourceBundle;
 
 public class AssignDialog extends HoareDialog implements Initializable {
 	@FXML
 	private Button _button_continue;
 
 	private final Assign _assign;
-	private final Hoare.Executer.Assign_callback _callback;
-	
-	public AssignDialog(@Nonnull Assign assign, @Nonnull HoareCond preCond, @Nonnull HoareCond postCond, @Nonnull Hoare.Executer.Assign_callback callback) throws IOException {
+	private final Callback _callback;
+
+	public interface Callback {
+		void result() throws Lexer.LexerException, Hoare.HoareException, Parser.ParserException, IOException;
+	}
+
+	public AssignDialog(@Nonnull Assign assign, @Nonnull HoareCond preCond, @Nonnull HoareCond postCond, @Nonnull Callback callback) throws IOException {
 		super(assign, preCond, postCond);
 
 		_assign = assign;

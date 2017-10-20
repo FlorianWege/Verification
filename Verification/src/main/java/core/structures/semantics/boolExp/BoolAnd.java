@@ -1,12 +1,13 @@
 package core.structures.semantics.boolExp;
 
 import core.structures.semantics.SemanticNode;
-import core.structures.semantics.exp.*;
+import core.structures.semantics.exp.Exp;
+import core.structures.semantics.exp.Id;
+import core.structures.semantics.exp.Sum;
 import util.IOUtil;
 
 import javax.annotation.Nonnull;
 import java.util.*;
-import java.util.function.UnaryOperator;
 
 public class BoolAnd extends BoolList {
     @Override
@@ -64,47 +65,11 @@ public class BoolAnd extends BoolList {
         return replaceFunc.apply(this);
     }
 
-    @Override
-    public BoolExp reduce() {
-        List<BoolExp> boolExps = getBoolExps();
+    private Exp isolateId(BoolExp boolExp, Id id) {
+        if (!(boolExp instanceof ExpComp)) return null;
 
-        boolExps.replaceAll(new UnaryOperator<BoolExp>() {
-            @Override
-            public BoolExp apply(BoolExp boolExp) {
-                return boolExp.reduce();
-            }
-        });
+        ExpComp expComp = (ExpComp) boolExp.copy();
 
-        boolean hasFalse = false;
-
-        for (BoolExp boolExp : boolExps) {
-            if (boolExp instanceof BoolLit && !((BoolLit) boolExp).getVal()) hasFalse = true;
-        }
-
-        List<BoolExp> newBoolExps = new ArrayList<>();
-
-        if (hasFalse) {
-            return new BoolLit(false);
-        } else {
-            for (BoolExp boolExp : boolExps) {
-                if (boolExp instanceof BoolLit) continue;
-
-                newBoolExps.add(boolExp);
-            }
-
-            if (newBoolExps.isEmpty()) return new BoolLit(true);
-        }
-
-        BoolAnd ret = new BoolAnd();
-
-        for (BoolExp boolExp : newBoolExps) {
-            ret.addChild(boolExp);
-        }
-
-        return ret;
-    }
-
-    private Exp isolateId(ExpComp expComp, Id id) {
         if (!expComp.findType(Id.class).contains(id)) return null;
 
         //left side=0
@@ -114,11 +79,11 @@ public class BoolAnd extends BoolList {
         ExpCompOp compOp = expComp.getExpOp();
         Exp rightExp = expComp.getRightExp();
 
-        assert(!compOp.getType().equals(ExpCompOp.Type.UNEQUAL));
-
+        assert(compOp.getType().equals(ExpCompOp.Type.EQUAL));
+        System.out.println("isolating " + expComp);
         if (leftExp.equals(id)) return rightExp;
         if (rightExp.equals(id)) return leftExp;
-System.out.println("isolating " + expComp);
+
         if (rightExp instanceof Sum) {
             Sum toSubtract = new Sum();
 
@@ -128,8 +93,10 @@ System.out.println("isolating " + expComp);
                 }
             }
 
-            leftExp = new Sum(leftExp, new ExpNeg(toSubtract)).reduce();
-            rightExp = new Sum(rightExp, new ExpNeg(toSubtract)).reduce();
+            toSubtract.neg();
+
+            leftExp = new Sum(leftExp, toSubtract).reduce();
+            rightExp = new Sum(rightExp, toSubtract).reduce();
 
             expComp = new ExpComp(leftExp, compOp, rightExp);
 
@@ -143,10 +110,152 @@ System.out.println("isolating " + expComp);
         return leftExp;
     }
 
-    public BoolExp reduce_CNF() {
+    private BoolExp reduce_substitute() {
+        Set<Id> ids = findType(Id.class);
+
+        BoolAnd cur = (BoolAnd) copy();
+        BoolAnd last;
+
+        do {
+            last = cur;
+
+            for (Id id : ids) {
+                BoolExp source = null;
+                Exp toReplace = null;
+
+                for (BoolExp part : cur.getBoolExps()) {
+                    Exp exp = isolateId(part, id);
+
+                    if (exp != null) {
+                        source = part;
+                        toReplace = exp;
+
+                        break;
+                    }
+                }
+
+                if (toReplace != null) {
+                    List<BoolExp> boolExps = new ArrayList<>();
+
+                    for (BoolExp part : cur.getBoolExps()) {
+                        if (part.equals(source)) {
+                            boolExps.add(part);
+
+                            continue;
+                        }
+
+                        Exp finalToReplace = toReplace;
+
+                        part = (BoolExp) part.replace(new IOUtil.Func<SemanticNode, SemanticNode>() {
+                            @Override
+                            public SemanticNode apply(SemanticNode semanticNode) {
+                                if (semanticNode.equals(id)) {
+                                    return finalToReplace;
+                                }
+
+                                return semanticNode;
+                            }
+                        });
+
+                        part = part.reduce();
+
+                        boolExps.add(part);
+                    }
+
+                    cur = new BoolAnd();
+
+                    for (BoolExp part : boolExps) {
+                        cur.addBoolExp(part);
+                    }
+                }
+            }
+        } while (!last.equals(cur));
+
+        if (!last.equals(this)) return last.reduce();
+
+        return last;
+    }
+
+    @Override
+    public BoolExp reduce() {
+        //reduce parts and unwrap nested
+        BoolAnd tmpAnd = new BoolAnd();
+
+        for (BoolExp boolExp : getBoolExps()) {
+            tmpAnd.addBoolExp(boolExp.reduce());
+        }
+
+        //substitute
+        BoolExp substituted = tmpAnd.reduce_substitute();
+
+        if (!(substituted instanceof BoolAnd)) return substituted.reduce();
+
+        BoolAnd substitutedAnd = (BoolAnd) substituted;
+
+        //idempotency
+        Set<BoolExp> boolExps = new LinkedHashSet<>(substitutedAnd.getBoolExps());
+
+        boolean hasFalse = false;
+
+        for (BoolExp boolExp : boolExps) {
+            if (boolExp instanceof BoolLit && !((BoolLit) boolExp).getVal()) hasFalse = true;
+        }
+
+        if (hasFalse) return new BoolLit(false);
+
+        //search for complements
+        for (BoolExp boolExp : boolExps) {
+            boolExp = (BoolExp) boolExp.copy();
+
+            if (boolExp instanceof ExpComp && ((ExpComp) boolExp).getExpOp().getType().equals(ExpCompOp.Type.EQUAL)) {
+                Exp leftExp = ((ExpComp) boolExp).getLeftExp();
+                Exp rightExp = ((ExpComp) boolExp).getRightExp();
+
+                if (leftExp instanceof Sum) ((Sum) leftExp).cleanMu();
+                if (rightExp instanceof Sum) ((Sum) rightExp).cleanMu();
+
+                BoolExp reducedBoolExp = new ExpComp(leftExp, new ExpCompOp(ExpCompOp.Type.UNEQUAL), rightExp).reduce();
+
+                if (reducedBoolExp instanceof BoolOr) {
+                    List<BoolExp> parts = ((BoolOr) reducedBoolExp).getBoolExps();
+
+                    //all parts of reduction contained?
+                    if (boolExps.containsAll(parts)) return new BoolLit(false);
+                }
+            }
+        }
+
+        List<BoolExp> newBoolExps = new ArrayList<>();
+
+        //avoid unnecessary trues
+        for (BoolExp boolExp : boolExps) {
+            if (boolExp instanceof BoolLit) continue;
+
+            newBoolExps.add(boolExp);
+        }
+
+        //complete reduction?
+        if (newBoolExps.isEmpty()) return new BoolLit(true);
+        if (newBoolExps.size() == 1) return newBoolExps.get(0);
+
+        //reassemble
+        BoolAnd ret = new BoolAnd();
+
+        for (BoolExp boolExp : newBoolExps) {
+            ret.addChild(boolExp);
+        }
+
+        return ret;
+    }
+
+    /*public BoolExp reduce_CNF() {
         BoolExp reduced = reduce();
 
+        reduced.order();
+
         if (!(reduced instanceof BoolAnd)) return reduced;
+
+        BoolAnd reducedAnd = (BoolAnd) reduced;
 
         for (BoolExp boolExp : getBoolExps()) {
             if (!(boolExp instanceof ExpComp)) return reduced;
@@ -162,15 +271,15 @@ System.out.println("isolating " + expComp);
         }
 
         BoolExp last;
-        System.out.println("reduced " + reduced);
+        System.out.println("BEFORE " + reducedAnd);
         do {
-            last = reduced;
+            last = reducedAnd;
 
             for (Id id : ids) {
                 BoolExp source = null;
                 Exp toReplace = null;
 
-                for (BoolExp part : getBoolExps()) {
+                for (BoolExp part : reducedAnd.getBoolExps()) {
                     Exp exp = isolateId((ExpComp) part, id);
 
                     if (exp != null) {
@@ -185,7 +294,9 @@ System.out.println("isolating " + expComp);
                 if (toReplace != null) {
                     List<BoolExp> boolExps = new ArrayList<>();
 
-                    for (BoolExp part : getBoolExps()) {
+                    for (BoolExp part : reducedAnd.getBoolExps()) {
+                        System.out.println("source is " + source);
+
                         if (part.equals(source)) {
                             boolExps.add(part);
 
@@ -213,21 +324,21 @@ System.out.println("isolating " + expComp);
                         boolExps.add(part);
                     }
 
-                    reduced = new BoolAnd();
+                    reducedAnd = new BoolAnd();
 
                     for (BoolExp boolExp : boolExps) {
-                        ((BoolAnd) reduced).addBoolExp(boolExp);
+                        reducedAnd.addBoolExp(boolExp);
                     }
                 }
             }
-        } while (!last.equals(reduced));
+        } while (!last.equals(reducedAnd));
 
-        reduced = reduced.reduce();
+        reduced = reducedAnd.reduce();
 
         reduced.order();
         System.out.println("return " + reduced);
         return reduced;
-    }
+    }*/
 
     @Override
     public void order() {

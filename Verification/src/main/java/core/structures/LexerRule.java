@@ -16,11 +16,7 @@ public class LexerRule implements Serializable {
 	@Override
 	public boolean equals(Object other) {
 		if (other instanceof LexerRule) {
-			if (!getText().equals(((LexerRule) other).getText())) return false;
-			if (isRegEx() != ((LexerRule) other).isRegEx()) return false;
-			if (!getRegEx().equals(((LexerRule) other).getRegEx())) return false;
-
-			return true;
+			return getText().equals(((LexerRule) other).getText()) && isRegEx() == ((LexerRule) other).isRegEx() && getRegEx().equals(((LexerRule) other).getRegEx());
 		}
 
 		return super.equals(other);

@@ -1,11 +1,10 @@
 package gui.hoare;
 
-import core.*;
-import core.Hoare.Executer.LoopAskInv_callback;
-import core.structures.semantics.SemanticNode;
-import core.structures.semantics.boolExp.HoareCond;
+import core.Hoare;
+import core.Lexer;
+import core.Parser;
 import core.structures.semantics.boolExp.BoolExp;
-import core.structures.semantics.prog.Prog;
+import core.structures.semantics.prog.HoareCond;
 import grammars.BoolExpGrammar;
 import gui.ExtendedCodeArea;
 import javafx.event.ActionEvent;
@@ -23,24 +22,28 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class LoopAskInvariantDialog extends HoareDialog implements Initializable {
+public class LoopAskInvDialog extends HoareDialog implements Initializable {
 	@FXML
 	private CodeArea _codeArea_invariant;
 	@FXML
 	private Button _button_suggest;
 
-	private final Hoare.Executer.wlp_loop _loop;
-	private final LoopAskInv_callback _callback;
+	private final Hoare.wlp_loop _loop;
+	private final Callback _callback;
 
 	private ExtendedCodeArea _extendedCodeArea_invariant;
-	
-	public LoopAskInvariantDialog(@Nonnull Hoare.Executer.wlp_loop loop, @Nonnull LoopAskInv_callback callback) throws IOException {
+
+	public interface Callback {
+		void result(HoareCond invariant) throws Lexer.LexerException, Hoare.HoareException, Parser.ParserException, IOException;
+	}
+
+	public LoopAskInvDialog(@Nonnull Hoare.wlp_loop loop, @Nonnull Callback callback) throws IOException {
 		super(loop._whileNode, null, loop._postCond);
 
 		_loop = loop;
 		_callback = callback;
 
-		inflate(new File("LoopAskInvariantDialog.fxml"));
+		inflate(new File("LoopAskInvDialog.fxml"));
 	}
 
 	@Override
@@ -52,7 +55,7 @@ public class LoopAskInvariantDialog extends HoareDialog implements Initializable
 	public String getRationale() {
 		RationaleBuilder sb = new RationaleBuilder();
 
-		sb.addProse("using Hoare rule 5 (loop): {p" + StringUtil.bool_and + "B} S {p} " + StringUtil.bool_impl + " {p} while B do S od {p" + StringUtil.bool_and + StringUtil.bool_neg + "B}");
+		sb.addProse("using Hoare rule 5 (loop): {p" + StringUtil.bool_and + "B} S {p} " + StringUtil.bool_impl_meta + " {p} while B do S od {p" + StringUtil.bool_and + StringUtil.bool_neg + "B}");
 		sb.addProse("p" + StringUtil.bool_and + StringUtil.bool_neg + "B" + StringUtil.bool_impl + "q");
 
 		sb.addParam("B", styleNode(_loop._whileNode.getBoolExp()));
@@ -69,28 +72,22 @@ public class LoopAskInvariantDialog extends HoareDialog implements Initializable
 		try {
 			super.initialize(url, resources);
 
-			_extendedCodeArea_invariant = new ExtendedCodeArea(_codeArea_invariant, null, null, ExtendedCodeArea.Type.CODE);
+			_extendedCodeArea_invariant = new ExtendedCodeArea(_codeArea_invariant);
+
+			_extendedCodeArea_invariant.setParser(new Parser(BoolExpGrammar.getInstance()));
 
 			_button_suggest.setOnAction(new EventHandler<ActionEvent>() {
 				@Override
 				public void handle(ActionEvent event) {
 					try {
-						try {
-							_extendedCodeArea_invariant.setErrorPos(null);
+						BoolExp boolExp = (BoolExp) _extendedCodeArea_invariant.getParsing();
 
-							HoareCond invariant = new HoareCond((BoolExp) SemanticNode.fromString(_codeArea_invariant.getText(), BoolExpGrammar.getInstance()));
+						if (boolExp != null) {
+							HoareCond invariant = new HoareCond(boolExp);
 
 							close();
 
 							_callback.result(invariant);
-						} catch (Lexer.LexerException e) {
-							_extendedCodeArea_invariant.setErrorPos(e.getCurPos(), true);
-						} catch (Parser.ParserException e) {
-							Token token = e.getToken();
-
-							int pos = (token != null) ? token.getPos() : 0;
-
-							_extendedCodeArea_invariant.setErrorPos(pos, true);
 						}
 					} catch (Exception e) {
 						ErrorUtil.logEFX(e);

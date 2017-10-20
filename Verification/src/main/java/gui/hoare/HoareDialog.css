@@ -142,3 +142,20 @@ body {
 .table-row-cell:odd:filled:selected {
   -fx-background: -fx-control-inner-background-alt ;
 }
+
+.table-cell-fixed {
+    -fx-background-color: #EEFFEE;
+}
+
+.center {
+    -fx-alignment: center;
+    -fx-text-alignment: center;
+}
+
+.titled-pane > .title {
+    -fx-background-color: lightblue;
+}
+
+.titled-pane > *.content {
+    -fx-background-color: #EEEEFF;
+}

@@ -1,8 +1,6 @@
 package core.structures.semantics.exp;
 
 import core.structures.semantics.SemanticNode;
-import core.structures.semantics.prog.Comp;
-import core.structures.semantics.prog.Prog;
 import util.IOUtil;
 
 import javax.annotation.Nonnull;

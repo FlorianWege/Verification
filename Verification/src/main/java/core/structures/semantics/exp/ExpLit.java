@@ -1,6 +1,7 @@
 package core.structures.semantics.exp;
 
 import core.structures.semantics.SemanticNode;
+import org.nevec.rjm.BigDecimalMath;
 import util.IOUtil;
 
 import javax.annotation.Nonnull;
@@ -45,11 +46,11 @@ public class ExpLit extends ExpElem {
         applyGcd();
     }
 
-    public ExpLit(@Nonnull int num, @Nonnull int denom) {
+    public ExpLit(@Nonnull Integer num, @Nonnull Integer denom) {
         this(BigInteger.valueOf(num), BigInteger.valueOf(denom));
     }
 
-    public ExpLit(@Nonnull int num) {
+    public ExpLit(@Nonnull Integer num) {
         this(num, 1);
     }
 
@@ -61,9 +62,8 @@ public class ExpLit extends ExpElem {
     }
 
     public boolean isNeg() {
-        boolean ret = false;
+        boolean ret = (_num.compareTo(BigInteger.ZERO) < 0);
 
-        if (_num.compareTo(BigInteger.ZERO) < 0) ret = !ret;
         if (_denom.compareTo(BigInteger.ZERO) < 0) ret = !ret;
 
         return ret;
@@ -102,12 +102,48 @@ public class ExpLit extends ExpElem {
         mult(new ExpLit(other._denom, other._num));
     }
 
+    private BigDecimal pow(BigDecimal base, BigDecimal exp) {
+        System.out.println(base + "->" + exp);
+        return BigDecimalMath.pow(base, exp);
+    }
+
     public void pow(@Nonnull ExpLit exponent) {
-        int exp = exponent._num.divide(exponent._denom).intValue();
+        exponent = ((ExpLit) exponent.copy());
+
+        if (exponent.isNeg()) {
+            exponent.neg();
+            inv();
+        }
+
+        exponent.applyGcd();
+
+        if (!exponent._denom.equals(BigInteger.ONE)) {
+            BigDecimal dec_base = new BigDecimal(_num).divide(new BigDecimal(_denom));
+            BigDecimal dec_exponent = new BigDecimal(exponent._num).divide(new BigDecimal(exponent._denom));
+
+            BigDecimal result = pow(dec_base, dec_exponent);
+
+            BigInteger front = result.toBigInteger();
+            BigDecimal remainder = result.remainder(BigDecimal.ONE);
+
+            BigInteger mult = BigInteger.valueOf(10).pow(remainder.toString().length());
+
+            BigInteger remainderI = remainder.multiply(new BigDecimal(mult)).toBigInteger();
+
+            _num = front.multiply(mult).add(remainderI);
+            _denom = mult;
+
+            applyGcd();
+
+            return;
+        }
+
+        //TODO
+        int exp = exponent._num.intValue();
 
         _num = _num.pow(exp);
         _denom = _denom.pow(exp);
-    };
+    }
 
     public void fact() {
         applyGcd();

@@ -1,6 +1,8 @@
 package gui.hoare;
 
 import core.Hoare;
+import core.Lexer;
+import core.Parser;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -19,10 +21,14 @@ public class CompNextDialog extends HoareDialog implements Initializable {
 	@FXML
 	private Button _button_continue;
 
-	private final Hoare.Executer.wlp_comp _comp;
-	private final Hoare.Executer.CompNext_callback _callback;
-	
-	public CompNextDialog(@Nonnull Hoare.Executer.wlp_comp comp, @Nonnull Hoare.Executer.CompNext_callback callback) throws IOException {
+	private final Hoare.wlp_comp _comp;
+	private final Callback _callback;
+
+	public interface Callback {
+		void result() throws Lexer.LexerException, Hoare.HoareException, Parser.ParserException, IOException;
+	}
+
+	public CompNextDialog(@Nonnull Hoare.wlp_comp comp, @Nonnull Callback callback) throws IOException {
 		super(comp._compNode, null, comp._postCond);
 
 		_comp = comp;
@@ -40,7 +46,7 @@ public class CompNextDialog extends HoareDialog implements Initializable {
 	public String getRationale() {
 		RationaleBuilder sb = new RationaleBuilder();
 
-		sb.addProse("using Hoare rule 3 (composition): {p} S<sub>i</sub> {r<sub>i+1</sub>}, {r<sub>i+1</sub>} S<sub>i+1</sub> {q} " + StringUtil.bool_impl + " {p} S<sub>i</sub>; S<sub>i+1</sub> {q}");
+		sb.addProse("using Hoare rule 3 (composition): {p} S<sub>i</sub> {r<sub>i+1</sub>}, {r<sub>i+1</sub>} S<sub>i+1</sub> {q} " + StringUtil.bool_impl_meta + " {p} S<sub>i</sub>; S<sub>i+1</sub> {q}");
 
 		for (int i = 0; i < _comp._compNode.getChildren().size(); i++) {
 			sb.addParam("S<sub>" + (i + 1) + "</sub>", styleNode(_comp._compNode.getChildren().get(i)));

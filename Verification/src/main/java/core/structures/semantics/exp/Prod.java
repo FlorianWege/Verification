@@ -1,13 +1,9 @@
 package core.structures.semantics.exp;
 
-import core.structures.Terminal;
 import core.structures.semantics.SemanticNode;
-import javafx.util.Pair;
 import util.IOUtil;
-import util.StringUtil;
 
 import javax.annotation.Nonnull;
-import java.math.BigInteger;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
@@ -74,11 +70,6 @@ public class Prod extends Exp {
         return replaceFunc.apply(this);
     }
 
-    private static int _nestDepth = -1;
-    private static void print(String s) {
-        System.out.println(StringUtil.repeat("\t", _nestDepth) + s);
-    }
-
     public @Nonnull ExpLit getLit() {
         ExpLit lit = new ExpLit(1);
 
@@ -112,9 +103,44 @@ public class Prod extends Exp {
         return lit;
     }
 
+    public @Nonnull Exp getCoeff(Set<Id> ids) {
+        Prod coeff = new Prod();
+
+        for (Exp part : getExps()) {
+            if (!part.findType(Id.class).containsAll(ids)) {
+                coeff.addExp(part);
+            }
+        }
+
+        if (coeff.getExps().isEmpty()) return new ExpLit(1);
+        if (coeff.getExps().size() == 1) return coeff.getExps().get(0);
+
+        return coeff;
+    }
+
+    public @Nonnull Exp cutCoeff(Set<Id> ids) {
+        Exp coeff = getCoeff(ids);
+
+        List<Exp> exps = getExps();
+
+        exps.removeIf(new Predicate<Exp>() {
+            @Override
+            public boolean test(Exp exp) {
+                return !exp.findType(Id.class).containsAll(ids);
+            }
+        });
+
+        _children.clear();
+
+        for (Exp exp : exps) {
+            addExp(exp);
+        }
+
+        return coeff;
+    }
+
     @Override
     public Exp reduce() {
-        _nestDepth++;
         List<Exp> exps = getExps();
 
         exps.replaceAll(new UnaryOperator<Exp>() {
@@ -125,7 +151,7 @@ public class Prod extends Exp {
         });
 
         for (Exp exp : exps) {
-            if (exp instanceof ExpLit && ((ExpLit) exp).equals(new ExpLit(0))) return new ExpLit(0);
+            if (exp instanceof ExpLit && exp.equals(new ExpLit(0))) return new ExpLit(0);
         }
 
         //distributivity
@@ -164,14 +190,12 @@ public class Prod extends Exp {
         Map<Exp, Pow> idMap = new LinkedHashMap<>();
 
         for (Exp exp : newProd.getExps()) {
-            if (exp instanceof ExpInv) exp = new Pow(((ExpInv) exp).getExp(), new ExpLit(-1)).reduce();
-
             Pow pow = !(exp instanceof Pow) ? new Pow(exp, new ExpLit(1)) : (Pow) exp;
 
             Exp base = pow.getBase();
 
             if (idMap.containsKey(base)) pow = new Pow(base, new Sum(idMap.get(base).getExponent(), pow.getExponent()).reduce());
-            //System.out.println("store " + pow.getContentString() + " at " + base.getContentString());
+
             idMap.put(base, pow);
         }
 
@@ -211,7 +235,7 @@ public class Prod extends Exp {
         if (newProd.getExps().isEmpty()) return new ExpLit(1);
 
         if (newProd.getExps().size() == 1) return newProd.getExps().get(0);
-_nestDepth--;
+
         return newProd;
     }
 

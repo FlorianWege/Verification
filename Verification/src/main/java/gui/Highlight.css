@@ -7,3 +7,11 @@
 	-fx-fill: red;
 	-fx-font-weight: bold;
 }
+
+.parsing-ok {
+    -fx-background-color: #EEFFEE;
+}
+
+.parsing-nok {
+    -fx-background-color: #FFEEEE;
+}
