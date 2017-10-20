@@ -1,0 +1,68 @@
+\Tree[
+	.exp
+	[
+		.sum
+		[
+			.prod
+			[
+				.pow
+				[
+					.fact
+					[
+						.exp\textunderscore elem
+						id \treeterminal{A}
+						[
+							.param\textunderscore list
+							\treeterminal{\textepsilon{}}
+						]
+					]
+					[
+						.fact'
+						\treeterminal{\textepsilon{}}
+					]
+				]
+				[
+					.pow'
+					\treeterminal{\textepsilon{}}
+				]
+			]
+			[
+				.prod'
+				\treeterminal{\textepsilon{}}
+			]
+		]
+		[
+			.sum'
+			OP\textunderscore PLUS \treeterminal{+}
+			[
+				.prod
+				[
+					.pow
+					[
+						.fact
+						[
+							.exp\textunderscore elem
+							num \treeterminal{1}
+						]
+						[
+							.fact'
+							\treeterminal{\textepsilon{}}
+						]
+					]
+					[
+						.pow'
+						\treeterminal{\textepsilon{}}
+					]
+				]
+				[
+					.prod'
+					\treeterminal{\textepsilon{}}
+				]
+			]
+			[
+				.sum'
+				\treeterminal{\textepsilon{}}
+			]
+		]
+	]
+]

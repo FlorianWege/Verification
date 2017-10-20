@@ -1,0 +1,18 @@
+\begin{grammarEx}
+	<exp> ::= <exp> \lit{+} <factor>
+	\alt <exp> \lit{-} <factor>
+	\alt <factor>
+
+	<factor> ::= <factor> \lit{*} <pow>
+	\alt <factor> \lit{/} <pow>
+	\alt <pow>
+
+	<pow> ::= <factorial> \lit{\^{}} <pow>
+	\alt <factorial>
+
+	<factorial> ::= <exp\textunderscore elem> \lit{!}
+	\alt <exp\textunderscore elem>
+
+	<exp\textunderscore elem> ::= \lit{id}
+	\alt \lit{num}
+\end{grammarEx}

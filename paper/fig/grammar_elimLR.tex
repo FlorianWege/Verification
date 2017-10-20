@@ -1,0 +1,24 @@
+\begin{center}
+	\begin{tabular}{p{5cm} | p{5cm}}
+		left recursion
+		&
+		right recursion
+		\\
+		\hline
+		
+		\begin{grammarEx}
+			<A> ::= <A> \textcolor{red}{\textalpha}
+			\alt \textcolor{blue}{\textbeta}
+		\end{grammarEx}
+		
+		&
+		
+		\begin{grammarEx}
+			<A> ::= \textcolor{blue}{\textbeta} <A'>
+			
+			<A'> ::= \textcolor{red}{\textalpha} <A'>
+			\alt \textepsilon
+		\end{grammarEx}
+		
+	\end{tabular}
+\end{center}

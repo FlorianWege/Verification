@@ -1,0 +1,37 @@
+\begin{tabular}{c c}
+\Tree[
+	.exp
+	 [
+		.exp
+		 [
+			.exp \treeterminal{id}
+		 ]
+		 + 
+		[
+			.exp \treeterminal{id}
+		 ]
+	 ]
+	 *
+	 [
+		.exp \treeterminal{id}
+	 ]
+]
+&
+\Tree[
+	.exp
+	 [
+		.exp \treeterminal{id}
+	 ]
+	 +
+	 [
+		.exp
+		 [
+			.exp \treeterminal{id}
+		 ]
+		 * 
+		[
+			.exp \treeterminal{id}
+		 ]
+	 ]
+]
+\end{tabular}

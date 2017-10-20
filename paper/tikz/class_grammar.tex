@@ -1,0 +1,24 @@
+\begin{scaletikzpicturetowidth}{\textwidth}
+\begin{tikzpicture}[scale=\tikzscale]
+	\begin{umlpackage}{Grammar}
+		\umlclass[x=11, y=0, type=abstract]{Symbol}{ String : key }{}
+		
+		\umlclass[x=6, y=-3]{ParserRule}{ symbols : List<Symbol>  }{}
+		\umlclass[x=8,y=-6]{NonTerminal}{ rules : Set<ParserRule>  }{}
+		\umlclass[x=14,y=-6]{Terminal}{ rules : Set<LexerRule> }{}
+		\umlclass[x=18, y=-3]{LexerRule}{ exp : String \\ isRegex : bool }{}
+		
+		\umlclass[x=11, y=-10]{Grammar}{ nonTerminals : Set<NonTerminal> \\ terminals : Set<Terminal> }{}
+		
+		\umlinherit[geometry=-|]{Terminal}{Symbol}
+		\umlinherit[geometry=-|]{NonTerminal}{Symbol}
+		
+		\umlcompo[geometry=-|, mult=*, pos=1.7]{Grammar}{NonTerminal}
+		\umlcompo[geometry=-|, mult=*, pos=1.7]{Grammar}{Terminal}
+		\umlcompo[geometry=-|, mult=*, pos=1.7]{Terminal}{LexerRule}
+		\umlcompo[geometry=-|, mult=*, pos=1.7]{NonTerminal}{ParserRule}
+
+		\umlaggreg[pos=0.8, mult=*]{ParserRule}{Symbol}
+	\end{umlpackage}
+\end{tikzpicture}
+\end{scaletikzpicturetowidth}

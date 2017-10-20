@@ -1,0 +1,253 @@
+\documentclass[12pt,american,english, pointlessnumbers, abstracton, headsepline]{scrreprt}
+
+\renewcommand{\familydefault}{\sfdefault}
+
+%----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+% encoding
+%----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+
+\usepackage{geometry}
+
+\geometry{verbose,tmargin=2.5cm,bmargin=2.5cm}
+\pagestyle{plain}
+\setlength{\parskip}{\medskipamount}
+% \setlength{\parindent}{0pt}
+
+\usepackage{color}
+\usepackage{xcolor}
+\usepackage[english]{babel}
+\usepackage{array}
+\usepackage{varioref}
+\usepackage{textcomp}
+\usepackage{multirow}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{graphicx}
+\usepackage{setspace}
+\usepackage{nomencl}
+\usepackage{tkz-graph}
+\usepackage[hyphens]{url}
+\usepackage{listings}
+\usepackage{mdframed}
+\usepackage{float}
+\usepackage{alltt}
+\usepackage[nounderscore]{syntax}
+\usepackage{slashbox}
+
+%----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+% nicer tables
+%----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+\usepackage{booktabs}
+\newcommand{\ra}[1]{\renewcommand{\arraystretch}{#1}}
+
+%\usepackage[acronym]{glossaries}
+
+%\newglossary{abbrev}{abs}{abo}{List of Abbreviations}
+%
+%\newglossaryentry{MS}{
+%    name        = MS ,
+%    description = mass spectroscopy ,
+%    type        = abbrev
+%}
+
+%\makeglossaries
+
+%----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+% syntax trees
+%----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+\usepackage{qtree}
+
+\setlength{\nomlabelwidth}{.20\hsize}
+\renewcommand{\nomlabel}[1]{#1 \dotfill}
+
+%\setlength{\nomitemsep}{-\parsep}
+
+\makenomenclature
+
+\setstretch{1.2}
+
+\makeatletter
+
+% Because html converters don't know tabularnewline
+\providecommand{\tabularnewline}{\\}
+
+% verschieden Symbole, Zeichen wie (c), �
+\usepackage{textcomp,units}
+
+%  more space between table and subtitle
+\usepackage[tableposition=top]{caption}
+\captionsetup[table]{skip=10pt}
+
+%----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+% big chapter number indicator
+%----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+\makeatletter
+ \renewcommand*{\chapterformat}{% 
+   \begingroup
+     \setlength{\unitlength}{1mm}% 
+     \begin{picture}(10,10)(0,5)
+       \setlength{\fboxsep}{0pt}
+       %\put(0,0){\framebox(20,40){}}% 
+       %\put(0,20){\makebox(20,20){\rule{20\unitlength}{20\unitlength}}}% 
+       \put(10,15){\line(1,0){\dimexpr 
+           \textwidth-20\unitlength\relax\@gobble}}% 
+       \put(0,0){\makebox(10,20)[r]{% 
+           \fontsize{28\unitlength}{28\unitlength}\selectfont\thechapter 
+           \kern-.05em% Ziffer in der Zeichenzelle nach rechts schieben 
+         }}% 
+       \put(10,15){\makebox(\dimexpr 
+           \textwidth-20\unitlength\relax\@gobble,\ht\strutbox\@gobble)[l]{% 
+             \ \normalsize\color{black}\chapapp~\thechapter\autodot 
+           }}% 
+     \end{picture} % <-- Leerzeichen ist hier beabsichtigt! 
+   \endgroup 
+}
+
+\usepackage[automark]{scrpage2}
+%\automark[chapter]{chapter}
+\clearscrheadfoot
+\ohead{\\\headmark}
+\ihead{\includegraphics[scale=0.15]{logo.jpg}}%\pagemark}
+\ofoot[\pagemark]{\pagemark}
+
+
+% summary and abstract (english) on one page
+\renewenvironment{abstract}{
+    \@beginparpenalty\@lowpenalty
+      \begin{center}
+        \normalfont\sectfont\nobreak\abstractname
+        \@endparpenalty\@M
+      \end{center}
+}{
+    \par
+}
+
+%----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+% appearance optimization (commented out for faster compilation)
+%----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+% optimization of appearance
+\usepackage{microtype}
+\usepackage{ %a4wide,
+            ellipsis, fixltx2e, mparhack,
+            booktabs, longtable
+} 
+
+\usepackage{ifpdf} % part of the hyperref bundle
+\ifpdf
+	%set fonts for nicer pdf view
+	 \IfFileExists{lmodern.sty}{\usepackage{lmodern}}
+	  {\usepackage[scaled=0.92]{helvet}
+	    \usepackage{mathptmx}
+	    \usepackage{courier} }
+\fi
+
+ % the pages of the TOC are numbered roman
+ % and a pdf-bookmark for the TOC is added
+ \pagenumbering{roman}
+ \let\myTOC\tableofcontents
+ \renewcommand\tableofcontents{
+   %\pdfbookmark[1]{Contents}{}
+   \myTOC
+   \clearpage
+   \pagenumbering{arabic}}
+
+% cross refs as links
+ \usepackage[colorlinks=true, bookmarks, bookmarksnumbered, bookmarksopen, bookmarksopenlevel=1,
+  linkcolor=black, citecolor=black, urlcolor=blue, filecolor=blue,
+  pdfpagelayout=OneColumn, pdfnewwindow=true,
+  pdfstartview=XYZ, plainpages=false, pdfpagelabels,
+  pdfauthor={LyX Team}, pdftex,
+  pdftitle={LyX's Figure, Table, Floats, Notes, and Boxes manual},
+  pdfsubject={LyX-documentation about figures, tables, floats, notes, and boxes},
+  pdfkeywords={LyX, Tables, Figures, Floats, Boxes, Notes}]{hyperref}
+
+% increased space between heading and table
+\newcommand{\@ldtable}{}
+\let\@ldtable\table
+\renewcommand{\table}{ %
+                 \setlength{\@tempdima}{\abovecaptionskip} %
+                 \setlength{\abovecaptionskip}{\belowcaptionskip} %
+                 \setlength{\belowcaptionskip}{\@tempdima} %
+                 \@ldtable}
+
+\renewcommand{\nomname}{Glossar}
+
+\addto\captionsenglish{
+  \renewcommand{\contentsname}
+    {Table of Contents}
+}
+
+%----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+% colors
+%----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+\definecolor{lightgray}{rgb}{0.8,0.8,0.8}
+
+\definecolor{mygreen}{rgb}{0, 0.6, 0}
+\definecolor{mygray}{rgb}{0.5, 0.5, 0.5}
+
+\definecolor{numberbg}{rgb}{0.75, 0.75, 0.75}
+\definecolor{numbercolor}{rgb}{0, 0, 0}
+\definecolor{ballblue}{rgb}{0.13, 0.67, 0.8}
+
+\AtBeginDocument{
+  \def\labelitemiii{\(\circ\)}
+}
+
+\makeatother
+
+\usepackage{listings}
+\addto\captionsamerican{\renewcommand{\lstlistingname}{Listing}}
+\addto\captionsenglish{\renewcommand{\lstlistingname}{Listing}}
+\renewcommand{\lstlistingname}{Listing}
+
+\makeindex
+
+%----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+% quotations
+%----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+\usepackage{epigraph}
+\setlength\epigraphwidth{8cm}
+\setlength\epigraphrule{0pt}
+
+\usepackage{etoolbox}
+
+%\makeatletter
+%\patchcmd{\epigraph}{\@epitext{#1}}{\itshape\@epitext{#1}}{}{}
+%\makeatother
+
+\newcommand{
+	\myquote
+}[2]{
+	\begin{mdframed}
+		\vspace*{\fill}
+		\epigraph{
+			``#1''
+		}{
+			---#2
+		}
+	\end{mdframed}
+}
+
+%----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+% listings
+%----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+\lstset{
+	numbers=left,
+	numbersep=8pt,
+	numberstyle=\small\color{numbercolor},
+	rulecolor=\color{numberbg},
+	commentstyle=\color{mygreen},
+	frame=single,
+	framesep=0.5mm,
+	framexleftmargin=15pt,
+	fillcolor=\color{ballblue},
+	tabsize=4,
+	keywordstyle=\color{blue},
+	morekeywords={*, SKIP, IF, THEN, ELSE, FI, WHILE, DO, OD},
+	captionpos=b,
+}
+
+%definitions
+\newtheorem{definition}{Definition}

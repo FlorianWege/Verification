@@ -1,0 +1,20 @@
+\begin{grammarEx}
+	<bool\textunderscore exp> ::= <bool\textunderscore or> 
+	
+	<bool\textunderscore or> ::= <bool\textunderscore and> <bool\textunderscore or'> 
+	
+	<bool\textunderscore or'> ::= \lit{\textbar\textbar} <bool\textunderscore and> <bool\textunderscore or'> 
+	\alt \lit{\textepsilon{}} 
+	
+	<bool\textunderscore and> ::= <bool\textunderscore neg> <bool\textunderscore and'> 
+	
+	<bool\textunderscore and'> ::= \lit{\&\&} <bool\textunderscore neg> <bool\textunderscore and'> 
+	\alt \lit{\textepsilon{}} 
+	
+	<bool\textunderscore neg> ::= <bool\textunderscore elementary> 
+	\alt \lit{~} <bool\textunderscore elementary> 
+	
+	<bool\textunderscore elementary> ::= <exp> \lit{\textless{}} <exp> 
+	\alt \lit{true} 
+	\alt \lit{[} <bool\textunderscore exp> \lit{]}
+\end{grammarEx}

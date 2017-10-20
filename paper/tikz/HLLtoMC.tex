@@ -1,0 +1,29 @@
+\begin{tikzpicture} 
+	\tikzset{state/.style={rectangle,draw=none,minimum height=0.5cm, minimum width=4cm},
+		}
+	\tikzset{sqr/.style={rectangle,fill=blue!20,draw,minimum height=0.75cm, minimum width=4cm,inner sep=5pt},
+		}
+
+	\node[state] (1) [] {High level language};
+	\node[sqr] (2) [below = 0.5cm of 1] {Preprocessor};
+	\node[state] (3) [below = 0.5cm of 2] {Pure HLL};
+	\node[sqr] (4) [below = 0.5cm of 3] {Compiler};
+	\node[state] (5) [below = 0.5cm of 4] {Assembly};
+	\node[sqr] (6) [below = 0.5cm of 5] {Assembler};
+	\node[state] (7) [below = 0.5cm of 6] {Relocatable machine code};
+	\node[sqr] (8) [below = 0.5cm of 7] {Loader/linker};
+	\node[state] (9) [below = 0.5cm of 8] {Absolute machine code};
+
+	\begin{scope}[>={Stealth[black]},
+				  every node/.style={fill=white,circle},
+				  every edge/.style={draw=black,very thick}]
+		\path [->] (1) edge (2);
+		\path [-] (2) edge (3);
+		\path [->] (3) edge (4);
+		\path [-] (4) edge (5);
+		\path [->] (5) edge (6);
+		\path [-] (6) edge (7);
+		\path [->] (7) edge (8);
+		\path [->] (8) edge (9);
+	\end{scope}
+\end{tikzpicture}

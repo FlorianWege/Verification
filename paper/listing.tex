@@ -1,0 +1,39 @@
+\input{preamble}
+
+\newenvironment{code}[1]{}{}
+
+%\newenvironment{code}[1]
+%	{\begin{frame}}
+%	{\end{frame}}
+%	{\begin{lstlisting}[caption={#1},captionpos=b]}
+%	{\end{lstlisting}}
+
+\begin{document}
+		\begin{lstlisting}[caption={Hello world}]
+			x=x+1;
+			IF x>10 THEN
+				x=x+10
+			ELSE
+				x=x-5
+			FI;
+			x=x+1;
+			WHILE x>0 DO
+				x=x+3
+			OD;
+			x=x+1
+		\end{lstlisting}
+
+		\begin{lstlisting}[caption={Hello world}]
+			x=x+1;
+			IF x>10 THEN
+				x=x+10
+			ELSE
+				x=x-5
+			FI;
+			x=x+1;
+			WHILE x>0 DO
+				x=x+3
+			OD;
+			x=x+1
+		\end{lstlisting}
+\end{document}

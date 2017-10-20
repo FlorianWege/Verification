@@ -1,0 +1,16 @@
+\input{preamble}
+
+\begin{document}
+	\begin{tikzpicture}
+		\GraphInit[vstyle = Shade]
+		%\tikzset{LabelStyle/.style = {rectangle, rounded corners, draw, minimum width = 2em, fill = yellow!50, text = red, font = \bfseries}}
+		\tikzset{VertexStyle/.append style = {inner sep=2pt, font=\Large\bfseries}}
+		\tikzset{EdgeStyle/.append style = {->, bend left}}
+		\SetGraphUnit{5}
+		\Vertex{Specification}
+		\WE(Specification){Client}
+		\EA(Specification){Model}
+		\Edge[label=still unsafe](Client)(Specification)
+		\Edge[label=to be verified](Model)(Specification)
+	\end{tikzpicture}
+\end{document}

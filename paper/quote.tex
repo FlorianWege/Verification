@@ -1,0 +1,34 @@
+\documentclass[]{article}
+
+\usepackage{epigraph}
+
+\setlength\epigraphwidth{18cm}
+\setlength\epigraphrule{2pt}
+
+\usepackage{etoolbox}
+
+\newcommand{
+	\myquote
+}[2]{
+	\begin{center}
+		#1
+		\par
+		---#2
+	\end{center}
+}
+
+\newcommand{
+	\myquotea
+}[2]{
+%	\begin{center}
+		\epigraph{
+			``#1"
+		}{
+			---#2
+		}
+%	\end{center}
+}
+
+\begin{document}
+	\myquote{Program testing can best show the presence of errors but never their absence.}{Edsger W. Dijkstra}
+\end{document}

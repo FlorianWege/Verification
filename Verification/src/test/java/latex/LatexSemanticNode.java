@@ -22,6 +22,7 @@ public class LatexSemanticNode extends LatexObject {
 
         for (SemanticNode child : _node.getChildren()) {
             //if (!(_node.getChildren().isEmpty())) {
+            
                 stream.println("[");
             //}
 

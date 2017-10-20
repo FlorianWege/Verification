@@ -1,0 +1,20 @@
+\begin{tikzpicture}
+	\begin{umlpackage}{Parsing}			
+		\umlclass[x=14,y=0]{Terminal}{ rules : Set<LexerRule> }{}
+		\umlclass[x=14,y=-3]{Token}{ terminal : Terminal \\ int : line }{}
+		
+		\umlclass[x=5, y=0]{Grammar}{ nonTerminals : Set<NonTerminal> \\ terminals : Set<Terminal> }{}
+		\umlclass[x=5, y=-4]{ParserTable}{ map : Map<Pair<\\ NonTerminal, Terminal>\\ , ParserRule> }{}
+
+		\umlclass[x=5, y=-8]{Parser}{}{ parse(Grammar grammar,\\ List<Token>) : SyntaxTree }
+		\umlclass[x=10, y=-11]{SyntaxTree}{}{}
+		\umlclass[x=14, y=-8]{Lexer}{}{ tokenize(grammar: Grammar,\\ input : String) : List<Token> }
+		
+		\umldep[geometry=--, pos=1.7,stereo=create]{Lexer}{Token}
+		\umldep[geometry=--, pos=1.7,stereo=use]{Parser}{ParserTable}
+		\umldep[geometry=--, pos=1.7,stereo=use]{Parser}{Token}
+		\umldep[geometry=|-, pos=1.7,stereo=create]{Parser}{SyntaxTree}
+		\umlcompo[geometry=--, pos=1.7]{Grammar}{ParserTable}
+		\umlaggreg[geometry=--, pos=1.7]{Token}{Terminal}
+	\end{umlpackage}
+\end{tikzpicture}

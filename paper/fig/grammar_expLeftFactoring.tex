@@ -1,0 +1,19 @@
+\begin{tabular}{p{5cm} p{5cm}}
+	
+	\begin{grammarEx}
+		<A> ::= \textcolor{OliveGreen}{\textalpha{}} \textcolor{Fuchsia}{\textbeta{} \textsubscript{1}}
+		\alt \textcolor{OliveGreen}{\textalpha{}} \textcolor{Fuchsia}{\textbeta \textsubscript{2}}
+		\alt ...
+	\end{grammarEx}
+	
+	&
+	
+	\begin{grammarEx}
+		<A> ::= \textcolor{OliveGreen}{\textalpha{}} <A'>
+		
+		<A'> ::= \textcolor{Fuchsia}{\textbeta \textsubscript{1}}
+		\alt \textcolor{Fuchsia}{\textbeta \textsubscript{2}}
+		\alt ...
+	\end{grammarEx}
+	
+\end{tabular}

@@ -1,0 +1,37 @@
+\include{preamble}
+
+\shortverb{\|}
+\setlength{\grammarindent}{2cm}
+\newcommand{\indalt}[1][2]{\\\hspace*{#1em}\textbar\quad}
+
+\begin{document}
+
+\begin{center}
+	\begin{minipage}{\linewidth}
+%		\begin{figure}
+			\begin{grammar}
+				<exp> ::= <exp> + <exp>
+				\alt id
+			\end{grammar}
+			
+			%\caption{Two-sided recursive grammar}
+			%\label{fig:grammar_amb}
+%		\end{figure}
+	\end{minipage}
+\end{center}
+
+\begin{center}
+  \begin{minipage}{0.8\linewidth}
+    \begin{grammar}
+      <stmt> ::= <stmt>; <stmt> | \textbf{skip} | $v := $ <expr>
+      \indalt \textbf{input} $\vec{v}$ | \textbf{output} $\vec{v}$
+      \indalt[4] \textbf{if} <expr> \textbf{then} <stmt> \textbf{else} <stmt>
+      \indalt \textbf{while} <expr> <stmt>
+
+      <expr> ::= $v$ | \textbf{tt} | \textbf{ff} | <expr> $\lor$
+      <expr> | $\lnot$<expr>.
+    \end{grammar}
+  \end{minipage}
+\end{center}
+
+\end{document}

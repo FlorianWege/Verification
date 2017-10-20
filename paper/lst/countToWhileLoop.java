@@ -1,0 +1,10 @@
+for (INIT; CONDITION; INCREMENT) {
+	BODY;
+}
+
+//same as
+INIT;
+while (CONDITION) {
+	BODY;
+	INCREMENT;
+}

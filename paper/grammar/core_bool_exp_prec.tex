@@ -1,0 +1,14 @@
+\begin{grammarEx}
+	<bool\textunderscore exp> ::= <bool\textunderscore or>
+	
+	<bool\textunderscore or> ::= <bool\textunderscore and> \textbar{}\textbar{} <bool\textunderscore and>
+
+	<bool\textunderscore{}and> ::= <bool\textunderscore neg> \&\& <bool\textunderscore{}neg>
+
+	<bool\textunderscore neg> ::= $\neg{}$ <bool\textunderscore elem>
+	\alt <bool\textunderscore elem>
+
+	<bool\textunderscore elem> ::= <exp> \lit{comp} <exp>
+	\alt \lit{true}
+	\alt \lit{false}
+\end{grammarEx}

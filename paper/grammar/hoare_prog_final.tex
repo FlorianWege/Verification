@@ -1,0 +1,79 @@
+\begin{grammarEx}
+	<num> ::= [1-9][0-9]*
+	\alt 0
+	
+	<id> ::= [a-zA-Z][a-zA-Z0-9]*
+	
+	<exp> ::= <factor> <exp'> 
+	
+	<exp'> ::= \lit{+} <factor> <exp'> 
+	\alt \lit{-} <factor> <exp'> 
+	\alt \straightepsilon{} 
+	
+	<factor> ::= <pow> <factor'> 
+	
+	<factor'> ::= \lit{*} <pow> <factor'> 
+	\alt \lit{/} <pow> <factor'> 
+	\alt \straightepsilon{} 
+	
+	<pow> ::= <factorial> <pow'> 
+	
+	<pow'> ::= \lit{\^{}} <pow> 
+	\alt \straightepsilon{} 
+	
+	<factorial> ::= <exp\textunderscore elem> <factorial'> 
+	
+	<factorial'> ::= \lit{!} 
+	\alt \straightepsilon{} 
+	
+	<exp\textunderscore elem> ::= \lit{id} 
+	\alt \lit{num} 
+	\alt \lit{(} <exp> \lit{)} 
+	
+	<bool\textunderscore exp> ::= <bool\textunderscore or> 
+	
+	<bool\textunderscore or> ::= <bool\textunderscore and> <bool\textunderscore or'> 
+	
+	<bool\textunderscore or'> ::= \lit{\textbar\textbar} <bool\textunderscore and> <bool\textunderscore or'> 
+	\alt \straightepsilon{} 
+	
+	<bool\textunderscore and> ::= <bool\textunderscore neg> <bool\textunderscore and'> 
+	
+	<bool\textunderscore and'> ::= \lit{\&\&} <bool\textunderscore neg> <bool\textunderscore and'> 
+	\alt \straightepsilon{} 
+	
+	<bool\textunderscore neg> ::= <bool\textunderscore elem> 
+	\alt \lit{\textasciitilde{}} <bool\textunderscore elem> 
+	
+	<bool\textunderscore elem> ::= <exp> \lit{\textless{}} <exp> 
+	\alt \lit{true} 
+	\alt \lit{[} <bool\textunderscore exp> \lit{]} 
+	
+	<*prog> ::= <skip> <prog'> 
+	\alt <assign> <prog'> 
+	\alt <selection> <prog'> 
+	\alt <while> <prog'> 
+	\alt <hoare\textunderscore block> <prog'> 
+	
+	<prog'> ::= \lit{;} <prog> 
+	\alt \straightepsilon{} 
+	
+	<skip> ::= \lit{SKIP} 
+	
+	<assign> ::= \lit{id} \lit{=} <exp> 
+	
+	<selection> ::= \lit{IF} <bool\textunderscore exp> \lit{THEN} <prog> <selection\textunderscore else> \lit{FI} 
+	
+	<selection\textunderscore else> ::= \lit{ELSE} <prog> 
+	\alt \straightepsilon{} 
+	
+	<while> ::= \lit{WHILE} <bool\textunderscore exp> \lit{DO} <prog> \lit{OD} 
+	
+	<hoare\textunderscore exp> ::= \lit{\{} <bool\textunderscore exp> \lit{\}} 
+	
+	<hoare\textunderscore pre> ::= \lit{PRE} <hoare\textunderscore exp> 
+	
+	<hoare\textunderscore post> ::= \lit{POST} <hoare\textunderscore exp> 
+	
+	<hoare\textunderscore block> ::= <hoare\textunderscore pre> <prog> <hoare\textunderscore post> 
+\end{grammarEx}

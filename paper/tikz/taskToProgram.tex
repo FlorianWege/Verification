@@ -1,0 +1,21 @@
+\begin{tikzpicture}
+	\node[main node] (1) {$Intention$};
+	\node[main node] (3) [right = 3cm of 1] {$Specification$};
+	\node[main node] (5) [right = 3cm of 3] {$Program$};
+
+	\begin{scope}[>={Stealth[black]},
+				  every node/.style={fill=white,circle},
+				  every edge/.style={draw=red,very thick}]
+		\path [->] (1) edge node {$unsafe$} (3);
+	\end{scope}
+	\begin{scope}[>={Stealth[black]},
+			  every node/.style={fill=white,circle},
+			  every edge/.style={draw=green,very thick}]
+		\path [->] (3) edge node {$safe$} (5);
+	\end{scope}
+	\begin{scope}[>={Stealth[black]},
+				  every node/.style={fill=white,circle},
+				  every edge/.style={draw=red,very thick}]
+		\path [->] (1) edge[bend right=60] node {$arbitrary$} (5);
+	\end{scope}
+\end{tikzpicture}

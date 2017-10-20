@@ -1,0 +1,56 @@
+http://wiki.c2.com/?EmptyYourCup
+http://wiki.c2.com/?EwDijkstra
+http://wiki.c2.com/?EwDijkstraQuotes
+
+"Program testing can best show the presence of errors but never their absence."
+
+"Sure there is. Computers are a tool and an inspiration, but they aren't the real subject matter of Computer Science as practiced by EwDijkstra."
+
+"Arrogance in computer science is measured in nano-Dijkstraas"
+
+http://www.informit.com/articles/article.aspx?p=1187967&seqNum=2
+
+http://wiki.c2.com/?OperationalReasoning
+http://wiki.c2.com/?ProofCarryingCode
+http://wiki.c2.com/?ProofAnnotationsForBubbleSort
+http://wiki.c2.com/?CowboyCoder
+
+https://de.wikipedia.org/wiki/Fehlerquotient
+https://de.wikipedia.org/wiki/Reinraum-Implementierung
+https://de.wikipedia.org/wiki/Verifizierung
+
+https://www.cl.cam.ac.uk/teaching/1516/HLog+ModC/hlmc.pdf
+http://www.inf.usi.ch/faculty/soule/teaching/2015-fall/netpl/lecture04b-spin.pdf
+https://www.cl.cam.ac.uk/teaching/1516/HLog+ModC/materials.html
+
+https://www.key-project.org/applications/program-verification/
+
+https://books.google.de/books?id=xpT6AQAAQBAJ&printsec=frontcover&dq=%22Design+Concepts+in+Programming+Languages%22&hl=de&sa=X&ved=0ahUKEwi24ZrknIHVAhVFXBQKHVvyB2AQ6AEIIzAA#v=onepage&q&f=false
+
+“I conclude that there are two ways of constructing a software design: One way is to make it so simple that there are obviously no deficiencies and the other way is to make it so complicated that there are no obvious deficiencies. The first method is far more difficult.”
+
+http://www.cs.ncl.ac.uk/research/pubs/trs/papers/1441.pdf
+https://de.wikipedia.org/wiki/Tony_Hoare
+
+http://www.npr.org/sections/ed/2016/01/12/462698966/the-president-wants-every-student-to-learn-computer-science-how-would-that-work
+Alfred Thompson, high school computer science teacher: "At least once a semester I hear some kid yell, 'Wow! This is like magic!' and that really motivates them."
+
+http://code.makery.ch/blog/javafx-dialogs-official/
+
+https://stackoverflow.com/questions/2842809/lexers-vs-parsers
+
+https://www.slideshare.net/dasprid/about-tokens-and-lexemes
+
+http://pages.cs.wisc.edu/~fischer/cs536.s15/lectures/L9.4up.pdf
+
+https://en.wikipedia.org/wiki/Model_checking
+
+https://en.wikipedia.org/wiki/Shape_analysis_(program_analysis)
+
+http://www.cs.cmu.edu/~crary/819-f09/Hoare69.pdf
+
+https://userpages.uni-koblenz.de/~sofronie/logik-ss-2012/slides/pred-logik-06.pdf
+
+https://en.wikipedia.org/wiki/Formal_verification#Approaches
+
+https://en.wikipedia.org/wiki/Ambiguous_grammar#Recognizing_ambiguous_grammars

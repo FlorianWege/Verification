@@ -1,0 +1,66 @@
+\begin{thebibliography}{APdBO10}
+
+\bibitem[APdBO10]{apt2010verification}
+K.~Apt, A.~Pnueli, F.S. de~Boer, and E.R. Olderog.
+\newblock {\em Verification of Sequential and Concurrent Programs}.
+\newblock Texts in Computer Science. Springer London, 2010.
+\newblock URL: \url{https://books.google.de/books?id=9BGPVwLTkh4C}.
+
+\bibitem[Gri82]{GRIES1982207}
+David Gries.
+\newblock A note on a standard strategy for developing loop invariants and
+  loops.
+\newblock {\em Science of Computer Programming}, 2(3):207 -- 214, 1982.
+\newblock URL:
+  \url{http://www.sciencedirect.com/science/article/pii/0167642383900151},
+  \href {http://dx.doi.org/http://dx.doi.org/10.1016/0167-6423(83)90015-1}
+  {\path{doi:http://dx.doi.org/10.1016/0167-6423(83)90015-1}}.
+
+\bibitem[Kam16]{motivation_science}
+Anya Kamenetz.
+\newblock The president wants every student to learn computer science. how
+  would that work?
+\newblock
+  http://www.npr.org/sections/ed/2016/01/12/462698966/the-president-wants-every-student-to-learn-computer-science-how-would-that-work,
+  2016.
+
+\bibitem[Kle09]{kleuker2009formale}
+S.~Kleuker.
+\newblock {\em Formale Modelle der Softwareentwicklung: Model-Checking,
+  Verifikation, Analyse und Simulation}.
+\newblock Vieweg Studium. Vieweg+Teubner Verlag, 2009.
+\newblock URL: \url{https://books.google.de/books?id=Gql3pv5V85cC}.
+
+\bibitem[Pnu77]{Pnueli:1977:TLP:1382431.1382534}
+Amir Pnueli.
+\newblock The temporal logic of programs.
+\newblock In {\em Proceedings of the 18th Annual Symposium on Foundations of
+  Computer Science}, SFCS '77, pages 46--57, Washington, DC, USA, 1977. IEEE
+  Computer Society.
+\newblock URL: \url{http://dx.doi.org/10.1109/SFCS.1977.32}, \href
+  {http://dx.doi.org/10.1109/SFCS.1977.32} {\path{doi:10.1109/SFCS.1977.32}}.
+
+\bibitem[Rav17]{gate_compiler_design}
+Ravindrababu Ravula.
+\newblock Compiler design online lectures.
+\newblock
+  https://www.youtube.com/playlist?list=PLEbnTDJUr\_IcPtUXFy2b1sGRPsLFMghhS,
+  2017.
+\newblock [Online; accessed 31-August-2017].
+
+\bibitem[Wik17a]{motivation_error_density}
+Wikipedia.
+\newblock Fehlerquotient --- wikipedia{,} die freie enzyklopädie.
+\newblock https://de.wikipedia.org/w/index.php?title=Fehlerquotient, 2017.
+\newblock [Online; accessed 24-August-2017].
+
+\bibitem[Wik17b]{motivation_shape_analysis}
+Wikipedia.
+\newblock Shape analysis (program analysis) --- wikipedia{,} the free
+  encyclopedia.
+\newblock
+  https://en.wikipedia.org/w/index.php?title=Shape\_analysis\_(program\_analysis),
+  2017.
+\newblock [Online; accessed 24-August-2017].
+
+\end{thebibliography}

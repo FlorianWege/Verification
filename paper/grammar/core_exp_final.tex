@@ -1,0 +1,26 @@
+\begin{grammarEx}
+	<exp> ::= <factor> <exp'>
+	
+	<exp'> ::= \lit{+} <factor> <exp'>
+	\alt \lit{-} <factor> <exp'>
+	\alt \textepsilon{}
+
+	<factor> ::= <pow> <factor'>
+	
+	<factor'> ::= \lit{*} <pow> <factor'>
+	\alt \lit{/} <pow> <factor'>
+	\alt \textepsilon{}
+
+	<pow> ::= <factorial> <pow'>
+	
+	<pow'> ::= \lit{\^{}} <pow>
+	\alt \textepsilon{}
+
+	<factorial> ::= <exp\textunderscore elem> <factorial'>
+	
+	<factorial'> ::= \lit{!}
+	\alt \textepsilon{}
+
+	<exp\textunderscore elem> ::= \lit{id}
+	\alt \lit{num}
+\end{grammarEx}

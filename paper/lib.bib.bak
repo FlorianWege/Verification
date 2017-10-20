@@ -1,0 +1,9 @@
+% Encoding: UTF-8
+
+@Article{,
+  author = {Firstname},
+  title  = {the title},
+  year   = {1992},
+}
+
+@Comment{jabref-meta: databaseType:bibtex;}

@@ -1,0 +1,15 @@
+\begin{grammarEx}
+	<bool\textunderscore xp> ::= <bool\textunderscore exp> \lit{\&\&} <bool\textunderscore exp>
+	\alt <bool\textunderscore exp> \lit{\textbar\textbar} <bool\textunderscore exp>
+	\alt \lit{!} <bool\textunderscore exp>
+	\alt <exp> \lit{compOp} <exp>
+	\alt \lit{true}
+	\alt \lit{false}
+
+	<compOp> ::= \lit{\textless{}}
+	\alt \lit{\textless{}=}
+	\alt \lit{\textgreater{}}
+	\alt \lit{\textgreater{}=}
+	\alt \lit{==}
+	\alt \lit{!=}
+\end{grammarEx}
