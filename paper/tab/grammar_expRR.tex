@@ -1,0 +1,25 @@
+\begin{center}
+	\begin{tabular}{p{7cm} | p{7cm}}
+		left recursion
+		&
+		right recursion
+		\\
+		\hline
+
+		
+		\begin{grammarEx}
+			<exp> ::= <exp> \textcolor{red}{test}
+			\alt \textcolor{blue}{\textbeta}
+		\end{grammarEx}
+		
+		&
+		
+		\begin{grammarEx}
+			<exp> ::= \textcolor{blue}{\textless mult\textgreater} <exp'>
+			
+			<exp'> ::= \textcolor{red}{+ \textless mult\textgreater} <exp'>
+			\alt \textemptyword{}
+		\end{grammarEx}
+		
+	\end{tabular}
+\end{center}

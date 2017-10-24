@@ -1,16 +1,18 @@
 \begin{grammarEx}
-	<exp> ::= <exp> \lit{+} <factor>
-	\alt <exp> \lit{-} <factor>
-	\alt <factor>
+	<exp> ::= <sum>
+		
+	<sum> ::= <sum> \lit{\opplus{}} <prod>
+	\alt <sum> \lit{\opminus{}} <prod>
+	\alt <prod>
 
-	<factor> ::= <factor> \lit{*} <pow>
-	\alt <factor> \lit{/} <pow>
+	<prod> ::= <prod> \lit{\opmult{}} <pow>
+	\alt <prod> \lit{/} <pow>
 	\alt <pow>
 
-	<pow> ::= <factorial> \lit{\^{}} <pow>
-	\alt <factorial>
+	<pow> ::= <fact> \lit{\oppow{}} <pow>
+	\alt <fact>
 
-	<factorial> ::= <exp\textunderscore elem> \lit{!}
+	<fact> ::= <exp\textunderscore elem> \lit{\opfact{}}
 	\alt <exp\textunderscore elem>
 
 	<exp\textunderscore elem> ::= \lit{id}

@@ -1,0 +1,35 @@
+\begin{center}
+	\begin{tabular}{p{7cm} | p{7cm}}
+		left recursion
+		&
+		right recursion
+		\\
+		\hline
+		
+		\begin{grammarEx}
+			<A> ::= <A> \textcolor{red}{\textalpha \textsubscript{1}}
+			\alt <A> \textcolor{red}{\textalpha \textsubscript{2}}
+			\alt <A> \textcolor{red}{\textalpha \textsubscript{3}}
+			...
+			\alt \textcolor{blue}{\textbeta \textsubscript{1}}
+			\alt \textcolor{blue}{\textbeta \textsubscript{2}}
+			\alt \textcolor{blue}{\textbeta \textsubscript{3}}
+			...
+		\end{grammarEx}
+		
+		&
+		
+		\begin{grammarEx}
+			<A> ::= \textcolor{blue}{\textbeta \textsubscript{1}} <A'>
+			\alt \textcolor{blue}{\textbeta \textsubscript{2}} <A'>
+			\alt \textcolor{blue}{\textbeta \textsubscript{3}} <A'>
+			...
+			<A'> ::= \textcolor{red}{\textalpha \textsubscript{1}} <A'>
+			\alt \textcolor{red}{\textalpha \textsubscript{2}} <A'>
+			\alt \textcolor{red}{\textalpha \textsubscript{3}} <A'>
+			...
+			\alt \textemptyword
+		\end{grammarEx}
+		
+	\end{tabular}
+\end{center}

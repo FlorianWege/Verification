@@ -3,18 +3,25 @@
 	
 	<bool\textunderscore or> ::= <bool\textunderscore and> <bool\textunderscore or'> 
 	
-	<bool\textunderscore or'> ::= \lit{\textbar\textbar} <bool\textunderscore and> <bool\textunderscore or'> 
+	<bool\textunderscore or'> ::= \lit{\opor{}} <bool\textunderscore and> <bool\textunderscore or'> 
 	\alt \lit{\textepsilon{}} 
 	
 	<bool\textunderscore and> ::= <bool\textunderscore neg> <bool\textunderscore and'> 
 	
-	<bool\textunderscore and'> ::= \lit{\&\&} <bool\textunderscore neg> <bool\textunderscore and'> 
-	\alt \lit{\textepsilon{}} 
+	<bool\textunderscore and'> ::= \lit{\opand{}} <bool\textunderscore neg> <bool\textunderscore and'> 
+	\alt \textemptyword{}
 	
-	<bool\textunderscore neg> ::= <bool\textunderscore elementary> 
-	\alt \lit{~} <bool\textunderscore elementary> 
+	<bool\textunderscore neg> ::= <bool\textunderscore elem>
+	\alt \lit{~} <bool\textunderscore elem>
 	
-	<bool\textunderscore elementary> ::= <exp> \lit{\textless{}} <exp> 
-	\alt \lit{true} 
+	<bool\textunderscore elem> ::= <exp> \lit{\opless{}} <exp> 
+	\alt <exp> \lit{\opless{}} <exp>
+	\alt <exp> \lit{\opgreater{}} <exp>
+	\alt <exp> \lit{\oplesseq{}} <exp>
+	\alt <exp> \lit{\opgreatereq{}} <exp>
+	\alt <exp> \lit{\opeq{}} <exp>
+	\alt <exp> \lit{\opuneq{}} <exp>
+	\alt \lit{true}
+	\alt \lit{false}
 	\alt \lit{[} <bool\textunderscore exp> \lit{]}
 \end{grammarEx}

@@ -1,0 +1,65 @@
+\begin{tabular}{c}
+%\Tree[
+%	.exp
+%	 [
+%		.exp
+%		 [
+%			.exp
+%			 [
+%				.mult \treeterminal{id}
+%			  ] 
+%		  ]
+%		 + 
+%		[
+%			.mult
+%			 [
+%				.mult
+%				[
+%					.mult \treeterminal{id}
+%				]
+%				*
+%				[
+%					\treeterminal{id}
+%				]
+%			 ]
+%			*
+%			[
+%				\treeterminal{id}
+%			]
+%		 ]
+%	  ]
+%	 +
+%	 [
+%		.mult \treeterminal{id}
+%	  ]
+%]
+
+\begin{tikzpicture}[sibling distance = 10em]
+\node {exp}
+	child { node {exp}
+		child { node {exp}
+			child { node {mult}
+				child { node {id} }
+			}
+		}
+		child { node {+} }
+		child { node {mult}
+			child { node {H}
+				child { node {I}
+					child { node {J} }
+				}
+				child { node{K} }
+				child { node{L} }
+			}
+			child { node{M} }
+			child { node{N} }
+		}
+	}
+	child { node{+} }
+	child { node{mult}
+		child { node{id} }
+	}
+	;
+\end{tikzpicture}
+
+\end{tabular}

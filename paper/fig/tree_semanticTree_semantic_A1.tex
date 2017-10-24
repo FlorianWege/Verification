@@ -1,9 +1,19 @@
-\Tree[
-	.Sum
+\begin{forest} for tree={
+	align=center,
+	calign=fixed edge angles,
+	calign primary angle=-45,
+	calign secondary angle=45,
+}
 	[
-		Id \treeterminal{A}
-	]
-	[
-	ExpLit \treeterminal{1}
+	sum 
+		[
+		id
+		[\treeterminal{A} ]
+		]
+		[
+		exp\textunderscore lit
+		[\treeterminal{1} ]
+		]
 	]
 ]
+\end{forest}

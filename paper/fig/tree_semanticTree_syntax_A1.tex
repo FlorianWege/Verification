@@ -1,68 +1,94 @@
-\Tree[
-	.exp
+\begin{forest} for tree={
+	align=center,
+	calign=fixed edge angles,
+	calign primary angle=-45,
+	calign secondary angle=45,
+}
 	[
-		.sum
+	exp 
 		[
-			.prod
+		sum 
 			[
-				.pow
+			prod 
 				[
-					.fact
+				pow 
 					[
-						.exp\textunderscore elem
-						id \treeterminal{A}
+					fact 
 						[
-							.param\textunderscore list
-							\treeterminal{\textepsilon{}}
+						exp\textunderscore elem 
+						[
+						id
+						 [\treeterminal{A} ]
+						]
+						]
+						[
+						fact' 
+						[
+						\textemptyword{}
+						]
 						]
 					]
 					[
-						.fact'
-						\treeterminal{\textepsilon{}}
+					pow' 
+					[
+					\textemptyword{}
+					]
 					]
 				]
 				[
-					.pow'
-					\treeterminal{\textepsilon{}}
+				prod' 
+				[
+				\textemptyword{}
+				]
 				]
 			]
 			[
-				.prod'
-				\treeterminal{\textepsilon{}}
-			]
-		]
-		[
-			.sum'
-			OP\textunderscore PLUS \treeterminal{+}
+			sum' 
 			[
-				.prod
+			\treeterminal{+}
+			]
 				[
-					.pow
+				prod 
 					[
-						.fact
+					pow 
 						[
-							.exp\textunderscore elem
-							num \treeterminal{1}
+						fact 
+							[
+							exp\textunderscore elem 
+							[
+							num
+							 [\treeterminal{1} ]
+							]
+							]
+							[
+							fact' 
+							[
+							\textemptyword{}
+							]
+							]
 						]
 						[
-							.fact'
-							\treeterminal{\textepsilon{}}
+						pow' 
+						[
+						\textemptyword{}
+						]
 						]
 					]
 					[
-						.pow'
-						\treeterminal{\textepsilon{}}
+					prod' 
+					[
+					\textemptyword{}
+					]
 					]
 				]
 				[
-					.prod'
-					\treeterminal{\textepsilon{}}
+				sum' 
+				[
+				\textemptyword{}
 				]
-			]
-			[
-				.sum'
-				\treeterminal{\textepsilon{}}
+				]
 			]
 		]
 	]
 ]
+\end{forest}

@@ -1,22 +1,22 @@
 \begin{grammarEx}
-	<exp> ::= <factor> <exp'>
+	<exp> ::= <sum>
 	
-	<exp'> ::= \lit{+} <factor> <exp'>
-	\alt \lit{-} <factor> <exp'>
-	\alt \textepsilon{}
+	<sum> ::= \lit{\opplus{}} <prod> <sum'>
+	\alt \lit{\opminus{}} <prod> <sum'>
+	\alt \textemptyword{}
 
-	<factor> ::= <pow> <factor'>
+	<prod> ::= <pow> <prod'>
 	
-	<factor'> ::= \lit{*} <pow> <factor'>
-	\alt \lit{/} <pow> <factor'>
-	\alt \textepsilon{}
+	<prod'> ::= \lit{\opmult{}} <pow> <prod'>
+	\alt \lit{/} <pow> <prod'>
+	\alt \textemptyword{}
 
-	<pow> ::= <factorial> \lit{\^{}} <pow>
-	\alt <factorial>
+	<pow> ::= <fact> \lit{\oppow{}} <pow>
+	\alt <fact>
 
-	<factorial> ::= <exp\textunderscore elem> \lit{!}
+	<fact> ::= <exp\textunderscore elem> \lit{!}
 	\alt <exp\textunderscore elem>
 
 	<exp\textunderscore elem> ::= \lit{id}
-	\alt num
+	\alt \lit{num}
 \end{grammarEx}

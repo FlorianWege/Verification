@@ -1,0 +1,39 @@
+\begin{tabular}{c | c}
+left derivation & right derivation \\
+\hline
+\Tree[
+	.exp
+	[
+		.exp
+		[
+			.exp \treeterminal{id}
+		]
+		\treeterminal{+}
+		[
+			.exp \treeterminal{id}
+		]
+	 ]
+	 \treeterminal{+}
+	 [
+		.exp \treeterminal{id}
+	 ]
+]
+&
+\Tree[
+	.exp
+	[
+		.exp \treeterminal{id}
+	]
+	\treeterminal{+}
+	[
+		.exp
+		[
+			.exp \treeterminal{id}
+		]
+		\treeterminal{+}
+		[
+			.exp \treeterminal{id}
+		]
+	]
+]
+\end{tabular}

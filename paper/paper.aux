@@ -36,8 +36,8 @@
 \@writefile{lol}{\addvspace {10\p@ }}
 \@writefile{toc}{\contentsline {section}{\numberline {1.1}Motivation}{2}{section.1.1}}
 \mph@setcol{ii:2}{\mph@nr}
-\@writefile{toc}{\contentsline {section}{\numberline {1.2}Analysis vs simulation}{3}{section.1.2}}
 \mph@setcol{ii:3}{\mph@nr}
+\@writefile{toc}{\contentsline {section}{\numberline {1.2}Analysis vs simulation}{4}{section.1.2}}
 \@writefile{toc}{\contentsline {section}{\numberline {1.3}Basic approaches}{4}{section.1.3}}
 \mph@setcol{ii:4}{\mph@nr}
 \citation{Pnueli:1977:TLP:1382431.1382534}
@@ -74,177 +74,213 @@
 \newlabel{sec:lang_grammars}{{3.1}{13}{On languages and grammars}{section.3.1}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.1.1}Definitions}{13}{subsection.3.1.1}}
 \mph@setcol{ii:13}{\mph@nr}
-\@writefile{lof}{\contentsline {figure}{\numberline {3.1}{\ignorespaces first grammar\relax }}{14}{figure.caption.7}}
-\newlabel{fig:grammar_example_first}{{3.1}{14}{first grammar\relax }{figure.caption.7}{}}
 \mph@setcol{ii:14}{\mph@nr}
 \citation{gate_compiler_design}
 \@input{grammar/example_amb.aux}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.1}{\ignorespaces first grammar\relax }}{15}{figure.caption.7}}
+\newlabel{fig:grammar_example_first}{{3.1}{15}{first grammar\relax }{figure.caption.7}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.1.2}Ambuigity, Associativity, Precedence}{15}{subsection.3.1.2}}
 \@writefile{lof}{\contentsline {figure}{\numberline {3.2}{\ignorespaces Two-sided recursive grammar\relax }}{15}{figure.caption.8}}
 \newlabel{fig:grammar_example_amb}{{3.2}{15}{Two-sided recursive grammar\relax }{figure.caption.8}{}}
 \mph@setcol{ii:15}{\mph@nr}
 \@writefile{lof}{\contentsline {figure}{\numberline {3.3}{\ignorespaces syntax trees of the example grammar for \textit  {id+id+id}\relax }}{16}{figure.caption.9}}
-\newlabel{fig:tree_amb}{{3.3}{16}{syntax trees of the example grammar for \textword {id+id+id}\relax }{figure.caption.9}{}}
+\newlabel{fig:tree_example_amb}{{3.3}{16}{syntax trees of the example grammar for \textword {id+id+id}\relax }{figure.caption.9}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {3.4}{\ignorespaces right-most derivation\relax }}{16}{figure.caption.10}}
-\newlabel{fig:grammar_exp_RR}{{3.4}{16}{right-most derivation\relax }{figure.caption.10}{}}
+\newlabel{fig:grammar_example_exp_RR}{{3.4}{16}{right-most derivation\relax }{figure.caption.10}{}}
 \mph@setcol{ii:16}{\mph@nr}
 \@writefile{lof}{\contentsline {figure}{\numberline {3.5}{\ignorespaces left-most derivation\relax }}{17}{figure.caption.11}}
 \newlabel{fig:grammar_example_exp_LR}{{3.5}{17}{left-most derivation\relax }{figure.caption.11}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {3.6}{\ignorespaces exp grammar with multiplication\relax }}{17}{figure.caption.12}}
-\newlabel{fig:grammar_ambPrec}{{3.6}{17}{exp grammar with multiplication\relax }{figure.caption.12}{}}
+\newlabel{fig:grammar_example_ambPrec}{{3.6}{17}{exp grammar with multiplication\relax }{figure.caption.12}{}}
 \mph@setcol{ii:17}{\mph@nr}
 \@writefile{lof}{\contentsline {figure}{\numberline {3.7}{\ignorespaces syntax trees of the multiplication-extended exp grammar\relax }}{18}{figure.caption.13}}
-\newlabel{fig:tree_diffSemantics}{{3.7}{18}{syntax trees of the multiplication-extended exp grammar\relax }{figure.caption.13}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.1.3}The problem with left recursion}{18}{subsection.3.1.3}}
+\newlabel{fig:tree_example_diffSemantics}{{3.7}{18}{syntax trees of the multiplication-extended exp grammar\relax }{figure.caption.13}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {3.8}{\ignorespaces grammar with operator precedence\relax }}{18}{figure.caption.14}}
-\newlabel{fig:grammar_ambPrecFixed}{{3.8}{18}{grammar with operator precedence\relax }{figure.caption.14}{}}
+\newlabel{fig:grammar_example_ambPrecFixed}{{3.8}{18}{grammar with operator precedence\relax }{figure.caption.14}{}}
 \mph@setcol{ii:18}{\mph@nr}
-\@writefile{lof}{\contentsline {figure}{\numberline {3.9}{\ignorespaces syntax trees of the example grammar with different semantics\relax }}{19}{figure.caption.15}}
-\newlabel{fig:tree_ambPrecFixed}{{3.9}{19}{syntax trees of the example grammar with different semantics\relax }{figure.caption.15}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {3.10}{\ignorespaces grammar with left recursion\relax }}{19}{figure.caption.16}}
-\newlabel{fig:grammar_LR}{{3.10}{19}{grammar with left recursion\relax }{figure.caption.16}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1.3}The problem with left recursion}{19}{subsection.3.1.3}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.9}{\ignorespaces grammar with left recursion\relax }}{19}{figure.caption.15}}
+\newlabel{fig:grammar_LR}{{3.9}{19}{grammar with left recursion\relax }{figure.caption.15}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.10}{\ignorespaces elimination of left recursion\relax }}{19}{figure.caption.16}}
+\newlabel{fig:grammar_elimLR}{{3.10}{19}{elimination of left recursion\relax }{figure.caption.16}{}}
 \mph@setcol{ii:19}{\mph@nr}
-\@writefile{lof}{\contentsline {figure}{\numberline {3.11}{\ignorespaces elimination of left recursion\relax }}{20}{figure.caption.17}}
-\newlabel{fig:grammar_elimLR}{{3.11}{20}{elimination of left recursion\relax }{figure.caption.17}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {3.12}{\ignorespaces exp with right recursion\relax }}{20}{figure.caption.18}}
-\newlabel{fig:grammar_expRR}{{3.12}{20}{exp with right recursion\relax }{figure.caption.18}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.11}{\ignorespaces exp with right recursion\relax }}{20}{figure.caption.17}}
+\newlabel{fig:grammar_expRR}{{3.11}{20}{exp with right recursion\relax }{figure.caption.17}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.12}{\ignorespaces elimination of left recursion with multiple instances of \textalpha {} and \textbeta {}\relax }}{20}{figure.caption.18}}
+\newlabel{fig:grammar_elimLRMultiple}{{3.12}{20}{elimination of left recursion with multiple instances of \textalpha {} and \textbeta {}\relax }{figure.caption.18}{}}
 \mph@setcol{ii:20}{\mph@nr}
-\@writefile{lof}{\contentsline {figure}{\numberline {3.13}{\ignorespaces elimination of left recursion with multiple instances of \textalpha {} and \textbeta {}\relax }}{21}{figure.caption.19}}
-\newlabel{fig:grammar_elimLRMultiple}{{3.13}{21}{elimination of left recursion with multiple instances of \textalpha {} and \textbeta {}\relax }{figure.caption.19}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.13}{\ignorespaces exp with right recursion\relax }}{21}{figure.caption.19}}
+\newlabel{fig:grammar_expLeftFactoring}{{3.13}{21}{exp with right recursion\relax }{figure.caption.19}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.1.4}Construction of an LL(1){} parser table}{21}{subsection.3.1.4}}
-\@writefile{lof}{\contentsline {figure}{\numberline {3.14}{\ignorespaces exp with right recursion\relax }}{21}{figure.caption.20}}
-\newlabel{fig:grammar_expLeftFactoring}{{3.14}{21}{exp with right recursion\relax }{figure.caption.20}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {T1}{\ignorespaces empty First-Follow table\relax }}{21}{table.caption.20}}
+\newlabel{tab:example_firstFollow_empty}{{T1}{21}{empty First-Follow table\relax }{table.caption.20}{}}
 \mph@setcol{ii:21}{\mph@nr}
-\@writefile{lof}{\contentsline {figure}{\numberline {3.15}{\ignorespaces grammar to clarify the concept of First and Follow\relax }}{22}{figure.caption.21}}
-\newlabel{fig:grammar_example_firstFollow}{{3.15}{22}{grammar to clarify the concept of First and Follow\relax }{figure.caption.21}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {T1}{\ignorespaces empty First-Follow table\relax }}{22}{table.caption.22}}
-\newlabel{tab:example_firstFollow_empty}{{T1}{22}{empty First-Follow table\relax }{table.caption.22}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.14}{\ignorespaces grammar to clarify the concept of First and Follow\relax }}{22}{figure.caption.21}}
+\newlabel{fig:grammar_example_firstFollow}{{3.14}{22}{grammar to clarify the concept of First and Follow\relax }{figure.caption.21}{}}
 \mph@setcol{ii:22}{\mph@nr}
-\@writefile{lot}{\contentsline {table}{\numberline {T2}{\ignorespaces filled First-Follow table\relax }}{23}{table.caption.23}}
-\newlabel{tab:example_firstFollow_filled}{{T2}{23}{filled First-Follow table\relax }{table.caption.23}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {T3}{\ignorespaces predictive parser table\relax }}{23}{table.caption.24}}
-\newlabel{tab:parseTab_example}{{T3}{23}{predictive parser table\relax }{table.caption.24}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {T2}{\ignorespaces filled First-Follow table\relax }}{23}{table.caption.22}}
+\newlabel{tab:example_firstFollow_filled}{{T2}{23}{filled First-Follow table\relax }{table.caption.22}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {T3}{\ignorespaces predictive parser table\relax }}{23}{table.caption.23}}
+\newlabel{tab:parseTab_example}{{T3}{23}{predictive parser table\relax }{table.caption.23}{}}
 \mph@setcol{ii:23}{\mph@nr}
 \@writefile{toc}{\contentsline {section}{\numberline {3.2}Core language}{24}{section.3.2}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.2.1}Commands}{24}{subsection.3.2.1}}
 \newlabel{lst:countToWhileLoop}{{L1}{24}{Conversion foot-loop to while-loop (Java)}{lstlisting.3.1}{}}
 \@writefile{lol}{\contentsline {lstlisting}{\numberline {L1}Conversion foot-loop to while-loop (Java)}{24}{lstlisting.3.1}}
-\newlabel{lst:countToWhileLoop}{{L2}{24}{Conversion count-controlled loop to while-loop (Java)}{lstlisting.3.2}{}}
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {L2}Conversion count-controlled loop to while-loop (Java)}{24}{lstlisting.3.2}}
+\newlabel{lst:core_condAssignToAlt}{{L2}{24}{Conversion conditional assignment to selection (Java)}{lstlisting.3.2}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {L2}Conversion conditional assignment to selection (Java)}{24}{lstlisting.3.2}}
+\newlabel{lst:countToWhileLoop}{{L3}{24}{Conversion count-controlled loop to while-loop (Java)}{lstlisting.3.3}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {L3}Conversion count-controlled loop to while-loop (Java)}{24}{lstlisting.3.3}}
 \mph@setcol{ii:24}{\mph@nr}
-\@writefile{lof}{\contentsline {figure}{\numberline {3.16}{\ignorespaces commands\relax }}{25}{figure.caption.25}}
-\newlabel{fig:grammar_commands}{{3.16}{25}{commands\relax }{figure.caption.25}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {3.17}{\ignorespaces \text  {\textlangle {}prog\textrangle {}}\relax }}{25}{figure.caption.26}}
-\newlabel{fig:grammar_prog}{{3.17}{25}{\textnonterminal {prog}\relax }{figure.caption.26}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.2.2}Numerical expressions}{25}{subsection.3.2.2}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.15}{\ignorespaces commands\relax }}{25}{figure.caption.24}}
+\newlabel{fig:grammar_core_cmds}{{3.15}{25}{commands\relax }{figure.caption.24}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.16}{\ignorespaces \text  {\textlangle {}prog\textrangle {}}\relax }}{25}{figure.caption.25}}
+\newlabel{fig:grammar_core_progonly_raw}{{3.16}{25}{\textnonterminal {prog}\relax }{figure.caption.25}{}}
 \mph@setcol{ii:25}{\mph@nr}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.17}{\ignorespaces \text  {\textlangle {}prog\textrangle {}}\relax }}{26}{figure.caption.26}}
+\newlabel{fig:grammar_core_progonly_final}{{3.17}{26}{\textnonterminal {prog}\relax }{figure.caption.26}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2.2}Numeric expressions}{26}{subsection.3.2.2}}
 \@writefile{lof}{\contentsline {figure}{\numberline {3.18}{\ignorespaces core \text  {\textlangle {}exp\textrangle {}} grammar\relax }}{26}{figure.caption.27}}
 \newlabel{fig:grammar_core_exp_raw}{{3.18}{26}{core \textnonterminal {exp} grammar\relax }{figure.caption.27}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {3.19}{\ignorespaces core grammar of \text  {\textlangle {}bool\textunderscore exp\textrangle {}} (raw)\relax }}{26}{figure.caption.28}}
-\newlabel{fig:grammar_core_bool_exp_raw}{{3.19}{26}{core grammar of \textnonterminal {bool\textunderscore exp} (raw)\relax }{figure.caption.28}{}}
 \mph@setcol{ii:26}{\mph@nr}
-\@writefile{lot}{\contentsline {table}{\numberline {T4}{\ignorespaces operator table of \text  {\textlangle {}exp\textrangle {}}\relax }}{27}{table.caption.29}}
-\newlabel{tab:exp_prec}{{T4}{27}{operator table of \textnonterminal {exp}\relax }{table.caption.29}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {T4}{\ignorespaces operator table of \text  {\textlangle {}exp\textrangle {}}\relax }}{27}{table.caption.28}}
+\newlabel{tab:exp_prec}{{T4}{27}{operator table of \textnonterminal {exp}\relax }{table.caption.28}{}}
 \mph@setcol{ii:27}{\mph@nr}
-\@writefile{lof}{\contentsline {figure}{\numberline {3.20}{\ignorespaces grammar of \text  {\textlangle {}exp\textrangle {}} (precedence)\relax }}{28}{figure.caption.30}}
-\newlabel{fig:grammar_core_exp_prec}{{3.20}{28}{grammar of \textnonterminal {exp} (precedence)\relax }{figure.caption.30}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {3.21}{\ignorespaces core grammar of \text  {\textlangle {}exp\textrangle {}} (associativity)\relax }}{28}{figure.caption.31}}
-\newlabel{fig:grammar_core_exp_assoc}{{3.21}{28}{core grammar of \textnonterminal {exp} (associativity)\relax }{figure.caption.31}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.19}{\ignorespaces grammar of \text  {\textlangle {}exp\textrangle {}} (precedence)\relax }}{28}{figure.caption.29}}
+\newlabel{fig:grammar_core_exp_prec}{{3.19}{28}{grammar of \textnonterminal {exp} (precedence)\relax }{figure.caption.29}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.20}{\ignorespaces core grammar of \text  {\textlangle {}exp\textrangle {}} (associativity)\relax }}{28}{figure.caption.30}}
+\newlabel{fig:grammar_core_exp_assoc}{{3.20}{28}{core grammar of \textnonterminal {exp} (associativity)\relax }{figure.caption.30}{}}
 \mph@setcol{ii:28}{\mph@nr}
-\@writefile{lof}{\contentsline {figure}{\numberline {3.22}{\ignorespaces core grammar of \text  {\textlangle {}exp\textrangle {}} (right recursive)\relax }}{29}{figure.caption.32}}
-\newlabel{fig:grammar_core_exp_RR}{{3.22}{29}{core grammar of \textnonterminal {exp} (right recursive)\relax }{figure.caption.32}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.2.3}Boolean expressions}{29}{subsection.3.2.3}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.21}{\ignorespaces core grammar of \text  {\textlangle {}exp\textrangle {}} (right recursive)\relax }}{29}{figure.caption.31}}
+\newlabel{fig:grammar_core_exp_RR}{{3.21}{29}{core grammar of \textnonterminal {exp} (right recursive)\relax }{figure.caption.31}{}}
 \mph@setcol{ii:29}{\mph@nr}
-\@writefile{lof}{\contentsline {figure}{\numberline {3.23}{\ignorespaces grammar of \text  {\textlangle {}exp\textrangle {}} (final)\relax }}{30}{figure.caption.33}}
-\newlabel{fig:grammar_core_exp_final}{{3.23}{30}{grammar of \textnonterminal {exp} (final)\relax }{figure.caption.33}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {T5}{\ignorespaces operator table of \text  {\textlangle {}exp\textrangle {}}\relax }}{30}{table.caption.34}}
-\newlabel{tab:exp_prec}{{T5}{30}{operator table of \textnonterminal {exp}\relax }{table.caption.34}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.22}{\ignorespaces grammar of \text  {\textlangle {}exp\textrangle {}} (final)\relax }}{30}{figure.caption.32}}
+\newlabel{fig:grammar_core_exp_final}{{3.22}{30}{grammar of \textnonterminal {exp} (final)\relax }{figure.caption.32}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2.3}Boolean expressions}{30}{subsection.3.2.3}}
 \mph@setcol{ii:30}{\mph@nr}
-\@writefile{lof}{\contentsline {figure}{\numberline {3.24}{\ignorespaces grammar of \text  {\textlangle {}bool\_{}exp\textrangle {}} (precedence)\relax }}{31}{figure.caption.35}}
-\newlabel{fig:grammar_core_bool_exp_prec}{{3.24}{31}{grammar of \textnonterminal {bool\_{}exp} (precedence)\relax }{figure.caption.35}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {3.25}{\ignorespaces grammar of \text  {\textlangle {}bool\_{}exp\textrangle {}} (final)\relax }}{31}{figure.caption.36}}
-\newlabel{fig:grammar_core_bool_exp_final}{{3.25}{31}{grammar of \textnonterminal {bool\_{}exp} (final)\relax }{figure.caption.36}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {T5}{\ignorespaces operator table of \text  {\textlangle {}exp\textrangle {}}\relax }}{31}{table.caption.33}}
+\newlabel{tab:exp_prec}{{T5}{31}{operator table of \textnonterminal {exp}\relax }{table.caption.33}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.23}{\ignorespaces core grammar of \text  {\textlangle {}bool\textunderscore exp\textrangle {}} (raw)\relax }}{31}{figure.caption.34}}
+\newlabel{fig:grammar_core_bool_exp_raw}{{3.23}{31}{core grammar of \textnonterminal {bool\textunderscore exp} (raw)\relax }{figure.caption.34}{}}
 \mph@setcol{ii:31}{\mph@nr}
-\@writefile{toc}{\contentsline {section}{\numberline {3.3}Semantics}{32}{section.3.3}}
-\@writefile{toc}{\contentsline {section}{\numberline {3.4}Semantic tree}{32}{section.3.4}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.24}{\ignorespaces grammar of \text  {\textlangle {}bool\_{}exp\textrangle {}} (precedence)\relax }}{32}{figure.caption.35}}
+\newlabel{fig:grammar_core_bool_exp_prec}{{3.24}{32}{grammar of \textnonterminal {bool\_{}exp} (precedence)\relax }{figure.caption.35}{}}
 \mph@setcol{ii:32}{\mph@nr}
-\@writefile{lof}{\contentsline {figure}{\numberline {3.26}{\ignorespaces extensive syntax tree of A+1\relax }}{33}{figure.caption.37}}
-\newlabel{fig:tree_semanticTree_syntax_A1}{{3.26}{33}{extensive syntax tree of A+1\relax }{figure.caption.37}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {3.27}{\ignorespaces nice tree of A+1\relax }}{33}{figure.caption.38}}
-\newlabel{fig:tree_semanticTree_semantic_A1}{{3.27}{33}{nice tree of A+1\relax }{figure.caption.38}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.25}{\ignorespaces grammar of \text  {\textlangle {}bool\_{}exp\textrangle {}} (final)\relax }}{33}{figure.caption.36}}
+\newlabel{fig:grammar_core_bool_exp_final}{{3.25}{33}{grammar of \textnonterminal {bool\_{}exp} (final)\relax }{figure.caption.36}{}}
 \mph@setcol{ii:33}{\mph@nr}
-\@writefile{toc}{\contentsline {chapter}{\numberline {4}How to prove}{34}{chapter.4}}
-\@writefile{lof}{\addvspace {10\p@ }}
-\@writefile{lot}{\addvspace {10\p@ }}
-\@writefile{lol}{\addvspace {10\p@ }}
-\@writefile{toc}{\contentsline {section}{\numberline {4.1}From operational semantics}{34}{section.4.1}}
+\@writefile{toc}{\contentsline {section}{\numberline {3.3}Semantic tree}{34}{section.3.3}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.26}{\ignorespaces extensive syntax tree of \textit  {A+1}\relax }}{34}{figure.caption.37}}
+\newlabel{fig:tree_semanticTree_syntax_A1}{{3.26}{34}{extensive syntax tree of \textword {A+1}\relax }{figure.caption.37}{}}
 \mph@setcol{ii:34}{\mph@nr}
-\@writefile{toc}{\contentsline {section}{\numberline {4.2}Transition to Hoare calculus}{35}{section.4.2}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.27}{\ignorespaces semantic tree of \textit  {A+1}\relax }}{35}{figure.caption.38}}
+\newlabel{fig:tree_semanticTree_semantic_A1}{{3.27}{35}{semantic tree of \textword {A+1}\relax }{figure.caption.38}{}}
 \mph@setcol{ii:35}{\mph@nr}
-\mph@setcol{ii:36}{\mph@nr}
-\@writefile{toc}{\contentsline {section}{\numberline {4.3}Challenges}{37}{section.4.3}}
-\newlabel{sec:challenges}{{4.3}{37}{Challenges}{section.4.3}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.3.1}Finding invariants}{37}{subsection.4.3.1}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.3.2}Resolving implications}{37}{subsection.4.3.2}}
-\mph@setcol{ii:37}{\mph@nr}
-\@writefile{toc}{\contentsline {chapter}{\numberline {5}Implementation}{38}{chapter.5}}
+\@writefile{toc}{\contentsline {chapter}{\numberline {4}How to prove}{36}{chapter.4}}
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
 \@writefile{lol}{\addvspace {10\p@ }}
-\newlabel{ch:Implementation}{{5}{38}{Implementation}{chapter.5}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {5.1}Java, Surface}{38}{section.5.1}}
+\@writefile{toc}{\contentsline {section}{\numberline {4.1}Of operational semantics}{36}{section.4.1}}
+\newlabel{lst:prove_varS}{{L1}{36}{S\textsubscript {var} example}{lstlisting.4.1}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {L1}S\textsubscript  {var} example}{36}{lstlisting.4.1}}
+\mph@setcol{ii:36}{\mph@nr}
+\citation{apt2010verification}
+\newlabel{eq:conf_skip}{{4.1}{37}{Of operational semantics}{equation.4.1.1}{}}
+\newlabel{eq:conf_assign}{{4.2}{37}{Of operational semantics}{equation.4.1.2}{}}
+\newlabel{eq:conf_comp}{{4.3}{37}{Of operational semantics}{equation.4.1.3}{}}
+\newlabel{eq:conf_altThen}{{4.4}{37}{Of operational semantics}{equation.4.1.4}{}}
+\newlabel{eq:conf_altElse}{{4.5}{37}{Of operational semantics}{equation.4.1.5}{}}
+\mph@setcol{ii:37}{\mph@nr}
+\newlabel{eq:conf_loop_continue}{{4.6}{38}{Of operational semantics}{equation.4.1.6}{}}
+\newlabel{eq:conf_loop_abort}{{4.7}{38}{Of operational semantics}{equation.4.1.7}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4.2}Transition to Hoare calculus}{38}{section.4.2}}
+\newlabel{eq:prove_tripel}{{4.8}{38}{Transition to Hoare calculus}{equation.4.2.8}{}}
+\newlabel{lst:grammar_exp}{{L2}{38}{Decoration example}{lstlisting.4.2}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {L2}Decoration example}{38}{lstlisting.4.2}}
 \mph@setcol{ii:38}{\mph@nr}
-\@writefile{lof}{\contentsline {figure}{\numberline {5.1}{\ignorespaces Main window\relax }}{39}{figure.caption.39}}
-\newlabel{fig:gui_main}{{5.1}{39}{Main window\relax }{figure.caption.39}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5.2}{\ignorespaces Views\relax }}{39}{figure.caption.40}}
-\newlabel{fig:gui_views}{{5.2}{39}{Views\relax }{figure.caption.40}{}}
+\citation{apt2010verification}
+\citation{kleuker2009formale}
+\newlabel{eq:prove_pw_skip}{{4.9}{39}{Transition to Hoare calculus}{equation.4.2.9}{}}
+\newlabel{eq:prove_pw_assign}{{4.10}{39}{Transition to Hoare calculus}{equation.4.2.10}{}}
+\newlabel{eq:prove_pw_comp}{{4.11}{39}{Transition to Hoare calculus}{equation.4.2.11}{}}
+\newlabel{eq:prove_pw_alt}{{4.12}{39}{Transition to Hoare calculus}{equation.4.2.12}{}}
+\newlabel{eq:prove_pw_loop}{{4.13}{39}{Transition to Hoare calculus}{equation.4.2.13}{}}
+\newlabel{eq:prove_pw_conseq}{{4.14}{39}{Transition to Hoare calculus}{equation.4.2.14}{}}
 \mph@setcol{ii:39}{\mph@nr}
-\@writefile{toc}{\contentsline {section}{\numberline {5.2}Grammar, Lexer, parser}{40}{section.5.2}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5.3}{\ignorespaces grammar-related class diagram\relax }}{40}{figure.caption.41}}
-\newlabel{fig:class_grammar}{{5.3}{40}{grammar-related class diagram\relax }{figure.caption.41}{}}
-\newlabel{lst:grammar_exp}{{L1}{40}{Implementation of \textnonterminal {exp} grammar (Java)}{lstlisting.5.1}{}}
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {L1}Implementation of \text  {\textlangle {}exp\textrangle {}} grammar (Java)}{40}{lstlisting.5.1}}
 \mph@setcol{ii:40}{\mph@nr}
+\newlabel{eq:prove_wlp_skip}{{4.21}{41}{Transition to Hoare calculus}{equation.4.2.21}{}}
+\newlabel{eq:prove_wlp_assign}{{4.22}{41}{Transition to Hoare calculus}{equation.4.2.22}{}}
+\newlabel{eq:prove_wlp_comp}{{4.23}{41}{Transition to Hoare calculus}{equation.4.2.23}{}}
+\newlabel{eq:prove_wlp_alt}{{4.24}{41}{Transition to Hoare calculus}{equation.4.2.24}{}}
+\newlabel{eq:prove_wlp_loop_pre}{{4.25}{41}{Transition to Hoare calculus}{equation.4.2.25}{}}
+\newlabel{eq:prove_wlp_loop_post}{{4.26}{41}{Transition to Hoare calculus}{equation.4.2.26}{}}
 \mph@setcol{ii:41}{\mph@nr}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.2.1}First, follow}{42}{subsection.5.2.1}}
+\citation{apt2010verification}
+\newlabel{eq:prove_wlp_conseq}{{4.27}{42}{Transition to Hoare calculus}{equation.4.2.27}{}}
 \mph@setcol{ii:42}{\mph@nr}
-\@writefile{lof}{\contentsline {figure}{\numberline {5.4}{\ignorespaces parser-related class diagram\relax }}{43}{figure.caption.42}}
-\newlabel{fig:class_parser}{{5.4}{43}{parser-related class diagram\relax }{figure.caption.42}{}}
-\newlabel{lst:getFirst_abstract}{{L2}{43}{Implementation of First (Java)}{lstlisting.5.2}{}}
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {L2}Implementation of First (Java)}{43}{lstlisting.5.2}}
+\@writefile{toc}{\contentsline {section}{\numberline {4.3}sec:Challenges}{43}{section.4.3}}
+\newlabel{sec:challenges}{{4.3}{43}{sec:Challenges}{section.4.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3.1}Finding invariants}{43}{subsection.4.3.1}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3.2}Resolving implications}{43}{subsection.4.3.2}}
 \mph@setcol{ii:43}{\mph@nr}
-\newlabel{lst:getFollow_abstract}{{L3}{44}{Implementation of Follow (Java)}{lstlisting.5.3}{}}
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {L3}Implementation of Follow (Java)}{44}{lstlisting.5.3}}
+\@writefile{toc}{\contentsline {chapter}{\numberline {5}Implementation}{44}{chapter.5}}
+\@writefile{lof}{\addvspace {10\p@ }}
+\@writefile{lot}{\addvspace {10\p@ }}
+\@writefile{lol}{\addvspace {10\p@ }}
+\newlabel{ch:Implementation}{{5}{44}{Implementation}{chapter.5}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5.1}Java, Surface}{44}{section.5.1}}
 \mph@setcol{ii:44}{\mph@nr}
-\newlabel{lst:parser_table}{{L4}{45}{Parser table (Java)}{lstlisting.5.4}{}}
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {L4}Parser table (Java)}{45}{lstlisting.5.4}}
-\newlabel{lst:parser_table}{{L5}{45}{Lexer (Java)}{lstlisting.5.5}{}}
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {L5}Lexer (Java)}{45}{lstlisting.5.5}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.1}{\ignorespaces Main window\relax }}{45}{figure.caption.39}}
+\newlabel{fig:gui_main}{{5.1}{45}{Main window\relax }{figure.caption.39}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.2}{\ignorespaces Views\relax }}{45}{figure.caption.40}}
+\newlabel{fig:gui_views}{{5.2}{45}{Views\relax }{figure.caption.40}{}}
 \mph@setcol{ii:45}{\mph@nr}
+\@writefile{toc}{\contentsline {section}{\numberline {5.2}Grammar, Lexer, parser}{46}{section.5.2}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.3}{\ignorespaces grammar-related class diagram\relax }}{46}{figure.caption.41}}
+\newlabel{fig:class_grammar}{{5.3}{46}{grammar-related class diagram\relax }{figure.caption.41}{}}
+\newlabel{lst:grammar_exp}{{L1}{46}{Implementation of \textnonterminal {exp} grammar (Java)}{lstlisting.5.1}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {L1}Implementation of \text  {\textlangle {}exp\textrangle {}} grammar (Java)}{46}{lstlisting.5.1}}
 \mph@setcol{ii:46}{\mph@nr}
-\newlabel{lst:parser}{{L6}{47}{Parser (Java)}{lstlisting.5.6}{}}
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {L6}Parser (Java)}{47}{lstlisting.5.6}}
 \mph@setcol{ii:47}{\mph@nr}
-\@writefile{toc}{\contentsline {section}{\numberline {5.3}Hoare}{48}{section.5.3}}
-\@writefile{toc}{\contentsline {section}{\numberline {5.4}Exception handling}{48}{section.5.4}}
-\@writefile{toc}{\contentsline {section}{\numberline {5.5}GUI}{48}{section.5.5}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.5.1}Editor}{48}{subsection.5.5.1}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.5.2}Display of tokens/syntax tree}{48}{subsection.5.5.2}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.5.3}Syntax chart with Hoare decoration}{48}{subsection.5.5.3}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2.1}First, follow}{48}{subsection.5.2.1}}
 \mph@setcol{ii:48}{\mph@nr}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.4}{\ignorespaces parser-related class diagram\relax }}{49}{figure.caption.42}}
+\newlabel{fig:class_parser}{{5.4}{49}{parser-related class diagram\relax }{figure.caption.42}{}}
+\newlabel{lst:getFirst_abstract}{{L2}{49}{Implementation of First (Java)}{lstlisting.5.2}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {L2}Implementation of First (Java)}{49}{lstlisting.5.2}}
+\mph@setcol{ii:49}{\mph@nr}
+\newlabel{lst:getFollow_abstract}{{L3}{50}{Implementation of Follow (Java)}{lstlisting.5.3}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {L3}Implementation of Follow (Java)}{50}{lstlisting.5.3}}
+\mph@setcol{ii:50}{\mph@nr}
+\newlabel{lst:parser_table}{{L4}{51}{Parser table (Java)}{lstlisting.5.4}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {L4}Parser table (Java)}{51}{lstlisting.5.4}}
+\newlabel{lst:parser_table}{{L5}{51}{Lexer (Java)}{lstlisting.5.5}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {L5}Lexer (Java)}{51}{lstlisting.5.5}}
+\mph@setcol{ii:51}{\mph@nr}
+\mph@setcol{ii:52}{\mph@nr}
+\newlabel{lst:parser}{{L6}{53}{Parser (Java)}{lstlisting.5.6}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {L6}Parser (Java)}{53}{lstlisting.5.6}}
+\mph@setcol{ii:53}{\mph@nr}
+\@writefile{toc}{\contentsline {section}{\numberline {5.3}Hoare}{54}{section.5.3}}
+\@writefile{toc}{\contentsline {section}{\numberline {5.4}Exception handling}{54}{section.5.4}}
+\@writefile{toc}{\contentsline {section}{\numberline {5.5}GUI}{54}{section.5.5}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.5.1}Editor}{54}{subsection.5.5.1}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.5.2}Display of tokens/syntax tree}{54}{subsection.5.5.2}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.5.3}Syntax chart with Hoare decoration}{54}{subsection.5.5.3}}
+\mph@setcol{ii:54}{\mph@nr}
 \citation{gate_compiler_design}
 \bibstyle{alphaurl}
 \citation{*}
 \bibdata{lib}
-\@writefile{toc}{\contentsline {chapter}{\numberline {6}Fazit}{49}{chapter.6}}
+\@writefile{toc}{\contentsline {chapter}{\numberline {6}Fazit}{55}{chapter.6}}
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
 \@writefile{lol}{\addvspace {10\p@ }}
-\newlabel{ch:fazit}{{6}{49}{Fazit}{chapter.6}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {6.1}Summerization}{49}{section.6.1}}
-\@writefile{toc}{\contentsline {section}{\numberline {6.2}Remaining problems}{49}{section.6.2}}
-\@writefile{toc}{\contentsline {section}{\numberline {6.3}Extendabilities}{49}{section.6.3}}
-\mph@setcol{ii:49}{\mph@nr}
+\newlabel{ch:fazit}{{6}{55}{Fazit}{chapter.6}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {6.1}Summerization}{55}{section.6.1}}
+\@writefile{toc}{\contentsline {section}{\numberline {6.2}Remaining problems}{55}{section.6.2}}
+\@writefile{toc}{\contentsline {section}{\numberline {6.3}Extendabilities}{55}{section.6.3}}
+\mph@setcol{ii:55}{\mph@nr}
 \bibcite{apt2010verification}{APdBO10}
 \bibcite{GRIES1982207}{Gri82}
 \bibcite{motivation_science}{Kam16}
@@ -253,68 +289,68 @@
 \bibcite{gate_compiler_design}{Rav17}
 \bibcite{motivation_error_density}{Wik17a}
 \bibcite{motivation_shape_analysis}{Wik17b}
-\mph@setcol{ii:50}{\mph@nr}
-\mph@setcol{ii:51}{\mph@nr}
-\@writefile{toc}{\contentsline {chapter}{\numberline {A}First, Follow, Parser Table listings}{52}{appendix.A}}
-\@writefile{lof}{\addvspace {10\p@ }}
-\@writefile{lot}{\addvspace {10\p@ }}
-\@writefile{lol}{\addvspace {10\p@ }}
-\newlabel{app:parser_table}{{A}{52}{First, Follow, Parser Table listings}{appendix.A}{}}
-\newlabel{lst:getFirst}{{A}{52}{}{lstlisting.A.-1}{}}
-\@writefile{lol}{\contentsline {lstlisting}{lst/getFirst.java}{52}{lstlisting.A.-1}}
-\mph@setcol{ii:52}{\mph@nr}
-\newlabel{lst:getFollow}{{A}{53}{}{lstlisting.A.-2}{}}
-\@writefile{lol}{\contentsline {lstlisting}{lst/getFollow.java}{53}{lstlisting.A.-2}}
-\mph@setcol{ii:53}{\mph@nr}
-\newlabel{lst:parser_table}{{A}{54}{}{lstlisting.A.-3}{}}
-\@writefile{lol}{\contentsline {lstlisting}{lst/parser\textunderscore table.java}{54}{lstlisting.A.-3}}
-\mph@setcol{ii:54}{\mph@nr}
-\@writefile{toc}{\contentsline {chapter}{\numberline {B}Lexer, Parser listings}{55}{appendix.B}}
-\@writefile{lof}{\addvspace {10\p@ }}
-\@writefile{lot}{\addvspace {10\p@ }}
-\@writefile{lol}{\addvspace {10\p@ }}
-\newlabel{app:lexer_parser}{{B}{55}{Lexer, Parser listings}{appendix.B}{}}
-\newlabel{lst:lexer}{{B}{55}{}{lstlisting.B.-4}{}}
-\@writefile{lol}{\contentsline {lstlisting}{lst/lexer.java}{55}{lstlisting.B.-4}}
-\mph@setcol{ii:55}{\mph@nr}
-\newlabel{lst:parser}{{B}{56}{}{lstlisting.B.-5}{}}
-\@writefile{lol}{\contentsline {lstlisting}{lst/parser.java}{56}{lstlisting.B.-5}}
 \mph@setcol{ii:56}{\mph@nr}
 \mph@setcol{ii:57}{\mph@nr}
-\@writefile{toc}{\contentsline {chapter}{\numberline {C}Hoare listing}{58}{appendix.C}}
+\@writefile{toc}{\contentsline {chapter}{\numberline {A}First, Follow, Parser Table listings}{58}{appendix.A}}
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
 \@writefile{lol}{\addvspace {10\p@ }}
-\newlabel{app:lexer_parser}{{C}{58}{Hoare listing}{appendix.C}{}}
-\newlabel{lst:hoare}{{C}{58}{}{lstlisting.C.-6}{}}
-\@writefile{lol}{\contentsline {lstlisting}{lst/hoare.java}{58}{lstlisting.C.-6}}
+\newlabel{app:parser_table}{{A}{58}{First, Follow, Parser Table listings}{appendix.A}{}}
+\newlabel{lst:getFirst}{{A}{58}{}{lstlisting.A.-1}{}}
+\@writefile{lol}{\contentsline {lstlisting}{lst/getFirst.java}{58}{lstlisting.A.-1}}
 \mph@setcol{ii:58}{\mph@nr}
+\newlabel{lst:getFollow}{{A}{59}{}{lstlisting.A.-2}{}}
+\@writefile{lol}{\contentsline {lstlisting}{lst/getFollow.java}{59}{lstlisting.A.-2}}
 \mph@setcol{ii:59}{\mph@nr}
+\newlabel{lst:parser_table}{{A}{60}{}{lstlisting.A.-3}{}}
+\@writefile{lol}{\contentsline {lstlisting}{lst/parser\textunderscore table.java}{60}{lstlisting.A.-3}}
 \mph@setcol{ii:60}{\mph@nr}
+\@writefile{toc}{\contentsline {chapter}{\numberline {B}Lexer, Parser listings}{61}{appendix.B}}
+\@writefile{lof}{\addvspace {10\p@ }}
+\@writefile{lot}{\addvspace {10\p@ }}
+\@writefile{lol}{\addvspace {10\p@ }}
+\newlabel{app:lexer_parser}{{B}{61}{Lexer, Parser listings}{appendix.B}{}}
+\newlabel{lst:lexer}{{B}{61}{}{lstlisting.B.-4}{}}
+\@writefile{lol}{\contentsline {lstlisting}{lst/lexer.java}{61}{lstlisting.B.-4}}
 \mph@setcol{ii:61}{\mph@nr}
+\newlabel{lst:parser}{{B}{62}{}{lstlisting.B.-5}{}}
+\@writefile{lol}{\contentsline {lstlisting}{lst/parser.java}{62}{lstlisting.B.-5}}
 \mph@setcol{ii:62}{\mph@nr}
 \mph@setcol{ii:63}{\mph@nr}
+\@writefile{toc}{\contentsline {chapter}{\numberline {C}Hoare listing}{64}{appendix.C}}
+\@writefile{lof}{\addvspace {10\p@ }}
+\@writefile{lot}{\addvspace {10\p@ }}
+\@writefile{lol}{\addvspace {10\p@ }}
+\newlabel{app:lexer_parser}{{C}{64}{Hoare listing}{appendix.C}{}}
+\newlabel{lst:hoare}{{C}{64}{}{lstlisting.C.-6}{}}
+\@writefile{lol}{\contentsline {lstlisting}{lst/hoare.java}{64}{lstlisting.C.-6}}
 \mph@setcol{ii:64}{\mph@nr}
 \mph@setcol{ii:65}{\mph@nr}
 \mph@setcol{ii:66}{\mph@nr}
 \mph@setcol{ii:67}{\mph@nr}
-\@writefile{toc}{\contentsline {chapter}{\numberline {D}Grammmar for while programs}{68}{appendix.D}}
-\@writefile{lof}{\addvspace {10\p@ }}
-\@writefile{lot}{\addvspace {10\p@ }}
-\@writefile{lol}{\addvspace {10\p@ }}
-\newlabel{app:grammar_core}{{D}{68}{Grammmar for while programs}{appendix.D}{}}
 \mph@setcol{ii:68}{\mph@nr}
 \mph@setcol{ii:69}{\mph@nr}
-\@writefile{toc}{\contentsline {chapter}{\numberline {E}Grammar for Hoare-decorated while programs}{70}{appendix.E}}
-\@writefile{lof}{\addvspace {10\p@ }}
-\@writefile{lot}{\addvspace {10\p@ }}
-\@writefile{lol}{\addvspace {10\p@ }}
-\newlabel{app:grammar_hoare}{{E}{70}{Grammar for Hoare-decorated while programs}{appendix.E}{}}
 \mph@setcol{ii:70}{\mph@nr}
 \mph@setcol{ii:71}{\mph@nr}
 \mph@setcol{ii:72}{\mph@nr}
 \mph@setcol{ii:73}{\mph@nr}
-\gdef\mph@lastpage{74}
+\@writefile{toc}{\contentsline {chapter}{\numberline {D}Grammmar for while programs}{74}{appendix.D}}
+\@writefile{lof}{\addvspace {10\p@ }}
+\@writefile{lot}{\addvspace {10\p@ }}
+\@writefile{lol}{\addvspace {10\p@ }}
+\newlabel{app:grammar_core}{{D}{74}{Grammmar for while programs}{appendix.D}{}}
+\mph@setcol{ii:74}{\mph@nr}
+\mph@setcol{ii:75}{\mph@nr}
+\@writefile{toc}{\contentsline {chapter}{\numberline {E}Grammar for Hoare-decorated while programs}{76}{appendix.E}}
+\@writefile{lof}{\addvspace {10\p@ }}
+\@writefile{lot}{\addvspace {10\p@ }}
+\@writefile{lol}{\addvspace {10\p@ }}
+\newlabel{app:grammar_hoare}{{E}{76}{Grammar for Hoare-decorated while programs}{appendix.E}{}}
+\mph@setcol{ii:76}{\mph@nr}
+\mph@setcol{ii:77}{\mph@nr}
+\mph@setcol{ii:78}{\mph@nr}
+\mph@setcol{ii:79}{\mph@nr}
+\gdef\mph@lastpage{80}
 \csname mph@do@warn\endcsname
 \global\csname @altsecnumformattrue\endcsname
 \global\@namedef{scr@dte@chapter@lastmaxnumwidth}{14.81331pt}

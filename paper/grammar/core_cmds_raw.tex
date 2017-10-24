@@ -1,6 +1,9 @@
 \begin{grammarEx}
 	<assign> ::= <var> \lit{=} <exp>
-	<selection> ::= \lit{IF} <bool\textunderscore xp> \lit{THEN} <prog> \lit{ELSE} <prog> \lit{FI}
+	
+	<alt> ::= \lit{IF} <bool\textunderscore exp> \lit{THEN} <prog> \lit{ELSE} <prog> \lit{FI}
+	
 	<loop> ::= \lit{WHILE} <bool\textunderscore exp> \lit{DO} <prog> \lit{OD}
+	
 	<skip> ::= \lit{SKIP}
 \end{grammarEx}

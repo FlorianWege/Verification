@@ -1,26 +1,29 @@
 \begin{grammarEx}
-	<exp> ::= <factor> <exp'>
+	<exp> ::= <sum>
 	
-	<exp'> ::= \lit{+} <factor> <exp'>
-	\alt \lit{-} <factor> <exp'>
-	\alt \textepsilon{}
+	<sum> ::= <prod> <sum'>
+	
+	<sum'> ::= \lit{\opplus{}} <prod> <sum'>
+	\alt \lit{\opminus{}} <prod> <sum'>
+	\alt \textemptyword{}
 
-	<factor> ::= <pow> <factor'>
+	<prod> ::= <pow> <prod'>
 	
-	<factor'> ::= \lit{*} <pow> <factor'>
-	\alt \lit{/} <pow> <factor'>
-	\alt \textepsilon{}
+	<prod'> ::= \lit{\opmult{}} <pow> <prod'>
+	\alt \lit{\opdiv{}} <pow> <prod'>
+	\alt \textemptyword{}
 
-	<pow> ::= <factorial> <pow'>
+	<pow> ::= <fact> <pow'>
 	
-	<pow'> ::= \lit{\^{}} <pow>
-	\alt \textepsilon{}
+	<pow'> ::= \lit{\oppow{}} <pow>
+	\alt \textemptyword{}
 
-	<factorial> ::= <exp\textunderscore elem> <factorial'>
+	<fact> ::= <exp\textunderscore elem> <fact'>
 	
-	<factorial'> ::= \lit{!}
-	\alt \textepsilon{}
+	<fact'> ::= \lit{!}
+	\alt \textemptyword{}
 
 	<exp\textunderscore elem> ::= \lit{id}
 	\alt \lit{num}
+	\alt \lit{(} <exp> \lit{)}
 \end{grammarEx}

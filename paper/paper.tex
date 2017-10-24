@@ -4,6 +4,9 @@
 \newcommand{\figref}[1]{
 	figure ~\ref{#1}
 }
+\newcommand{\Figref}[1]{
+	Figure ~\ref{#1}
+}
 \newcommand{\tabref}[1]{
 	table ~\ref{#1}
 }
@@ -11,17 +14,19 @@
 	listing ~\ref{#1}
 }
 \newcommand{\chref}[1]{
-	~\ref{#1}:
+	chapter ~\ref{#1}:
 	\textit{~\nameref{#1}}
 }
 \newcommand{\secref}[1]{
-	~\ref{#1}:
+	section ~\ref{#1}:
 	\textit{~\nameref{#1}}
 }
 \newcommand{\appref}[1]{
 	appendix ~\ref{#1}:
 	\textit{~\nameref{#1}}
 }
+
+\newcommand{\putquotes}[1]{``#1''}
 
 \newcommand{\textacronym}[1]{\textit{#1}}
 
@@ -42,11 +47,34 @@
 \newcommand{\textregex}[1]{\textit{#1}}
 
 \newcommand{\textlang}{LL(1)}
+\newcommand{\textemptyword}{\straightepsilon{}}
 \newcommand{\textterminator}{\$}
 
 \newcommand{\treeterminal}[1]{\textit{#1}}
 
 \newcommand{\mathrule}[2]{\textit{\textlangle{}#1\textrangle{}} ::= \text{#2}}
+\newcommand{\mathspace}[1]{\;\;}
+
+\newcommand{\opprogsep}{;}
+\newcommand{\opassign}{:=}
+
+\newcommand{\opplus}{+}
+\newcommand{\opminus}{-}
+\newcommand{\opmult}{*}
+\newcommand{\opdiv}{/}
+\newcommand{\oppow}{\^}
+\newcommand{\opfact}{!}
+
+\newcommand{\opand}{\&}
+\newcommand{\opor}{\textbar}
+\newcommand{\opneg}{\textasciitilde{}}
+
+\newcommand{\opless}{\textless}
+\newcommand{\opgreater}{\textgreater}
+\newcommand{\oplesseq}{\textless{}=}
+\newcommand{\opgreatereq}{\textgreater{}=}
+\newcommand{\opeq}{=}
+\newcommand{\opuneq}{\textless\textgreater}
 
 \newcommand{\paper}{paper}
 %END OF MACROS
@@ -144,20 +172,20 @@ Merseburg, \today
 \newpage{}
 
 \begin{abstract}
-The Floyd-Hoare logic or calculus is a methodology for proving the partial or total correctness of computer programs developed by C.A.R. Hoare based on ideas of Robert W. Floyd and has awoken a wave of enthusiasm in the domain of program verification. Though the system has received a great deal of recognition, some fundamental problems in effectively using it remain to be solved, as they were found undecidable.
+The \textname{Floyd-Hoare} logic or calculus is a methodology for proving the partial or total correctness of computer programs developed by \textname{C.A.R. Hoare} based on ideas of Robert W. Floyd and has awoken a wave of enthusiasm in the domain of program verification. Though the system has received a great deal of recognition, some fundamental problems in effectively using it remain to be solved, as they were found undecidable.
 
-This \paper{} aims to build a bridge between the often only theoretically-contemplated Hoare calculus and the venture to implement such with an example, starting from scratch. It describes the construction of an \textlang{} parser, corresponding grammars, the Hoare methodology and delves into the issues of searching for loop invariants and the handling of logical expressions, finding heuristics and resorts to user interaction where automated solutions fall short.
+This \paper{} aims to build a bridge between the often only theoretically-contemplated \textname{Hoare} calculus and the venture to implement such with an example, starting from scratch. It describes the construction of an \textlang{} parser, the preparation of corresponding grammars, a transformation of the obtained syntax trees, the Hoare methodology and delves into the issues of searching for loop invariants and the handling of logical and arithmetic expressions, seeking heuristics of the implication problem and resorts to user interaction where automated solutions fall short.
 \end{abstract}
 %END OF ABSTRACT
 
 \chapter{Introduction}
 
 \section{Motivation}
-Since the introduction of computers, more and more of today's workings were shifted to digital processing. That transition streamlined a lot of things but also requested for a new profession facing up to controlling those machines, which would soon become known under the term \textemph{software engineering}. As there are a lot of processes to be described and accounted for, of course it had been bound to fan out and different engineers for different systems and hybrid forms had and are still coming to life. Programming has turned into a basic skill and some politicians actually want to integrate it into the curriculums of elementary schools.\footnote{\url{http://www.npr.org/sections/ed/2016/01/12/462698966/the-president-wants-every-student-to-learn-computer-science-how-would-that-work}} That discipline also experienced a certain trait of creativity. With the right idea in mind for an App, arranging the available components in a way of high usability, one can explore and look out for a market demand because a number of platforms and services are already in existence for unleashing one's own ideas upon. Hardware, too, became more feasible and sophisticated in time but as the term discloses, software stands for a higher level of malleability, which fosters trial-and-error-flavored development. When developing for some platform, most of the details are abstracted, so, unless one is working with embedded systems, that require a close treatment, being aware of the inner workings at least partially has become increasingly unnecessary.
+Since the introduction of computers, more and more of the human life's activities experienced a shift to digital handling. That transition streamlined a lot of things but also called for a new profession facing up to the proper control of those machines, which would soon become known under the term \textemph{software engineering}. As there is a myriad of processes to be described and accounted for, the phenomenon had been bound to fan out. Thus the emergence of specialized engineers for diverse systems and their hybrid forms gradually took place. \textname{Programming} in its common associations has turned into a basic skill and some politicians actually want to integrate it firmly into the curriculums of elementary schools.\footnote{\url{http://www.npr.org/sections/ed/2016/01/12/462698966/the-president-wants-every-student-to-learn-computer-science-how-would-that-work}} This discipline has also adapted a certain trait of creativity. With the right idea in mind for an App, arranging the available components in a way of high usability, one can tap a market demand because a range of platforms and services are already in place for unleashing one's creative mind upon. Hardware, too, became more feasible and sophisticated in time but, as the term discloses, software stands for an elevated level of malleability, which initially fosters a trial-and-error-flavored development. Adding more and more layers of abstraction, the exact behavior of a program is often up for speculation. Unless one is working with embedded systems, which require a close-up treatment, being aware of the inner workings, to some extent at least, has been rendered increasingly unnecessary.
 
 \myquote{At least once a semester I hear some kid yell, 'Wow! This is like magic!' and that really motivates them.}{Alfred Thompson, computer science teacher}
 
-This is in contradistinction to the foundations of computer science, which seeks to formalize and systematically find solutions to problems. And in fact, as the application of software engineering progressed, the domain of topics enlarged. Questions of optimizations and concerns about security are slowly catching up and thus a particularized insight into the groundwork is about to regain value. As noted above, most everyday business is already handled by software and there are a couple of different applications where utmost accuracy is key:
+This aspect is in contradistinction to the foundations of computer science, which seeks to formalize and systematically find solutions to problems. And in fact, as the application of software engineering progressed, the domain of topics enlarged. There is the so-called \textname{Law of leaky Abstractions} as depicted by \textname{Joel Spolsky} in 2002.\footnote{\url{https://www.joelonsoftware.com/2002/11/11/the-law-of-leaky-abstractions/}} It states that there is no perfect abstraction of non-trivial procedures. Especially when things do not work as they should, the mask falls and implementation details protrude. Questions of optimization and concerns about security are catching up and thus a particularized insight into the groundwork is about to regain value. As noted above, most everyday business is already handled by software and there are a couple of different applications where utmost accuracy is key:
 
 \begin{itemize}
 	\item monetary transactions: automatic teller machines, to debit the right account, transfering ability to where it is needed
@@ -166,42 +194,29 @@ This is in contradistinction to the foundations of computer science, which seeks
 	\item ...
 \end{itemize}
 
-Since it is more economic to do so, most software companies are content with the density of errors below a prior specified threshold. That is, the amount of errors per 1000 lines of code is measured and weighed against a target value set within the analysis phase. For applications where an error could cost the life of a human being, a limit of 0.5 (0.05\%) is the common pick\footnote{\url{https://de.wikipedia.org/wiki/Fehlerquotient\#Fehlerdichte_in_der_Informatik}} albeit one may argue risks of that kind should be reduced to zero and the worth of an individual is not up for quantification.
+Since it is more economic to do so, most software companies are content with the density of errors below a prior specified threshold. That is, the amount of errors per lines of code is measured and weighed against a target value set within the analysis phase. For applications where an error could cost the life of a human being, the common pick is a limit of 0.5 per 1000 lines (0.05\%).\footnote{\url{https://de.wikipedia.org/wiki/Fehlerquotient\#Fehlerdichte_in_der_Informatik}} Yet one may argue that risks of that kind should be diminished to zero and that an individual life is not up for quantification.
 
-From a historical viewpoint, a broad range of different causes for misfunctioning software could be recorded: A comma in lieu of a dot, a wrong sign in front of a numeric expression, use of a wrong formula, racing conditions, an insufficient domain of definition, protocol errors, imprecision of floating point operations, overload, buffer overflow/underflow, non-considered constellations and many more. Upcoming are trends like IoT (Internet of Things) or autonomous driving that pose new layers of networks and challenge established safety aspects. Another known concern is cost efficiency: The later a software mistake is found, the more expensive it is to be fixed. After the development phase, the team that initially wrote the program often moved on to new tasks. Or in a case like the Mars rover \textname{Curiosity}, once deployed, it cannot just be replaced the software a posteriori. Moreover, often enough, the source code is not published, demands can change later on and glitches may manifest themselves without displaying symptoms at the beginning but which infect the system and which have an impact upon the expandability.
+From a historical viewpoint, a broad range of different causes for malfunctioning software could be recorded: A comma in lieu of a dot, a wrong signum leading a numeric expression, the usage of a wrong formula, racing conditions, an insufficient domain of definition, protocol errors, imprecision of floating point operations, overload, buffer overflow/underflow, non-considered constellations and many more. Upcoming are trends like \textname{IoT} (Internet of Things) or autonomous driving that pose new layers of networks and challenge established safety aspects. Another famous concern is cost efficiency: It is known that the later a software mistake is discovered, the more expensive it is to be fixed. After the development phase, the team that initially wrote the program often moved on to newer shores. Or in a case like the Mars rover \textname{Curiosity}, once deployed, replacing the software a posteriori appears rather challenging. Moreover, often enough, the source code is not published, demanded requirements can change later on and glitches may manifest themselves without displaying symptoms right away but which may infect the system and deal a blow to its expandability later on.
 
-Summarizing this section, the sources of programming errors are multifarious, there is a lot of potential hidden in between and it is often vital to know that software is indeed working correctly before its deployment or utilization. Thus is implied a stricter methodology of investigation of software if not one for its systematic development.
+Summarizing this section, the sources of programming errors are multifarious. There is a lot of potential hidden in between and it is often vital to know that software is indeed working correctly before shipping or utilizing it. Hence is implied a stricter methodology of scrutinizing software if not one for its systematic development.
 
 \section{Analysis vs simulation}
-To decrease the number of errors, a range of methods is at disposal. Most often that involves peer reviews, i.e. an independent surveyor evaluates one's code. Another idea is to simulate the behavior by carrying out dynamic test cases, directly running the code. Therefore, positive test cases are written that present well-formed inputs or conditions for an algorithm, then that algorithm is executed and the results are checked for integrity. Conversely, negative tests are to confirm bad input or precondition scenarios yield a proper error handling. The program is not supposed to end in an unregarded segmentation fault (stemming from an invalid access of memory), maybe should rather display a message box and append the information of the exception to a log file.
+To decrease the number of errors, a range of actions is at the software engineer's disposal. Most often that involves peer reviews, i.e. an independent surveyor evaluates one's code. Another idea is to simulate the behavior by carrying out dynamic test cases, directly running the code. Therefore, positive test cases are written that present well-formed inputs or conditions for an algorithm, then that algorithm is executed and the results are checked for integrity. Conversely, negative tests are to confirm bad input or precondition scenarios will yield a proper error handling. The program is not supposed to end in an unregarded segmentation fault (stemming from an invalid access of memory), maybe should instead display a message box and append the information of the exception to a log file.
 
-However, those tests cover but a part of the possible instances the code allows for, therefore fail to vindicate an overall correctness as a famous quote by E. W. Dijkstra alleges:
+However, those tests cover but a part of the possible instances the code allows for, therefore fail to vindicate an overall correctness as a famous quote by \textname{E. W. Dijkstra} alleges:
 
 \myquote{Program testing can best show the presence of errors but never their absence.}{Edsger W. Dijkstra}
 
-On the other hand, when speaking about verification in the environment of theoretical computer science, the term denotes a genuine proof of the absence of errors within a program according to a specification using formal means. Hence it poses an exact method to evaluate the quality of a software, which, as hinted above, turns out to be crucial at some points and as a consequence rightfully enlarges the discipline of software engineering.
+On the other hand, when speaking about verification in the environment of theoretical computer science, the term denotes a genuine proof of the absence of errors within a program according to a specification using formal means. It therefore poses an exact method to evaluate the quality of a software, which, as hinted above, turns out to be crucial at some points and as a consequence rightfully enlarges the discipline of software engineering.
 
 \section{Basic approaches}
-Currently, there are two main approaches known to this stipulation: model checking and deductive means.
+Currently, there are two main approaches known to this stipulation: model checking and deductive means. Model checking is the method of deciding whether a program or a model of it suffices a given specification by exploring its state-space. At this, a model serves an abstraction of the reality. The idea is to examine the model in order to draw conclusions about the actual system. It needs to be fitting to the task at hand, should be reduced as far as possible to simplify the issue but still contain all the relevant information. Different models can be mixed to acquire new information but such course of action is quick to decline the collective operability.
 
-Model checking is the method of deciding whether a program or a model of it suffices a given specification by exploring its state-space.
+The state-space is a set or graph of constellations of the values of variables and the current point of execution. This vector describes the state of the program in its entirety. By going through the program code, a verifying tool shifts between the states in order to find all possible execution paths. Those are then checked against constraints, e.g. invariants like a combination of variable values that should never occur. If an execution path should be found that violates these conditions, it will be exposed and the programmer can observe the execution path that lead to the error to hopefully fix its root cause. This approach basically traverses all accessible variations before it marks the program as approved. That is why there is an exponential growth in computation time and required memory involved, rendering the algorithm impractical fairly quickly. Model checking also necessitates a closed, finite system (or an algorithm to render it as such). Otherwise the program could keep allocating memory and the number of states would not exhaust, thus the verifier may never come to a conclusion. Dynamic data structures may be examined by dedicated methods like shape analysis\footnote{\url{https://en.wikipedia.org/wiki/Shape_analysis_(program_analysis)}}.
 
-At this, a model serves an abstraction of the reality. The idea is to examine the model in order to draw conclusions about the actual system. It needs to be fitting to the task at hand, should be reduced as far as possible to simplify the issue but still contain all the relevant information. Different models can be mixed to acquire new information but such course of action is quick to decline the collective operability.
+Both the model and the specifications are described in appropriate languages that allow the verifier to work with. Due to the intent of exploring the state space, the modeling language must project a finite state machine. Examples are PROMELA (Process Meta Language), Timed Automata or Petri nets. The specifications or properties checked for are usually decorated by logical expressions like temporal logic as introduced in programs by A. Pnueli \cite{Pnueli:1977:TLP:1382431.1382534}, are tacit (a division by zero should never occur) or may be integrated in the modeling language itself, e.g. PROMELA permits to insert assertions as part of the control flow.\footnote{\url{https://en.wikipedia.org/wiki/Model_checking}}
 
-The state-space is a set or graph of constellations of the values of variables and the current point of execution. This vector describes the state of the program in its entirety. By going through the program code, a verifying tool shifts between the states in order to find all possible execution paths. Those are then checked against constraints, e.g. invariants like a combination of variable values that should never occur. If an execution path should be found that violates these conditions, it will be exposed and the programmer can observe the execution path that lead to the error to hopefully fix its root cause. This approach basically traverses all accessible variations before it marks the program as approved. That is why there is an exponential growth in computation time and required memory involved, rendering the algorithm impractical fairly quickly. Model checking also necessitates a closed, finite system (or an algorithm to render it as such). Otherwise the program could keep allocating memory and the number of states would not exhaust, thus the verifier may never come to a conclusion. Dynamic data structures may be examined by specialized methods like shape analysis\footnote{\url{https://en.wikipedia.org/wiki/Shape_analysis_(program_analysis)}}.
-
-Both the model and the specifications are described in dedicated languages that allow the verifier to work with. Due to the intent of exploring the state space, the modeling language must project a finite state machine. Examples are PROMELA (Process Meta Language), Timed Automata or Petri nets. The specifications or properties checked for are usually decorated by logical expressions like temporal logic as introduced in programs by A. Pnueli \cite{Pnueli:1977:TLP:1382431.1382534}, are tacit (a division by zero should never occur) or may be integrated in the modeling language itself, e.g. PROMELA permits to insert assertions as part of the control flow.\footnote{\url{https://en.wikipedia.org/wiki/Model_checking}}
-
-%In the Java programming language, more specifically the runtime environment, there is a verifier checking the used classes for specific illegal structure, including:
-%
-%\begin{itemize}
-%	\item Usage of uninitialized variables
-%	\item Violation of access rights (e.g. write to a private variable from another scope)
-%\end{itemize}
-%
-%\footnote{\url{http://www.informit.com/articles/article.aspx?p=1187967&seqNum=2}}
-
-Another way of verifying a program and the method presented to be in this \paper{} is the deductive resolution of theorems. This idea was first introduced by \textname{Alan Turing} on a conference in 1949. Due to typographical mistakes and other circumstances, it went hidden for a bit but later on other researches would have retaken the topic. But the important thing was to notice that the problem could be modularized and that a program (\textname{Turing} used flowcharts back then) could be decorated with assertions. Later, in 1969, \textname{C.A.R. Hoare} invented a set of axioms and rules, the so-called \textname{Hoare} triples, that would point out a relation between an elementary program instruction or control flow and its effect on what can be logically assumed from what the semantics of this piece of code are to imply. For example the following listing increments a numerical variable 'x' by 1.
+Another way of verifying a program and the approach presented to be in this \paper{} is the deductive resolution of theorems. This idea was first introduced by \textname{Alan Turing} on a conference in 1949. Due to typographical mistakes and other circumstances, it went hidden for a bit but later on other researches have retaken the topic. The important aspect back then was the notion that the problem could be modularized and that a program (\textname{Turing} used flowcharts) could be decorated with assertions. Later, in 1969, \textname{C.A.R. Hoare} invented a set of axioms and rules, the so-called \textname{Hoare} triples, that would point out a relation between an elementary program instruction or control flow and its effect on what can be logically assumed from what the semantics of this piece of code are to imply. For example the following listing increments a numerical variable 'x' by 1.
 
 \begin{center}
 	\begin{lstlisting}[caption={First listing}]
@@ -209,7 +224,7 @@ Another way of verifying a program and the method presented to be in this \paper
 	\end{lstlisting}
 \end{center}
 
-Now it can be said that prior to this assignment, the variable had been lower by 1 compared to afterwards. Or more generally, before the assignment, every occurrence of 'x' had been substituted by the expression of the new value.
+Now it can be said that prior to this assignment, the variable had been lower by 1 compared to its new state. Or more generally, before the assignment, every occurrence of 'x' had been substituted by the expression of the new value.
 
 \begin{center}
 	\begin{lstlisting}[caption={Disadvantages of state-space exploration}]
@@ -221,14 +236,12 @@ Now it can be said that prior to this assignment, the variable had been lower by
 	\end{lstlisting}
 \end{center}
 
-The above code snippet shall serve as an easily comprehensible example for when deductive means outclass the procedure of state exploration. Assuming that x and y are only 2 byte integer variables and may take any value in their data type domain, that totals the combination of 32 bits or over 4 billion possibilities to check the post condition for, which is what state exploration would do. On the other hand, a human being should be able to recognize the pattern easily. By substitution, one could argue the assignments could be reduced to a single one (z=x+y) and that straight seems to match the post condition. So does the above program fulfill the surrounding specification? Maybe, maybe not. It should be considered that, first off, the conditions between the curly braces possess their own language with their own semantics, e.g. the operators may have their own meaning. Secondly, those are not exactly mathematical expressions. As hinted by x and y being 2 byte integer variables, z too might be restricted, thus the add and multiplication instructions may cause a buffer overflow, whereupon the semantics would have been altered by the substitution then. So of course it depends on the underlying system and that system respectively the semantics of the language have to be well-known in detail. Other than that, an axiomatic theorem solver like the human would identify the pattern, apply rules on the structure of the program to see what can be derived from it and then make statements about it.
+The above code snippet shall serve as an easily comprehensible example for when deductive means outclass the procedure of state exploration. Assuming that x and y are only 2 byte integer variables and may take any value in their data type domain, that totals the combination of 32 bits or over 4 billion possibilities to check the post condition for, which is what state exploration would do. On the other hand, a human being should be able to recognize the pattern easily. By substitution, one could argue the assignments should be reduced to a single one (z=x+y) and that straight seems to match the postcondition. So does the above program fulfill the surrounding specification? Maybe, maybe not. It should be considered that, first off, the conditions between the curly braces possess their own language with their own semantics, e.g. the operators may have their own meaning. Secondly, those are not exactly mathematical expressions. As hinted by x and y being 2 byte integer variables, z too might be restricted, thus the add and multiplication instructions may cause a buffer overflow, whereupon the semantics would have been altered by the substitution then. So of course it depends on the underlying system and that system respectively the semantics of the language have to be well-known in advance. Other than that, an axiomatic theorem solver like the human would identify the pattern, apply rules on the structure of the program to see what can be derived from it and then make statements about it.
 
-However, deductive program verification comes with its own set of problems: Those usually revolve around the elementary control flow constructs of imperative programming languages and the implications of those are not necessarily assessable in their entirety. The question whether a predicate logic expression connotes another is known to be undecidable in general. Furthermore, the calculus viewed here only establishes relationships and does not exactly hand out an algorithm.
-
-From theoretical computer science it can be stated that, in general, it is impossible to say if a program satisfies a set of specifications of any kind. However, it becomes more feasible when narrowed down to classes of programs and regarded languages.
+However, deductive program verification comes with its own set of problems: Those usually revolve around the elementary control flow constructs of imperative programming languages and the implications of those are not necessarily assessable in their entirety. The question whether a predicate logic expression connotes another is known to be undecidable in general. Furthermore, the later precisely examined calculus by itself only establishes relationships and does not exactly hand out an algorithm. From theoretical computer science it can be stated that, in general, it is impossible to say if a program satisfies a set of specifications of any kind. However, it becomes more feasible when narrowed down to classes of programs and regarded languages.
 
 \section{What the paper is about}
-The objective of this \paper{} shall be to outline the Hoare calculus, to make a design for a verifier that would present how rationales can be applied starting from a raw string input, how the mathematical formulas that come with it could be transcribed to imperative algorithms and at which points the interaction with a human user is still required. The elaborated design is then to be implemented in the \textname{Java} programming language along with an appropriate graphical user interface to portray the inductive procedure of Hoare-style reasoning.
+The objective of this \paper{} shall be to outline the Hoare calculus, to make a design for a verifier that would present how rationales can be applied starting from a raw string input, how the mathematical formulae that come with it could be transcribed to imperative algorithms and at which points the interaction with a human user is still required. The elaborated design is then to be implemented in the \textname{Java} programming language along with an appropriate graphical user interface to portray the inductive procedure of Hoare-style reasoning.
 
 To conclude the introduction, it should be stated that both model checking and theorem solving rely on a proper specification of the issue. If that is already faulty, which may be the case, since the specification needs a strict formalization as well, any verification will be meaningless and is prone to invoke type II errors (false negatives) because it fails to project the client's true intentions.
 
@@ -256,7 +269,7 @@ To conclude the introduction, it should be stated that both model checking and t
 
 Before plunging into the core topic of this \paper{}, it appears necessary to formalize the target of a prospective verifier. In order to make statements about the validity of a program, whether it holds to certain properties or not, both the program and the properties should be fixated. What could be considered secure knowledge anyway? Such a holistic view only makes sense under the presumption that some basic ideas can already be regarded as irrevocably intrinsic and then means of induction, analogy or similar are used to widen the scope and to declare more statements compatible to the existing knowledge base, verifying or, if they appear as contradictory, objecting them.
 
-And the strategy here is likewise: To know if a program fulfills some conditions, the meaning of the program and the conditions have to be precise. Since this entails lots and lots of programs and attributes in general, it becomes evident that rather than manually and pointlessly contemplating all possible variations, it deems better to ascribe it to some underlying scheme that can be unfolded on demand. Therefore the meaning, also called the semantics, of a program (and later also those of conditions) should be inductively synthesized using an appropriate model kit relating to a set of basic entities. Prior to determining the semantics, these entities also have to be identified as such, which is the part of the syntax analysis and shall be depicted as well.
+And the strategy here is likewise: To know if a program fulfills some conditions, the meaning of the program and the conditions have to be exact. Since this entails lots and lots of programs and attributes in general, it becomes evident that rather than manually and pointlessly contemplating all possible variations, it deems better to ascribe it to some underlying scheme that can be unfolded on demand. Therefore the meaning, also called the semantics, of a program (and later also those of conditions) should be inductively synthesized using an appropriate model kit relating to a set of basic entities. Prior to determining the semantics, these entities also have to be identified as such, which is the part of the syntax analysis and shall be depicted as well.
 
 Therefore the schedule is as follows: The rest of this chapter will give some further classification, tease about the purport and hand over a short preview. It may be skimmed or skipped over if the reader is fond of the contextual knowledge. Chapter \chref{ch:Introduction of language} will formally start with the definition of a language, how are they characterized and how they can be processed. Subsequently, the specific language subject to this \paper{} and whose programs are to be verified is firmly presented along with some simple remarks about its significance. Afterwards, in the dedicated \chref{ch:Semantics} chapter, these semantics are going to be formalized and, moreover, the type of semantics and how to continue with it are explained. The \chref{ch:How to prove} chapter reasons about using the obtained semantics, talks about the notion of correctness and introduces assertions by extending the language. Finally, a transition to the \textname{Hoare} rule system will be conducted, how to use it for verification of sequential programs and what challenges come with it.
 %A short outlook to parallelism will also be appended.
@@ -270,7 +283,7 @@ Computers by definition are devices that understand some sort of digitally repre
 
 Still, machine code, as the name indicates, varies between different machines. Infact, in the beginning, software engineers tended to write in \textemph{assembly} language, which is a more human-readable representation of machine code yet still platform-dependent. To not have to rewrite the same program logic for different platforms over and over again, more levels of abstractions were piled up and thus high level languages were born. High level languages like \textname{C} aggregate universal coding paradigms like variables or control structures and can combine elementary instructions to larger compounds. This makes it easier for the software engineer to assess the functionality of a program, which in turn in some way is a first step to boost the drafting of correct programs.
 
-For the platform to be able to use such high level programs, of course it appears necessary to reduce them to executable machine code again. The standard procedure is depicted in \figref{fig:HLLtoMC}.
+For the platform to be able to use such high level programs, of course it appears necessary to reduce them to executable machine code again. The standard procedure is depicted in \figref{fig:HLLtoMC}. The user-manufactured code may be exposed to a preprocessor, which takes care of some preparatory tasks like the inclusion of other script files or alternative substitutions like those carried out by the \textname{\#define} directive in the \textname{C} language. This yields the pure high level language as understandable by a compiler. The compiler does the main part of the translation and outputs assembly code which only needs to be transcribed to machine code and linked together to obtain the final executable version the hardware setup can be operated with.
 
 \begin{figure}
 	\centering
@@ -280,12 +293,6 @@ For the platform to be able to use such high level programs, of course it appear
 	\caption{High level code to machine code}
 	\label{fig:HLLtoMC}
 \end{figure}
-
-%Back in the day, when there were not as many different operating systems and hardware options yet, it was more about embedded programming in a style directly addressing the provided instruction set without a layer of abstraction in between. Now, programs are usually written in a high level language, that is, a language that does not specifically target a single platform, platform being the combination of the operating system and the hardware beneath. So high level languages abstract the details of the surrounding shell. The standard procedure to convert from high level to machine executable instructions is depicted in \figref{fig:HLLtoMC}.
-
-%outputs platform-dependent so-called assembler or assembly code
-
-The user-manufactured code may be exposed to a preprocessor, which takes care of some preparatory tasks like the inclusion of other script files or alternative substitutions like those carried out by the \textname{\#define} directive in the \textname{C} language. This yields the pure high level language as understandable by a compiler. The compiler does the main part of the translation and outputs assembly code which only needs to be transcribed to machine code and linked together to obtain the final executable version the hardware setup can be operated with.
 
 The language as described in this \paper{} won't be in need of such a preprocessor and the verification is directly applied to the high level language during the compiler phase. Thus any kind of assembly output or lower level persistence is not required here and, in fact, the workings of a compiler can be split up further in detail.
 
@@ -303,9 +310,7 @@ The language as described in this \paper{} won't be in need of such a preprocess
 	\label{fig:compiler}
 \end{figure}
 
-x=y+1 -> id assignmentOperator id plusOperator 
-
-\figref{fig:compiler} shows the composition of the different components of a compiler. In a first step, a lexical analyzer, usually denoted as \textname{lexer} or \textname{tokenizer}, surveys the raw input sequence of characters and contracts the to be as cohesive identified words (\textname{lexemes}) to a sequence of tokens in the same order. This makes it easier for the syntactical analyzer (\textname{parser}) to progress because it abstracts the tokens as the atomic symbols instead of the initial single characters then. Both lexer and parser work with some grammar based on which the symbols are bestowed semantics but while the task of a lexer is to handle a less complex regular grammar (\textname{Chomsky}'s level 3), which can be realized using regular expressions, parsers must cope with context-free grammars (\textname{Chomsky}'s level 2) and normally it would be desirable for the parser to produce a tree structure incorporating rule precedence. The lexer can also be used to remove unnecessary white space and comments. More about the process can be read in the next chapter.\footnote{\url{https://stackoverflow.com/questions/2842809/lexers-vs-parsers}}
+\Figref{fig:compiler} shows the composition of the different components of a compiler. In a first step, a lexical analyzer, usually denoted as \textname{lexer} or \textname{tokenizer}, surveys the raw input sequence of characters and contracts the to be as cohesive identified words (\textname{lexemes}) to a sequence of tokens in the same order. This makes it easier for the syntactical analyzer (\textname{parser}) to progress because it abstracts the tokens as the atomic symbols instead of the initial single characters then. Both lexer and parser work with some grammar based on which the symbols are bestowed semantics but while the task of a lexer is to handle a less complex regular grammar (\textname{Chomsky}'s level 3), which can be realized using regular expressions, parsers must cope with context-free grammars (\textname{Chomsky}'s level 2) and normally it would be desirable for the parser to produce a tree structure incorporating rule precedence. The lexer can also be used to remove unnecessary white space and comments. More about the process can be read in the next chapter.\footnote{\url{https://stackoverflow.com/questions/2842809/lexers-vs-parsers}}
 
 After the syntactical analysis, there can be a semantic analysis that cross-checks the validity of the constructed syntax tree or sanitizes it, e.g. the typing in a variable assignment statement like:
 
@@ -341,12 +346,10 @@ To later derive a meaning from it, some code must be established in advance and 
 	A language is a set of words. Since those sets are usually infinite, a language is commonly described by a predicate.
 \end{definition}
 
-Ex: A language may be designated by the notation of a regular expression like for instance \textregex{a*b}, the asterisk being a quantifier for the preceding symbol, indicating ``an arbitrary number of'', so the given example would encompass the words \textword{b}, \textword{ab}, \textword{aab}, \textword{aaab}, \textword{aaaab} and so on but regular expressions can only describe regular languages (Chomsky's level 3) while there are other ways to address greater sets of languages.
-
-Since languages as defined above alone still lack a proper structure to bind semantics to, the concept of grammars is to be introduced. Those consist of a set of production rules to span a language incrementally, chunk and organize their words into a tree structure, called the tree of the syntax. Grammars always relate to a (specific type of) language and are formalized as following:
+Ex: A language may be designated by the notation of a regular expression like for instance \textregex{a*b}, the asterisk being a quantifier for the preceding symbol, indicating ``an arbitrary number of'', so the given example would encompass the words \textword{b}, \textword{ab}, \textword{aab}, \textword{aaab} and so on but regular expressions can only describe regular languages (Chomsky's level 3) while there are other ways to address greater sets of languages. Since languages as defined above alone still lack a proper structure to bind semantics to, the concept of grammars is to be introduced. Those consist of a set of production rules to span a language incrementally, chunk and organize their words into a tree structure, called the tree of the syntax. Grammars always relate to a (specific type of) language and are formalized as following:
 
 \begin{definition}
-	A grammar is a tuple of a set of variables (also called non-terminals), terminal symbols, production rules and a starting symbol (of set thereof).
+	A grammar is a tuple of a set of variables (also called non-terminals), terminal symbols, production rules and a starting symbol (or set thereof).
 	\[G = (V, T, P, S)\]
 	
 	\begin{itemize}
@@ -359,7 +362,7 @@ Since languages as defined above alone still lack a proper structure to bind sem
 
 \FloatBarrier
 
-The first example of a grammar in \figref{fig:grammar_example_first} displays the standard \textname{Backus-Naur Form}\footnote{\url{http://matt.might.net/articles/grammars-bnf-ebnf/}} notation that will also be used throughout this \paper{}. In a mathematical set notation it correspond to:
+The first example of a grammar in \figref{fig:grammar_example_first} displays the standard \textname{Backus-Naur Form}\footnote{\url{http://matt.might.net/articles/grammars-bnf-ebnf/}} notation that will also be used throughout this \paper{}. In a mathematical set notation it corresponds to:
 
 \begin{figure}
 	\centering
@@ -374,10 +377,20 @@ The first example of a grammar in \figref{fig:grammar_example_first} displays th
 \begin{aligned}
 G ={} ( \\
 		& V = \{\textnonterminal{exp}, \textnonterminal{boolExp}\}, \\
-		& T = \{\textterminal{id}, \textterminal{+}, \textterminal{*}, \textterminal{\&\&}, \textterminal{\textbar\textbar}, \textterminal{compOp}, \textterminal{true}, \textterminal{false}\}, \\
-		& P = \{ \mathrule{exp}{\textnonterminal{exp} \textterminal{+} \textnonterminal{exp}}, \mathrule{exp}{\textnonterminal{exp} \textterminal{*} \textnonterminal{exp}}, \mathrule{exp}{\textterminal{id}}, \\
-		& \mathrule{boolExp}{\textnonterminal{boolExp} \textterminal{\&\&} \textnonterminal{boolExp}}, \mathrule{boolExp}{\textnonterminal{boolExp} \textterminal{\textbar\textbar} \textnonterminal{boolExp}}, \\
-		& \mathrule{boolExp}{\textnonterminal{exp} \textterminal{compOp} \textnonterminal{exp}}, \mathrule{boolExp}{\textterminal{true}}, \mathrule{boolExp}{\textterminal{false}} \}, \\
+		& T = \{\textterminal{id}, \textterminal{+}, \textterminal{*}, \textterminal{\&}, \textterminal{\textbar}, \textterminal{\textless}, \textterminal{\textgreater}, \textterminal{\textless{}=}, \textterminal{\textgreater{}=}, \textterminal{=}, \textterminal{\textless\textgreater}, \textterminal{true}, \textterminal{false}\}, \\
+		& P = \{ \mathrule{exp}{\textnonterminal{exp} \textterminal{+} \textnonterminal{exp}}, \\
+		& \mathrule{exp}{\textnonterminal{exp} \textterminal{*} \textnonterminal{exp}}, \\
+		& \mathrule{exp}{\textterminal{id}}, \\
+		& \mathrule{boolExp}{\textnonterminal{boolExp} \textterminal{\&} \textnonterminal{boolExp}}, \\
+		& \mathrule{boolExp}{\textnonterminal{boolExp} \textterminal{\textbar} \textnonterminal{boolExp}}, \\
+		& \mathrule{boolExp}{\textnonterminal{exp} \textterminal{\textless} \textnonterminal{exp}}, \\
+		& \mathrule{boolExp}{\textnonterminal{exp} \textterminal{\textgreater} \textnonterminal{exp}}, \\
+		& \mathrule{boolExp}{\textnonterminal{exp} \textterminal{\textless{}=}  \textnonterminal{exp}}, \\
+		& \mathrule{boolExp}{\textnonterminal{exp} \textterminal{\textgreater{}=} \textnonterminal{exp}}, \\
+		& \mathrule{boolExp}{\textnonterminal{exp} \textterminal{=} \textnonterminal{exp}}, \\
+		& \mathrule{boolExp}{\textnonterminal{exp} \textterminal{\textless\textgreater} \textnonterminal{exp}}, \\
+		& \mathrule{boolExp}{\textterminal{true}}, \\
+		& \mathrule{boolExp}{\textterminal{false}} \}, \\
 		& S = \{\textnonterminal{exp}\} \\
 )
 \end{aligned}
@@ -385,13 +398,11 @@ G ={} ( \\
 
 This assumes that \textnonterminal{exp} is indeed the starting symbol, which is not quite clarified in the first notation and will instead be separately stated when needed. Variables are those that appear on the left-hand side of the production rules and which form the non-terminal nodes of the syntax tree. Terminals are atomic symbols, which means they cannot be split up any further and become leaves of the syntax tree. They can only be found on the right-hand side of the rules. Furthermore, production rules tell how the input words shall be broken down into variables and terminals. The starting symbol (or set thereof) determines what rule(s) to regard on the highest level. The pipe or vertical line symbol \textbar{} indicates an alternative. Thus the variable \textnonterminal{exp} can either be derived to \textword{exp + exp}, to \textword{exp * exp} or to \textword{id} here.
 
-Now there are different classes of grammars. Depending on it, the required strategy of a parser will look different. The later introduced language shall suffice the context-free \textlang{} type. This is why the following steps explain the constraints and the construction of a \textlang{} grammar. To obtain such a one, ambiguity, left recursion and non-determinism shall be erased. Some examples are to be inspected and transformed accordingly before stepping further and applying the learned techniques on the actual used language.
+Now there are different classes of grammars. Depending on it, the required strategy of a parser will look different. The later introduced language shall suffice the context-free \textlang{} type. This is why the following steps explain the constraints and construction of a \textlang{} grammar. To obtain such one, ambiguity, left recursion and non-determinism shall be erased. Some examples are to be inspected and transformed accordingly before stepping further and applying the learned techniques on the actual used language.
 
 \subsection{Ambuigity, Associativity, Precedence}\FloatBarrier
 
 Most of the conductions and remarks in this section refer to the compiler design lectures by \textname{Ravindrababu Ravula}\cite{gate_compiler_design}.
-
-In a first step, the grammar of \figref{fig:grammar_amb} shall depict the concatenation of id terminals by the + operator, namely the infix notation of addition. When exposing an input \textword{id+id+id} to that grammar, the two different syntax trees shown in \figref{fig:tree_amb} may be derived. That means the derivation process is not definite. Even with the arithmetic addition of two numbers being associative and commutative (Abelian), ambiguity in grammars is not really desired. There shall exist no more than one possible syntax tree for the same input and grammar. Telling if a grammar is ambiguous in general is not decidable.\footnote{\url{https://en.wikipedia.org/wiki/Ambiguous_grammar\#Recognizing_ambiguous_grammars}} However, the ambiguity at hand is evidently induced because it is unclear whether the addition operator binds to the left or right side. This can be taken care of by rewriting the production rules to not include the same non-terminal on both ends.
 
 \begin{figure}
 	\centering
@@ -402,18 +413,18 @@ In a first step, the grammar of \figref{fig:grammar_amb} shall depict the concat
 	\label{fig:grammar_example_amb}
 \end{figure}
 
+In a first step, the grammar of \figref{fig:grammar_example_amb} shall depict the concatenation of id terminals by the + operator, namely the infix notation of addition. When exposing an input \textword{id+id+id} to that grammar, the two different syntax trees shown in \figref{fig:tree_example_amb} may be obtained. That means the derivation process is not definite. Even with the arithmetic addition of two numbers being associative and commutative (Abelian), ambiguity in grammars is not really desired. There shall exist no more than one possible syntax tree for the same input and grammar. Telling if a grammar is ambiguous in general is not decidable.\footnote{\url{https://en.wikipedia.org/wiki/Ambiguous_grammar\#Recognizing_ambiguous_grammars}} However, the ambiguity at hand is evidently induced because it is unclear whether the addition operator binds to the lefthand or righthand side. This can be taken care of by rewriting the production rules to not include the same non-terminal on both ends. The grammar of \figref{fig:grammar_example_exp_RR} has the non-terminal situated at the ending, its syntax trees grow right-sided (rightmost derivation). The grammar of \figref{fig:grammar_example_exp_LR} has the non-terminal situated at the beginning, its syntax trees grow left-sided (leftmost derivation). With the addition being commutative, it does not matter semantics-wise but in order to be capable of elucidating another point about leftmost derivation, it shall be persevered with.
+
 \begin{figure}
 	\begin{center}
-		\input{tab/tree_amb}
+		\input{tab/tree_example_amb}
 	\end{center}
 
 	\caption{syntax trees of the example grammar for \textword{id+id+id}}
-	\label{fig:tree_amb}
+	\label{fig:tree_example_amb}
 \end{figure}
 
 \FloatBarrier
-
-The grammar of \figref{fig:grammar_example_exp_RR} has the non-terminal situated at the ending, its syntax trees grow on the right side (rightmost derivation). The grammar of \figref{fig:grammar_example_exp_LR} has the non-terminal situated at the beginning, its syntax trees grow on the left side (leftmost derivation). With the addition being commutative, it does not matter semantics-wise but in order to be capable of elucidating another point about leftmost derivation, it shall be persevered.
 
 \begin{figure}
 	\centering
@@ -421,7 +432,7 @@ The grammar of \figref{fig:grammar_example_exp_RR} has the non-terminal situated
 	\input{grammar/example_exp_RR}
 
 	\caption{right-most derivation}
-	\label{fig:grammar_exp_RR}
+	\label{fig:grammar_example_exp_RR}
 \end{figure}
 
 \begin{figure}
@@ -433,7 +444,7 @@ The grammar of \figref{fig:grammar_example_exp_RR} has the non-terminal situated
 
 \FloatBarrier
 
-In the following step, the grammar is extended by multiplication. Again an example input \textword{id+id*id} yields two different syntax trees as visible in \figref{fig:tree_diffSemantics}. Moreover, they entail different semantics. When evaluating the semantics of an expression like applying the mathematical operations of addition and multiplication, it is not reasonable to re-synthesize the string containing the mathematical expression as that would again call for the necessity of analyzing the structure but rather the syntax tree should directly be worked on progressively. The children of a node would recursively be conflated before advancing to their parent. So in \figref{fig:tree_diffSemantics}, the left tree would prioritize and execute the addition first and the resulting sum would become a factor in the multiplication, which would amount to a different value than what the mathematical expression \textword{id+id*id} denotes. The multiplication must be carried out before the summation directive. This raises the question on how to enforce precedence of operators within a grammar. Operations of higher precedence have to be on a deeper tree level. The solution is to split the grammar into more stages of variables.
+In the following step, the grammar is extended by multiplication according to \figref{fig:grammar_example_ambPrec}. Again an example input \textword{id+id*id} yields two different syntax trees as visible in \figref{fig:tree_example_diffSemantics}. Moreover, they entail different semantics. When evaluating the semantics of an expression like applying the mathematical operations of addition and multiplication, it is not reasonable to re-synthesize the string containing the mathematical expression as that would again call for the necessity of analyzing the structure but rather the syntax tree should directly be worked on progressively. The children of a node would recursively be conflated before advancing to their parent. So in \figref{fig:tree_example_diffSemantics}, the left tree would prioritize and execute the addition first and the resulting sum would become a factor in the multiplication, which would amount to a different value than what the mathematical expression \textword{id+id*id} denotes. The multiplication must be carried out before the summation directive. This raises the question on how to enforce precedence of operators within a grammar. Operations of higher precedence have to be on a deeper tree level. The solution is to split the grammar into more stages of variables.
 
 \begin{figure}
 	\centering
@@ -441,21 +452,54 @@ In the following step, the grammar is extended by multiplication. Again an examp
 	\input{grammar/example_ambPrec}
 
 	\caption{exp grammar with multiplication}
-	\label{fig:grammar_ambPrec}
+	\label{fig:grammar_example_ambPrec}
 \end{figure}
 
 \begin{figure}
 	\begin{center}
-		\input{tab/tree_diffSemantics}
+		\input{tab/tree_example_diffSemantics}
 	\end{center}
 
 	\caption{syntax trees of the multiplication-extended exp grammar}
-	\label{fig:tree_diffSemantics}
+	\label{fig:tree_example_diffSemantics}
 \end{figure}
 
 \FloatBarrier
 
-Now, in the grammar of \figref{fig:grammar_ambPrecFixed}, the \textterminal{+} and the \textterminal{*} operators are disconnected. Only the \textnonterminal{mult} variable is able to contain multiplication and it cannot go back to \textnonterminal{exp}. The purpose of \textnonterminal{exp} is to realize summation but it can derive to occurrences of \textnonterminal{mult}. So it realizes a one-way street and the sum derivation happens at the upper levels. The intrinsic ambiguity was eliminated as well. The raison d'être of the second production rule of \textnonterminal{exp} is for the case that there is no summation involved, it should go straight to \textnonterminal{mult} then. The second rule of \textnonterminal{mult} functions as a terminator, otherwise the tree would keep on growing and it accounts the case that maybe there is no multiplication within the expression.
+Now, in the grammar of \figref{fig:grammar_example_ambPrecFixed}, the \textterminal{+} and the \textterminal{*} operators are disconnected, they reside on different levels. Only the \textnonterminal{prod} variable is able to contain multiplication and it cannot go back to \textnonterminal{exp}. The purpose of \textnonterminal{exp} is to realize summation but it can derive to occurrences of \textnonterminal{prod}. So it realizes a one-way street and the sum derivation happens at the upper levels. The intrinsic ambiguity was eliminated as well. The raison d'être of the second production rule of \textnonterminal{exp} is for the case that there is no summation involved, it should go straight to \textnonterminal{prod} then. The second rule of \textnonterminal{prod} acts as a terminator, otherwise the tree would keep on growing and it accounts for the case that maybe there is no multiplication within the expression.
+
+%\begin{figure}
+%	\centering
+%	\begin{forest} for tree={
+%	    align=center,
+%%	    calign angle=45,
+%	    calign=fixed edge angles,
+%	    calign primary angle=-45, calign secondary angle = 45,
+%	}
+%	[exp
+%		[exp
+%			[exp
+%				[mult [id ] ]
+%			]
+%			[+ ]
+%			[mult
+%				[mult
+%					[mult [id ] ]
+%					[* ]
+%					[id ]
+%				]
+%				[* ]
+%				[id ]
+%			]
+%		]
+%		[+ ]
+%		[mult [id ] ]
+%	] ]
+%	\end{forest}
+%
+%	\caption{grammar with operator precedence}
+%	\label{fig:grammar_ambPrecFixed}
+%\end{figure}
 
 \begin{figure}
 	\centering
@@ -463,27 +507,26 @@ Now, in the grammar of \figref{fig:grammar_ambPrecFixed}, the \textterminal{+} a
 	\input{grammar/example_ambPrecFixed}
 
 	\caption{grammar with operator precedence}
-	\label{fig:grammar_ambPrecFixed}
+	\label{fig:grammar_example_ambPrecFixed}
 \end{figure}
 
-\begin{figure}
-	\begin{center}
-		\input{tab/tree_ambPrecFixed}
-	\end{center}
+%\begin{figure}
+%	\begin{center}
+%		\input{tab/tree_example_ambPrecFixed}
+%	\end{center}
+%
+%	\caption{syntax trees of the example grammar with different semantics}
+%	\label{fig:tree_example_ambPrecFixed}
+%\end{figure}
 
-	\caption{syntax trees of the example grammar with different semantics}
-	\label{fig:tree_ambPrecFixed}
-\end{figure}
+In summarization, to fix associativity, the recursivity of the rules has to be adjusted (\textrule{exp}{\textnonterminal{exp} \textterminal{+} \textterminal{id}} or \textrule{exp}{\textterminal{id} \textterminal{+} \textnonterminal{exp}} but no \textrule{exp}{\textnonterminal{exp} \textterminal{+} \textnonterminal{exp}}). To fix precedence, a hierarchy of non-terminals has to be established. This information will be adduced when designing the language whose words shall be verified and that is up for implementation.
 
-In summarization, to fix associativity, the recursivity of the rules has to be adjusted. To fix precedence, a hierarchy of non-terminals has to be established. This information will later be adduced when designing the language whose words shall be verified and that is up for implementation.
-
+\FloatBarrier
 \subsection{The problem with left recursion}
 
-When writing a grammar, it should be ensured that a real parser will have to be able to work with it. In a grammar as depicted in ~\figref{fig:grammar_LR} with the starting symbol being \textnonterminal{exp}, a top-down parser has to make a decision whether to pick the rule \textrule{exp}{\textnonterminal{exp} \textterminal{+} \textterminal{id}} or \textrule{exp}{\textterminal{id}}. The basis for a specific decision is the input string. When entering the \textnonterminal{exp} variable, the type of parser that will be illustrated here would investigate the first part of the first production rule \textrule{exp}{\textnonterminal{exp} \textterminal{+} \textterminal{id}}, which again is \textnonterminal{exp}. Without having made any progress, it finds itself in the same situation, the parser will try to derive \textnonterminal{exp} and see \textrule{exp}{\textnonterminal{exp} \textterminal{+} \textterminal{id}} as the path to pursue. It turns out to be an never-ending loop. This is why left recursion should be avoided in all of the production rules.
+When writing a grammar, it should be ensured that a real parser will have to be able to work with it. In a grammar as depicted in ~\figref{fig:grammar_LR} with the starting symbol being \textnonterminal{exp}, a top-down parser has to make a decision whether to pick the rule \textrule{exp}{\textnonterminal{exp} \textterminal{+} \textterminal{id}} or \textrule{exp}{\textterminal{id}}. The basis for a specific decision is the input string. When entering the \textnonterminal{exp} variable, the type of parser that will be illustrated here would investigate the first part of the first production rule \textrule{exp}{\textnonterminal{exp} \textterminal{+} \textterminal{id}}, which again is \textnonterminal{exp}. Without having made any progress, it finds itself in the same situation, the parser will try to derive \textnonterminal{exp} and see \textrule{exp}{\textnonterminal{exp} \textterminal{+} \textterminal{id}} as the path to pursue. It turns out to be an never-ending loop. This is why left recursion should be avoided in all production rules. To retain the generated language yet still get rid of left recursion, there is a simple conversion prescript demonstrated in \figref{fig:grammar_elimLR}. Another non-terminal is inserted that may right-recursively spawn new instances of \textalpha{} (everything that follows the initial non-terminal of the production rule causing the left-recursion) or end with \textemptyword{} which is the empty word. \textemptyword{} does not take any token from the input. Now, \textalpha{} and \textbeta{} may be substituted by any sequence of variables/terminals. To reform the above example grammar in \figref{fig:grammar_example_ambPrecFixed} and match the conversion pattern, \textalpha{} corresponds to \textterminal{+} \textnonterminal{mult} and \textbeta{} corresponds to \textnonterminal{mult}. The transformation is illustrated in \figref{fig:grammar_expRR}. On top of that, the pattern can be extended for multiple \textalpha{} and \textbeta{} branches like in \figref{fig:grammar_elimLRMultiple}.
 
-To retain the generated language yet still get rid of left recursion, there is a simple conversion prescript demonstrated in \figref{fig:grammar_elimLR}. Another non-terminal is inserted that may right-recursively spawn new instances of \textalpha{} (everything that follows the initial non-terminal of the production rule causing the left-recursion) or end with \straightepsilon{} which is the empty word. \straightepsilon{} does not take any token from the input. Now, \textalpha{} and \textbeta{} may be substituted by any sequence of variables/terminals. To reform the above example grammar in \figref{fig:grammar_ambPrecFixed} and match the conversion pattern, \textalpha{} corresponds to \textterminal{+} \textnonterminal{mult} and \textbeta{} corresponds to \textnonterminal{mult}. It is shown in \figref{fig:grammar_expRR}. On top of that, the pattern can be extended for multiple \textalpha{} and \textbeta{} branches like in \figref{fig:grammar_elimLRMultiple}.
-
-\begin{figure}
+\begin{figure}[H]
 	\centering
 	
 	\input{grammar/example_LR}
@@ -492,12 +535,10 @@ To retain the generated language yet still get rid of left recursion, there is a
 	\label{fig:grammar_LR}
 \end{figure}
 
-\FloatBarrier
-
 \begin{figure}
 	\centering
 
-	\input{fig/grammar_elimLR}
+	\input{tab/grammar_elimLR}
 
 	\caption{elimination of left recursion}
 	\label{fig:grammar_elimLR}
@@ -506,7 +547,7 @@ To retain the generated language yet still get rid of left recursion, there is a
 \begin{figure}
 	\centering
 	
-	\input{fig/grammar_expRR}
+	\input{tab/grammar_expRR}
 
 	\caption{exp with right recursion}
 	\label{fig:grammar_expRR}
@@ -515,7 +556,7 @@ To retain the generated language yet still get rid of left recursion, there is a
 \begin{figure}
 	\centering
 	
-	\input{fig/grammar_elimLRMultiple}
+	\input{tab/grammar_elimLRMultiple}
 
 	\caption{elimination of left recursion with multiple instances of \textalpha{} and \textbeta{}}
 	\label{fig:grammar_elimLRMultiple}
@@ -523,9 +564,9 @@ To retain the generated language yet still get rid of left recursion, there is a
 
 \FloatBarrier
 
-Lastly, in order to produce a \textlang{} grammar, non-determinism must be preempted. That means that the parser must be able to deduce which rule to use looking only at the next token of the input sequence and never tracing back. Common prefixes in the production rules of the same variable have to be factored out to realize that feature. That process is also called left factoring and is visualized in \figref{fig:grammar_expLeftFactoring}.
+Lastly, in order to produce a \textlang{} grammar, non-determinism must be preempted. That means that the parser must be able to deduce which rule to use looking only at the next token of the input sequence, never tracing back. Common prefixes in the production rules of the same variable have to be factored out to realize that feature. That process is also called left factoring and is visualized in \figref{fig:grammar_expLeftFactoring}.
 
-\begin{figure}
+\begin{figure}[H]
 	\centering
 
 	\input{fig/grammar_expLeftFactoring}
@@ -534,11 +575,20 @@ Lastly, in order to produce a \textlang{} grammar, non-determinism must be preem
 	\label{fig:grammar_expLeftFactoring}
 \end{figure}
 
+\FloatBarrier
 \subsection{Construction of an \textlang{} parser table}
 
-\textlang{} stands for processing the input from left to right, right-most derivation and having a lookahead of 1 token, so no back tracing required. Using a parsing table, a \textlang{} parser can directly make the rule picking decision by knowing the current non-terminal and the next terminal obtained from the input sequence: $NT \times T \mapsto P$. Before moving on to the actual language going to be used, the process of constructing a \textlang{} parser table shall be outlined, which requires the concept of \textname{First} and \textname{Follow}. \textname{First} and \textname{Follow} both describe sets of terminals. \textname{First} can furthermore contain the empty word and \textname{Follow} the terminating symbol. In order to construct the parser table, each variable is going to be assigned a pair of \textname{First} and \textname{Follow} sets. Considering the grammar in \figref{fig:example_grammar_firstFollow}, \tabref{tab:example_firstFollow_empty} must be filled in.
+\textlang{} stands for processing the input from left to right, right-most derivation and having a lookahead of 1 token, so no back tracing required. Using a parsing table, a \textlang{} parser can directly make the rule picking decision by knowing the current non-terminal and the next terminal obtained from the input sequence: $NT \times T \mapsto P$. Before moving on to the actual language going to be used, the process of constructing a \textlang{} parser table shall be outlined, which requires the concept of \textname{First} and \textname{Follow}. \textname{First} and \textname{Follow} both describe sets of terminals. \textname{First} can furthermore contain the empty word \textemptyword{} and \textname{Follow} the terminating symbol \textterminator{} (\textterminator{} is just an extra symbol appended to the input sequence in order to mark the ending). Continuing to construct the parser table, each variable is going to be assigned a pair of \textname{First} and \textname{Follow} sets. Considering the grammar in \figref{fig:grammar_example_firstFollow}, \tabref{tab:example_firstFollow_empty} must be filled in.
 
-\begin{figure}
+\begin{table}[H]
+	\centering
+	\caption{empty First-Follow table}
+	\label{tab:example_firstFollow_empty}
+	
+	\input{tab/example_firstFollow_empty}
+\end{table}
+
+\begin{figure}[H]
 	\centering
 	
 	\input{grammar/example_firstFollow}
@@ -547,19 +597,11 @@ Lastly, in order to produce a \textlang{} grammar, non-determinism must be preem
 	\label{fig:grammar_example_firstFollow}
 \end{figure}
 
-\begin{table}
-	\centering
-	\caption{empty First-Follow table}
-	\label{tab:example_firstFollow_empty}
-	
-	\input{tab/example_firstFollow_empty}
-\end{table}
+\underline{\textname{First}}: \textname{First} of a variable \textnonterminal{X} is obtained by taking a look at each of its production rules Q\textsubscript{i}, processing its sequence of symbols \textrulevar{P\textsubscript{i}}, collecting \textname{First} of \textrulevar{P\textsubscript{i}}. To get \textname{First} of \textrulevar{P\textsubscript{i}}, look at its first symbol. If it is a terminal, add it to the set and leave P\textsubscript{i}. If it is a variable \textnonterminal{Sub}, get \textname{First} of \textnonterminal{Sub}. The next step depends on if \textname{First} of \textnonterminal{Sub} contains the empty word \textemptyword{}, for then \textnonterminal{Sub} might be erased in \textrulevar{P\textsubscript{i}} while parsing. If \textemptyword{} is not included \underline{or} if the variable being investigated is the last symbol of \textrulevar{P\textsubscript{i}}, add all of \textname{First} of \textnonterminal{Sub} to the set and leave \textrulevar{P\textsubscript{i}}. If \textemptyword{} was contained and \textnonterminal{Sub} was not the last symbol of \textrulevar{P\textsubscript{i}}, everything except \textemptyword{} is added and \textrulevar{P\textsubscript{i}} advances to the next symbol.
 
-\underline{\textname{First}}: \textname{First} of a variable \textnonterminal{X} is obtained by taking a look at each of its production rules Q\textsubscript{i}, processing its sequence of symbols \textrulevar{P\textsubscript{i}}, collecting \textname{First} of \textrulevar{P\textsubscript{i}}. To get \textname{First} of \textrulevar{P\textsubscript{i}}, look at its first symbol. If it is a terminal, add it to the set and leave P\textsubscript{i}. If it is a variable \textnonterminal{Sub}, get \textname{First} of \textnonterminal{Sub}. The next step depends on if \textname{First} of \textnonterminal{Sub} contains the empty word \straightepsilon{}, for then \textnonterminal{Sub} might be erased in \textrulevar{P\textsubscript{i}} while parsing. If \straightepsilon{} is not included \underline{or} if the variable being investigated is the last symbol of \textrulevar{P\textsubscript{i}}, add all of \textname{First} of \textnonterminal{Sub} to the set and leave \textrulevar{P\textsubscript{i}}. If \straightepsilon{} was contained and \textnonterminal{Sub} was not the last symbol of \textrulevar{P\textsubscript{i}}, everything except the \straightepsilon{} is added and \textrulevar{P\textsubscript{i}} advances to the next symbol.
+\underline{\textname{Follow}}: \textname{Follow} of a variable \textnonterminal{X} is obtained by taking a look at each of its occurrences in every production rule \textrulevar{Q\textsubscript{i}} of the grammar, processing its remaining symbols after the occurrence of \textnonterminal{X} \textrulevar{P\textsubscript{i}}, collecting \textname{Follow} of \textrulevar{P\textsubscript{i}}. Additionally, start variables automatically get the terminator symbol \textterminator{} bestowed. If \textrulevar{P\textsubscript{i}} contains symbols, get \textname{First} of \textrulevar{P\textsubscript{i}}. If \textname{First} of \textrulevar{P\textsubscript{i}} contains the empty word \textemptyword{}, add everything of \textname{First} of \textrulevar{P\textsubscript{i}} to the set except for \textemptyword{} and also get \textname{Follow} of the variable \textrulevar{Q\textsubscript{i}} resides on. If \textemptyword{} is not included, simply add everything of \textname{First} of \textrulevar{P\textsubscript{i}}. If \textrulevar{P\textsubscript{i}} was empty to begin with, add \textname{Follow} of the variable its original production rule \textrulevar{Q\textsubscript{i}} resides on.\linebreak\underline{Footnote:} The \textname{Follow} set never contains \textemptyword{}.
 
-\underline{\textname{Follow}}: \textname{Follow} of a variable \textnonterminal{X} is obtained by taking a look at each of its occurrences in every production rule \textrulevar{Q\textsubscript{i}} of the grammar, processing its remaining symbols after the occurrence of \textnonterminal{X} \textrulevar{P\textsubscript{i}}, collecting \textname{Follow} \textrulevar{P\textsubscript{i}}. Additionally, start variables automatically get the terminator symbol \textterminator{} bestowed. If \textrulevar{P\textsubscript{i}} contains symbols get \textname{First} of \textrulevar{P\textsubscript{i}}. If \textname{First} of \textrulevar{P\textsubscript{i}} contains the empty word \straightepsilon{}, add everything of \textname{First} of \textrulevar{P\textsubscript{i}} to the set except for \straightepsilon{} and also get \textname{Follow} of the variable \textrulevar{Q\textsubscript{i}} resides on. If \straightepsilon{} is not included, simply add everything of \textname{First} of \textrulevar{P\textsubscript{i}}. If \textrulevar{P\textsubscript{i}} was empty to begin with, add \textname{Follow} of the variable its original production rule \textrulevar{Q\textsubscript{i}} resides on. The \textname{Follow} set never contains \straightepsilon{}.
-
-Since production rules may reference themselves or create a cycle dependency, both algorithms should mark which non-terminals were already visited. Using these algorithms for \textname{First} and \textname{Follow} - \textname{Java} listings are provided in \chref{Implementation} - the table can be filled in like in \tabref{tab:firstFollow_filled}. Transcribing the First-Follow table, the promised predictive \textlang{} parser table is about to emerge. Therefore, each of the variables qualifies a row once again and the columns are made up of all terminals of the grammar, including the termination symbol.
+Since production rules may reference themselves or create a cycle dependency, both algorithms should mark which non-terminals were already visited. Using these algorithms for \textname{First} and \textname{Follow} - \textname{Java} listings are provided in \chref{ch:Implementation} - the table can be filled in like in \tabref{tab:example_firstFollow_filled}. Transcribing the First-Follow table, the promised predictive \textlang{} parser table is about to erect. Therefore, each of the variables qualifies a row once again and the columns are made up of all terminals of the grammar, including the termination symbol \textterminal{}.
 
 \begin{table}
 	\centering
@@ -571,31 +613,31 @@ Since production rules may reference themselves or create a cycle dependency, bo
 
 \FloatBarrier
 
-The procedure appears straightforward: For every variable \textnonterminal{X} and every rule \textrulevar{P}, check the first symbol of \textrulevar{P}. If that symbol is a terminal, put \textrulevar{P} in the cell denoted by \textnonterminal{X} and the terminal. If it is a non-terminal \textnonterminal{Y}, put \textrulevar{P} in every cell denoted by \textnonterminal{X} and any of the terminals in the \textname{First} set of \textnonterminal{Y}. If as a last option it should be the empty word \straightepsilon{}, the rule will be to all of the terminals of the Follow set of \textnonterminal{X}.
-%what if \textnonterminal{Y} contains empty word?
+The procedure appears straightforward: For every variable \textnonterminal{X} and every rule \textrulevar{P}, check the first symbol of \textrulevar{P}. If that symbol is a terminal, put \textrulevar{P} in the cell denoted by \textnonterminal{X} and the actual terminal ($X \times t \mapsto $\textrule{X}{t}). If it is a non-terminal \textnonterminal{Y}, put \textrulevar{P} in every cell denoted by \textnonterminal{X} and any of the terminals in the \textname{First} set of \textnonterminal{Y} ($\forall y\in First(Y):$ $X \times y \mapsto $\textrule{X}{Y}). If (as a last option) it should be the empty word \textemptyword{}, the rule will be to derive \textnonterminal{X} to \textemptyword{} for all of the terminals of the Follow set of \textnonterminal{X} ($\forall x\in Follow(X):$ $X \times x \mapsto $\textrule{X}{\textemptyword{}}).
 
-\begin{table}
+\begin{table}[H]
 	\caption{predictive parser table}
 	\label{tab:parseTab_example}
 
 	\input{tab/parseTab_example}
 \end{table}
 
-If any of the cells should be object to multiple entries using the method just described, the grammar has not been \textlang{} as seeing only the next token is not enough to make a decision in that case. All cells that remain empty are instances of failure. If the parser comes across such a combination, it has to throw an exception and the input must not be accepted. It should be noted that the above described algorithm for developing a grammar does not ensure \textlang{} behavior. Left factorization lifts the ambiguity evoked by a common prefix in multiple production rules of the same variable but is purely syntactic. Variables, whose decomposition may yield the same prefix of terminals, are not of further interest, e.g. the rules \textrule{A}{\textterminal{a} \textterminal{b}} and \textrule{A}{\textnonterminal{A'}\textterminal{b}} cannot be unified/left factored even if \textterminal{a} $\subseteq{}$ \textnonterminal{A'}. Additionally, there may be overlapping with the \textname{Follow} sets. For a grammar to be \textlang{}, the \textname{First} sets of all production rules per variable must be disjoint and the intersection of the \textname{First} and \textname{Follow} sets of a variable must be empty in case the variables has an \straightepsilon{} production rule. One type of parser that can handle \textlang{} grammars is those that descend recursively. It is presented in \chref{Implementation}.
+If any of the cells should be object to multiple entries using the method just described, the grammar has not been \textlang{} as seeing only the next token is not enough to make a decision in that case. All cells that remain empty are instances of failure. If the parser comes across such a combination, it has to throw an exception and the input must not be accepted. It should be noted that the above described algorithm for developing a grammar does not ensure \textlang{} behavior. Left factorization lifts the ambiguity evoked by a common prefix in multiple production rules of the same variable but is purely syntactic. Variables, whose decomposition may yield the same prefix of terminals, are not of further interest, e.g. the rules \textrule{A}{\textterminal{a} \textterminal{b}} and \textrule{A}{\textnonterminal{A'} \textterminal{b}} cannot be unified/left factored even if \textterminal{a} $\subseteq{}$\textnonterminal{A'}. Additionally, there may be overlapping with the \textname{Follow} sets. For a grammar to be \textlang{}, the \textname{First} sets of all production rules per variable must be disjoint and the intersection of the \textname{First} and \textname{Follow} sets of a variable must be empty in case the variables has an \textemptyword{} production rule. One type of parser that can handle \textlang{} grammars is those that descend recursively. It is presented in \chref{ch:Implementation}. More can be read in.
 
-%http://pages.cs.wisc.edu/~fischer/cs536.s15/lectures/L9.4up.pdf
-
+\FloatBarrier
 \section{Core language}
 
 \subsection{Commands}
 
-Now the core language shall be constructed. The \textname{Hoare} calculus provides rules for the typical elementary imperative flow control elements and statements: variable assignment, selection, head-controlled loops and of course sequential composition.
-
-Some more known structures can be derived from this set. Foot-controlled loops are semantically equivalent to head-controlled loops with the loop body duplicated once in front of the loop for example:
+Having previewed the example, now the core language shall be constructed. The \textname{Hoare} calculus provides rules for the typical elementary imperative flow control elements and statements: variable assignment, selection, head-controlled loops and of course sequential composition. It matches that of \textname{while} programs. Some more commonly known structures can be extrapolated. Foot-controlled loops are semantically equivalent to head-controlled loops with the loop body duplicated once in front of the loop for example:
 
 \lstinputlisting[caption={Conversion foot-loop to while-loop (Java)},label={lst:countToWhileLoop}]{lst/footToWhileLoop.java}
 
 Count-controlled loops can be converted to head-controlled loops as well:
+
+The ternary conditional assignment can be expanded to a selection:
+
+\lstinputlisting[caption={Conversion conditional assignment to selection (Java)},label={lst:core_condAssignToAlt}]{lst/core_condAssignToAlt.java}
 
 \lstinputlisting[caption={Conversion count-controlled loop to while-loop (Java)},label={lst:countToWhileLoop}]{lst/countToWhileLoop.java}
 
@@ -605,52 +647,48 @@ Although converting the old-school goto jumps to loops may not be trivial and wi
 	\input{grammar/core_cmds_raw}
 
 	\caption{commands}
-	\label{fig:grammar_commands}
+	\label{fig:grammar_core_cmds}
 \end{figure}
 
-The commands for variable assignment, if selection and while loop are depicted in \figref{fig:grammar_commands}. The variable assignment \textnonterminal{assign} assigns \textnonterminal{exp} to \textnonterminal{var}, the if selection \textnonterminal{selection} checks the truth value of \textnonterminal{bool\textunderscore exp}. If it evaluates to true, the \textnonterminal{prog} of the THEN-branch will be executed, otherwise it will execute the \textnonterminal{prog} of the ELSE-branch. The \textnonterminal{loop} command checks the truth value of \textnonterminal{bool\textunderscore exp}. Should it evaluate to false, the execution point will jump right after the loop. In case it is true, the inner \textnonterminal{prog} will be called and afterwards the whole loop mechanism be repeated. Additionally, there is \textnonterminal{skip}, which does nothing of meaning but can be placed to suffice the syntax (like maybe if the ELSE-branch of the selection is not required). After having defined the single commands, they can be tied together via \textnonterminal{prog} as shown in \figref{fig:grammar_prog}, which is also the starting symbol. The first rule of \textnonterminal{prog} already displays left recursion which must be get rid of.
+The commands for variable assignment, if selection (alternative) and while loop are depicted in \figref{fig:grammar_core_cmds}. The variable assignment \textnonterminal{assign} assigns \textnonterminal{exp} to \textnonterminal{var} (no variable subscription/arrays here). The if selection \textnonterminal{alt} checks the truth value of \textnonterminal{bool\textunderscore exp}. Should it evaluate to true, the \textnonterminal{prog} of the THEN-branch will be executed, otherwise it will execute the \textnonterminal{prog} of the ELSE-branch. The \textnonterminal{loop} command checks the truth value of \textnonterminal{bool\textunderscore exp}. Should it evaluate to false, the execution point will jump right after the loop. In case it is true, the inner \textnonterminal{prog} will be called and afterwards the whole loop mechanism be repeated. Additionally, there is \textnonterminal{skip}, which does nothing of meaning but can be placed to suffice the syntax (like maybe if the ELSE-branch of the selection is superfluous). After having defined the single commands, they can be tied together via \textnonterminal{prog} as shown in \figref{fig:grammar_core_progonly_raw}, which is also the starting symbol, and put in a sequential composition using the \textterminal{\opprogsep{}} separator. The first rule of \textnonterminal{prog} displays left-recursion which must be get rid of. This is easily solved in \figref{fig:grammar_core_progonly_final}. The addition of \textnonterminal{alt\textunderscore{} else} and refactoring of \textnonterminal{alt} renders the else branch of selections optional for convenience.
 
 \begin{figure}
 	\centering
 
-	\input{grammar/core_prog_raw}
+	\input{grammar/core_progonly_raw}
 
 	\caption{\textnonterminal{prog}}
-	\label{fig:grammar_prog}
+	\label{fig:grammar_core_progonly_raw}
 \end{figure}
 
-\subsection{Numerical expressions}
+\begin{figure}[H]
+	\centering
 
-The \textnonterminal{exp} and \textnonterminal{bool\textunderscore exp} non terminals are still open to define. \textnonterminal{exp} describes an expression. In normal programming languages, this could be of any type. Here, it is restrained to integer. Floating-point operations in numerical systems are commonly imprecise respectively on the bit level, which would make a semantic observation more difficult. \textnonterminal{bool\textunderscore exp} yields a boolean value.
+	\input{grammar/core_progonly_final}
 
-\begin{figure}
+	\caption{\textnonterminal{prog}}
+	\label{fig:grammar_core_progonly_final}
+\end{figure}
+
+\FloatBarrier
+\subsection{Numeric expressions}
+
+The \textnonterminal{exp} and \textnonterminal{bool\textunderscore exp} non terminals remain open for definition. \textnonterminal{exp} describes an expression. In normal programming languages, this could be of any data type. Here, it is restrained to numeric expressions. Floating-point operations in numerical systems are commonly imprecise respectively on the bit level, which would make a semantic observation more difficult. Some techniques to cope with fractions will be covered later.
+
+\begin{figure}[H]
 	\input{grammar/core_exp_raw}
 	
 	\caption{core \textnonterminal{exp} grammar}
 	\label{fig:grammar_core_exp_raw}
 \end{figure}
 
-\begin{figure}
-	\centering
-	
-	\input{grammar/core_bool_exp_raw}
-	
-	\caption{core grammar of \textnonterminal{bool\textunderscore exp} (raw)}
-	\label{fig:grammar_core_bool_exp_raw}
-\end{figure}
+The indication of this initial grammar is as it appears most intuitive. For example, a numeric expression might be a multiplication of two other \textnonterminal{exp} or using any binary arithmetic operation for that matter. \textterminal{\opplus{}} stands for addition, \textterminal{\opminus{}} for subtraction, \textterminal{\opmult{}} for multiplication, \textterminal{\opdiv{}} for (integer) division, \textterminal{\oppow{}} for potentization and \textterminal{\opfact{}} for factorial (which is unary). The terminal \textterminal{id} matches a variable name (\textregex{[a-zA-Z][a-zA-Z0-9]*}), \textterminal{num} is any integer literal (\textregex{[1-9][0-9]*} \textbar{} \textregex{0}). The grammar rules for \textnonterminal{exp} contain left recursion and the precedence must be fixated to influence the setup of the syntax tree as described in \secref{sec:lang_grammars}. First off, a total order of the operators must be established. It seems obvious to do it according to the mathematical notation rules:
 
-The indication of these initial grammars is as it appears most intuitive. For example, an integer expression might be a multiplication of two other integer expressions or using any binary arithmetic operation for that matter. \textterminal{+} stands for addition, \textterminal{-} for subtraction, \textterminal{*} for multiplication, \textterminal{/} for (integer) division, \textterminal{\^{}} for potentization and \textterminal{!} for factorial (which is unary). The terminal \textterminal{id} matches a variable name (\textregex{[a-zA-Z][a-zA-Z0-9]*}), \textterminal{num} is any integer literal (\textregex{[1-9][0-9]* \textbar{} 0}).
+\begin{center}
+\opplus{} $\doteq{}$ \opminus{} $\lessdot{}$ \opmult{} $\doteq{}$ \opdiv{} $\lessdot{}$ \oppow{} $\lessdot{}$ \opfact{}
+\end{center}
 
-In \textnonterminal{bool\textunderscore exp}, it may either be a conjunction (\textnonterminal{bool\textunderscore exp} \&\& \textnonterminal{bool\textunderscore exp}), a disjunction (\textnonterminal{bool\textunderscore exp} \textbar{}\textbar{} \textnonterminal{bool\textunderscore exp}), a negation (! \textnonterminal{bool\textunderscore exp}) or an elementary entity: The comparison of two \textnonterminal{exp} expressions or the boolean literals \lit{true} or \lit{false}.
-
-Both the grammar rules for \textnonterminal{exp} and \textnonterminal{bool\textunderscore exp} contain left recursion and the precedence must be fixated to influence the setup of the syntax tree as described in \secref{sec:lang_grammar}. First off, a total order of the operators must be established. It seems obvious to do it according to the mathematical notation rules:
-
-+ $\doteq{}$ - $\lessdot{}$ * $\doteq{}$ / $\lessdot{}$ \^{} $\lessdot{}$ !
-
-So addition and subtraction have the lowest precedence, followed by multiplication and division, then comes exponentiation and finally the factorial operator gains the highest precedence. The hierarchy is displayed in \tabref{tab:exp_prec}, too. Moreover, it denotes the associativity of the binary operators: addition through division are left-associative but exponentiation is not. The expression 2\^{}2\^{}3 shall denote $2^{2^3}=2^8=256$ as opposed to $(2^2)^3=4^3=64$. While semantics-wise, associativity does not matter for addition and multiplication, it is fixed to left bias on default to reduce ambiguity.
-
-%tab_exp_prec
-\begin{table}
+\begin{table}[H]
 	\centering
 	\caption{operator table of \textnonterminal{exp}}
 	\label{tab:exp_prec}
@@ -658,10 +696,11 @@ So addition and subtraction have the lowest precedence, followed by multiplicati
 	\input{tab/exp_prec}
 \end{table}
 
-Using the methods proposed in \secref{sec:lang_grammar}, the grammar fragment for \textnonterminal{exp} can be arranged. The first version in \figref{fig:grammar_core_exp_prec} shows the precedence levels. In \figref{fig:grammar_core_exp_assoc} associativity is applied, in \figref{fig:grammar_core_exp_RR} left recursion is abolished and finally the grammar is exposed to left factoring in \figref{fig:grammar_core_exp_final}.
+So addition and subtraction come with the lowest precedence, followed by multiplication and division, then follows exponentiation and finally the factorial operator stands at the top. The hierarchy is displayed in \tabref{tab:exp_prec}, too. Moreover, this table denotes the associativity of the binary operators: addition through division are left-associative but exponentiation is not. The expression 2\^{}2\^{}3 shall denote $2^{2^3}=2^8=256$ as opposed to $(2^2)^3=4^3=64$. While semantics-wise, associativity does not matter for addition and multiplication, it is fixed to left bias on default to reduce ambiguity. Using the methods proposed in \secref{sec:lang_grammars}, the grammar fragment for \textnonterminal{exp} can be arranged. The first version in \figref{fig:grammar_core_exp_prec} shows the precedence levels. Associativity is applied in \figref{fig:grammar_core_exp_assoc}, in \figref{fig:grammar_core_exp_RR} left recursion is abolished and finally the grammar has been exposed to left factoring in \figref{fig:grammar_core_exp_final}. The last version encloses the auxiliary rule \textrule{exp\textunderscore elem}{\textterminal{(} \textnonterminal{exp} \textterminal{)}}, whose parentheses' encapsulation permits the prioritization of any operation over others.
 
-%
-\begin{figure}
+\FloatBarrier
+
+\begin{figure}[H]
 	\centering
 	
 	\input{grammar/core_exp_prec}
@@ -670,7 +709,7 @@ Using the methods proposed in \secref{sec:lang_grammar}, the grammar fragment fo
 	\label{fig:grammar_core_exp_prec}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[H]
 	\centering
 	
 	\input{grammar/core_exp_assoc}
@@ -679,7 +718,7 @@ Using the methods proposed in \secref{sec:lang_grammar}, the grammar fragment fo
 	\label{fig:grammar_core_exp_assoc}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[H]
 	\centering
 	
 	\input{grammar/core_exp_RR}
@@ -688,7 +727,7 @@ Using the methods proposed in \secref{sec:lang_grammar}, the grammar fragment fo
 	\label{fig:grammar_core_exp_RR}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[H]
 	\centering
 	
 	\input{grammar/core_exp_final}
@@ -697,34 +736,16 @@ Using the methods proposed in \secref{sec:lang_grammar}, the grammar fragment fo
 	\label{fig:grammar_core_exp_final}
 \end{figure}
 
-\begin{grammarEx}
-	<bool\textunderscore exp> ::= <bool\textunderscore or> 
-	
-	<bool\textunderscore or> ::= <bool\textunderscore and> <bool\textunderscore or'> 
-	
-	<bool\textunderscore or'> ::= \lit{\textbar\textbar} <bool\textunderscore and> <bool\textunderscore or'> 
-	\alt \lit{\textepsilon{}} 
-	
-	<bool\textunderscore and> ::= <bool\textunderscore neg> <bool\textunderscore and'> 
-	
-	<bool\textunderscore and'> ::= \lit{\&\&} <bool\textunderscore neg> <bool\textunderscore and'> 
-	\alt \lit{\textepsilon{}} 
-	
-	<bool\textunderscore neg> ::= <bool\textunderscore elementary> 
-	\alt \lit{~} <bool\textunderscore elementary> 
-	
-	<bool\textunderscore elementary> ::= <exp> \lit{\textless{}} <exp> 
-	\alt \lit{true} 
-	\alt \lit{[} <bool\textunderscore exp> \lit{]}
-\end{grammarEx}
-
+\FloatBarrier
 \subsection{Boolean expressions}
 
-The same procedure must be done for boolean expressions.
+The same procedure must be done for boolean expressions. \textnonterminal{bool\textunderscore exp}s yield a boolean value. Here, it may either be a conjunction (\textterminal{\opand{}}), a disjunction (\textterminal{\opor{}}), a negation (\textterminal{\opneg{}}) or an elementary entity: The comparison of two \textnonterminal{exp} via the comparison operators (less (\textterminal{\opless{}}), greater (\textterminal{\opgreater{}}), less or equal(\textterminal{\oplesseq{}}), greater or equal(\textterminal{\opgreatereq{}}), equal (\textterminal{\opeq{}}) or unequal (\textterminal{\opuneq{}})) or the boolean literals \textterminal{true} or \textterminal{false}.
 
-\textterminal{\textbar{}\textbar{}} $\lessdot{}$ \textterminal{\&\&} $\lessdot{}$ \textterminal{$\neg{}$} $\lessdot{}$ \textterminal{compOp}
+\begin{center}
+\textterminal{\opor{}} $\lessdot{}$ \textterminal{\opand{}} $\lessdot{}$ \textterminal{\opneg{}} $\lessdot{}$ \textterminal{\opless{}} $\doteq{}$ \textterminal{\opgreater{}} $\doteq{}$ \textterminal{\oplesseq{}} $\doteq{}$ \textterminal{\opgreatereq{}} $\doteq{}$ \textterminal{\opeq{}} $\doteq{}$ \textterminal{\opuneq{}}
+\end{center}
 
-\begin{table}
+\begin{table}[H]
 	\centering
 	\caption{operator table of \textnonterminal{exp}}
 	\label{tab:exp_prec}
@@ -732,7 +753,18 @@ The same procedure must be done for boolean expressions.
 	\input{tab/core_exp_prec}
 \end{table}
 
-\begin{figure}
+\FloatBarrier
+
+\begin{figure}[H]
+	\centering
+	
+	\input{grammar/core_bool_exp_raw}
+	
+	\caption{core grammar of \textnonterminal{bool\textunderscore exp} (raw)}
+	\label{fig:grammar_core_bool_exp_raw}
+\end{figure}
+
+\begin{figure}[H]
 	\centering
 	
 	\input{grammar/core_bool_exp_prec}
@@ -741,7 +773,7 @@ The same procedure must be done for boolean expressions.
 	\label{fig:grammar_core_bool_exp_prec}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[H]
 	\centering
 	
 	\input{grammar/core_bool_exp_final}
@@ -750,192 +782,318 @@ The same procedure must be done for boolean expressions.
 	\label{fig:grammar_core_bool_exp_final}
 \end{figure}
 
-This concludes the language definition that will be subject to the forthcoming verifying methods. It will be extended by the proof specification decorations later on. The whole language up to now can be viewed in \appref{app:grammar_core}.
+Complying with the steps in accordance to the previous section, one arrives at \figref{fig:grammar_core_bool_exp_final}. An analogous parentheses mechanism (\textrule{bool\textunderscore{} elem}{\textterminal{[} \textnonterminal{bool\textunderscore{} exp} \textterminal{]}}) is inserted but it uses brackets instead of parentheses. The reason is that \textnonterminal{bool\textunderscore{} elem} possesses rules starting with \textnonterminal{exp}. \textnonterminal{exp} can already start with \textterminal{(}, using \textterminal{(} again would break the \textlang{} trait (\textname{First} sets of \textnonterminal{exp} and \textnonterminal{bool\textunderscore exp} would not be disjunct) and are therefore not desirable.
 
-\section{Semantics}
+This concludes the language definition subject to the forthcoming verifying methods. It will be extended by the proof specification decorations later on. The whole language up to now along with the here omitted parser table can be viewed in \appref{app:grammar_core}. Line breaks and white space is tolerated for readability and used as delimiters of keywords because e.g. \textword{IFa} should be regarded as an identifier \textterminal{IFa} rather than the keyword \textterminal{IF} plus the identifier \textterminal{a}.
 
-The semantics are inductively defined, which means to make sense of a construct, its components are recursively examined.
-
-expression:
-To obtain the semantics of an expression, the involved variables need to be resolved for their current value.
-
-condition:
-
-
+\FloatBarrier
 \section{Semantic tree}
 
-The syntax tree constructed so far was due to the technical workings of the LL(1) parser. It creates a lot of unnecessary levels and the right recursion spawns cascades and \textepsilon{}-branches. Ex: The syntax tree of a simple expression A+1 produces the syntax tree in \figref{fig:tree_semanticTree_syntax_A1}. As can easily be observed, this representation is immensely oversized, contains redundancy and traversing it would be convoluted. Each additional summand would append another operator and another \textnonterminal{prod}-sub tree. It turns out to be impractical for further processing, which is why it should be converted into a more semantically meaningful tree. The deflated result is shown in \figref{fig:tree_semanticTree_semantic_A1}.
-
-The author will henceforth be using the term \textname{semantic tree} to refer to the new type when trying to emphasize a distinction between it and the original \textname{syntax tree}. The usual term found in literature is \textname{abstract syntax tree} while \textname{semantic tree} is reserved for a quite similar entity in logic. The author reckons the meaning can be generalized and fits.
-
-\begin{figure}
+\begin{figure}[H]
 	\begin{center}
 		\input{fig/tree_semanticTree_syntax_A1}
 	\end{center}
 
-	\caption{extensive syntax tree of A+1}
+	\caption{extensive syntax tree of \textword{A+1}}
 	\label{fig:tree_semanticTree_syntax_A1}
 \end{figure}
+
+The syntax tree constructed so far was meant to match the workings of a LL(1) parser. It creates a lot of unnecessary levels and the right-recursion spawns extended cascades and \textemptyword{}-branches. Ex: The syntax tree of a simple expression \textword{A+1} produces the syntax tree in \figref{fig:tree_semanticTree_syntax_A1}. As can easily be observed, this representation is immensely oversized, contains redundancy and traversing it would be convoluted. Each additional summand appends another operator and another \textnonterminal{prod}-sub tree. It turns out to be impractical for further processing, which is why it should be converted into a more semantically meaningful tree. The deflated result of such is shown in \figref{fig:tree_semanticTree_semantic_A1}. The expression is reduced to just a sum of an id and a numeric value, as a one would intuitively identify it. The operator is also left out because it can be implied by the fact that the treated node is a sum (a minus sign could be realized by inserting another intermediate \textname{negation} node, not defined yet). More on the technical aspects of typification of nodes and the transition from one tree to another are to be unveiled in the \textname{Implementation} chapter. The considerations up to this point are to showcase the elements of the language to be verified and to give credit to the required preparatory steps. The author will henceforth be using the term \textname{semantic tree} to refer to the new type when trying to emphasize a distinction between it and the original \textname{syntax tree}. The usual term found in literature is \textname{abstract syntax tree} while \textname{semantic tree} is reserved for a quite similar entity in logic. The author reckons the meaning can be generalized to encompass the described topic and is fitting.
 
 \begin{figure}
 	\begin{center}
 		\input{fig/tree_semanticTree_semantic_A1}
 	\end{center}
 
-	\caption{nice  tree of A+1}
+	\caption{semantic tree of \textword{A+1}}
 	\label{fig:tree_semanticTree_semantic_A1}
 \end{figure}
 
 \chapter{How to prove}
 
-\section{From operational semantics}
-determinism -> only one instruction to be executed next -> subclass while programs
+\section{Of operational semantics}
+
+Speaking about verification of programs, it is of utmost importance to know what a program does exactly, namely its semantics. These are inductively defined and should be formally specified. The model checking part in the introduction mentioned that the current point of execution (the instruction position) and the values of the involved variables identify a snapshot of the program in its entirety. Theoretically, in a deterministic environment where the next instruction to handle is fixed, the behavior can be foretold as the machine would compute.
+
+The idea now is to use the semantics defined at the end of the previous chapter in order to make statements about the execution of a given program. This is similar to actually running the program, traversing the entered lines/statements of code in succession and keeping memory of the current variable values. The mapping of all variables used inside the program as well as additional helper variables to specific values is called a state. As according to the introduced language, only the assignment instruction has the ability to alter the state.
+
+\begin{definition}
+	Be $S$ a program. $var(S)$ denotes the set of all variables occurring in $S$.
+\end{definition}
+
+Ex: In \lstref{lst:prove_varS} $var(S_{var})=\{x, y, z, q\}$
+\lstinputlisting[caption={S\textsubscript{var} example},label={lst:prove_varS}]{lst/prove_varS.java}
+
+\begin{definition}
+	Be $S$ a program. $change(S)$ denotes the set of all variables modified in $S$ (each one that has at least one assignment, irrespective to the instruction being actually executed).
+\end{definition}
+
+Ex: In \lstref{lst:prove_varS} $change(S_{var})=\{x, y\}$
+
+\begin{definition}
+	A state is a function, mapping a value to every variable in $var(S)$ as well as to auxiliary variables.
+\end{definition}
+
+\begin{definition}
+	Be $S$ a program and \textsigma{} a state. The pair $<S,\sigma{}>$ is called a configuration.
+\end{definition}
+
+Through computations, a program can shift between configurations. $E$ denotes the end of the program.
+
+\begin{definition}
+	Be $S$ a program and \textsigma{} a state. The pair $<S,\sigma{}>$ is called a configuration.
+\end{definition}
+
+\begin{definition}
+	Be $S$ a program and \textsigma{} a state. The pair $<S,\sigma{}>$ is called a configuration.
+\end{definition}
+
+Ex: $<x:=1,x=0> -> <E,x=1>$
+
+\begin{definition}
+	M[[s]] mapping reachable states from initial states, in det. programs in PW exactly one
+\end{definition}
+
+The semantics of the input words are inductively defined, which means to make sense of a construct, its components are recursively examined. To obtain the semantics of an expression for example, the involved variables need to be resolved for their current value.
 
 proof outline -> assertional decoration
-
-in assignment var and expr same type, no declaration
-
-var(s), change(s)
-
-denotational approach good for det. seq. programs
-
-M[[s]] mapping reachable states from initial states, in det. programs in PW exactly one
-
-TW divergence
-
-configurations abstract machine transition relation
-
-design by contract/specification (Meyer), rich interfaces, model variables, data refinement
-
-dynamic logic (KeY), modal operators
 
 assertions, extension of language
 partial correctness, total correctness
 
-The idea now is to use the semantics defined at the end of the previous chapter in order to make statements about the execution of a given program. This is similar to actually running the program, subsequentially traversing the entered lines of code and keeping memory of the current variable values. The mapping of all variables used inside the program as well as additional helper variables to specific values is called a state. As according to the introduced language, only the assignment instruction has the ability to alter the state.
+The following axioms and rules of the \textname{transition system} are transcribed from page 59 of \cite{apt2010verification}:
 
-\begin{definition}
-	A state is a function, mapping a value to every variable in var(S) as well as supporting variables.
-\end{definition}
-
-\begin{definition}
-	A configuration is a pair of a program and a state.
-\end{definition}
-
-<skip,\textsigma{}> \textrightarrow{}* <E,\textsigma{}>
-<u=t,\textsigma{}> \textrightarrow{}* <E,\textsigma{}[u=\textsigma{}(t)]>
-
-\begin{equation}
-	\dfrac{<S\textsubscript{1},\sigma{}>\ \rightarrow{} <S\textsubscript{2},\tau>}{<S\textsubscript{1};S,\sigma{}>\ \rightarrow{}^*\ <S\textsubscript{2};S,\tau{}>}
+\begin{equation}\label{eq:conf_skip}
+	<skip,\textsigma{}>\mathspace \rightarrow{} <E,\textsigma{}>
 \end{equation}
 
-\begin{equation}
+\begin{equation}\label{eq:conf_assign}
+	<u=t,\textsigma{}>\mathspace \rightarrow{} <E,\textsigma{}[u=\textsigma{}(t)]>
+\end{equation}
+
+\begin{equation}\label{eq:conf_comp}
+	\dfrac{<S\textsubscript{1},\sigma{}>\mathspace \rightarrow{} <S\textsubscript{2},\tau>}{<S\textsubscript{1};S,\sigma{}>\mathspace \rightarrow{}\ <S\textsubscript{2};S,\tau{}>}
+\end{equation}
+
+\begin{equation}\label{eq:conf_altThen}
 	<IF\ COND\ THEN\ S\textsubscript{1}\ ELSE\ S\textsubscript{2}\ FI,\sigma{}>\ \rightarrow{} <S\textsubscript{1},\sigma{}>\ where\ \sigma{} \models{} COND
 \end{equation}
 
-\begin{equation}
+\begin{equation}\label{eq:conf_altElse}
 	<IF\ COND\ THEN\ S\textsubscript{1}\ ELSE\ S\textsubscript{2}\ FI,\sigma{}>\ \rightarrow{} <S\textsubscript{2},\sigma{}>\ where\ \sigma{} \nvDash{} COND
 \end{equation}
 
-\begin{equation}
+\begin{equation}\label{eq:conf_loop_continue}
 	<WHILE\ COND\ DO\ S\ OD,\sigma{}>\ \rightarrow{}\ <S;WHILE\ CONDITION\ DO\ S\ OD,\sigma{}>\ where\ \sigma{} \vDash{} COND
 \end{equation}
 
-\begin{equation}
+\begin{equation}\label{eq:conf_loop_abort}
 	<WHILE\ COND\ DO\ S\ OD,\sigma{}>\ \rightarrow{}\ <E,\sigma{}>\ where\ \sigma{} \nvDash{} COND
 \end{equation}
+
+\eqref{eq:conf_skip} states that \textname{skip} does not cause a state change and just transitions to \textname{E}. In \eqref{eq:conf_assign}, the state is altered by replacing the value of the variable $u$ by $t$. \eqref{eq:conf_comp} is the propagation characteristic of the sequential composition: the first part is evaluated and passed to the second part. \eqref{eq:conf_altThen} and \eqref{eq:conf_altElse} handle alternatives and \eqref{eq:conf_loop_continue} together with \eqref{eq:conf_loop_abort} loops. It can be noticed that the assignment is the only statement to evoke a state change and that only the loop (\eqref{eq:conf_loop_continue}) has the ability to have the \putquotes{remaining} program to be processed of the target configuration larger than that of the source configuration. Thus it is the only one with potential for divergence: to make the program never end.
 
 %determinism: exactly one computation of S starting in \textsigma{}
 %absence of blocking: <S,\sigma > -> <S1,\tau> for S!=E
 
-%var(prog) - set of variables occuring in the program
 %value(var \in var(prog)) - domain of the values the variable can be applied to (as specified by the data type)
 %states(prog) - set of all states
 
 \section{Transition to Hoare calculus}
+
+As hinted in the introduction, correctness is a somewhat vague term. For all it may concern, a program could be declared correct for halting, containing specific statements, fulfilling liveliness parameters (the program keeps visiting \putquotes{good} configurations) or safety conditions (it never comes across \putquotes{bad} configurations) for instance.
+
+The now presented \textname{Hoare} calculus defines relations of input/output behavior. That is, if a program starts in a state satisfying a precondition $p$ and executes a program $S$, it is guaranteed to have taken on a state fulfilling a postcondition $q$ afterwards.
+
+\begin{equation}\label{eq:prove_tripel}
+	\{p\}\ S\ \{q\}
+\end{equation}
+
+The notation is as shown in \eqref{eq:prove_tripel} and named \textname{Hoare triple}. The conditions, also called assertions, are put in curly braces although \textname{C.A.R. Hoare} originally did it the other way around ($p\ \{S\}\ q$). The difference between assertion and state is that an assertion is a predicate for allowed states, it designates a set of states. Using assertions, the programs of the developed language can be decorated to express a supposed to have behavior:
+
+\lstinputlisting[caption={Decoration example},label={lst:grammar_exp}]{lst/prove_deco.c}
+
+In that sense, of course, this is an arbitrary proposition that has to be verified. Do all states where $x$ is smaller than $y$ initially lead to a state where $x$ is smaller than $2*y$ after having added $y$ to $x$? It may be comprehensible in this case but less so for more complex problems. Fortunately, there is the \textname{Hoare} calculus to help systematizing them.
+
+\begin{center}
+	HOARE CALCULUS (PW):
+\end{center}
+
 %\begin{align}
 %\begin{split}
 SKIP AXIOM:
-	\begin{equation}
-		\{p\}\ SKIP\ \{p\}
-	\end{equation}
-//
+\begin{equation}\label{eq:prove_pw_skip}
+\begin{gathered}
+	\{p\}\ \mathbf{SKIP}\ \{p\}
+\end{gathered}
+\end{equation}
+
 ASSIGNMENT AXIOM:
-	\begin{equation}
-		\{p[u:=t]\}\ u:=t\ \{p\}
-	\end{equation}
-//
+\begin{equation}\label{eq:prove_pw_assign}
+\begin{gathered}
+	\{p[u:=t]\}\ u:=t\ \{p\}
+\end{gathered}
+\end{equation}
+
 COMPOSITION RULE:
-	\begin{equation}
-		\dfrac{\{p\}S_1\{r\},\{r\}S_2\{q\}}{\{p\}\ S_1;S_2\ \{q\}}
-	\end{equation}
-//
+\begin{equation}\label{eq:prove_pw_comp}
+\begin{gathered}
+	\{p\}\ S_1\ \{r\},\{r\}\ S_2\ \{q\} \\
+	\hline
+	\{p\}\ S_1;S_2\ \{q\}
+\end{gathered}
+\end{equation}
+
 CONDITIONAL RULE:
-	\begin{equation}
-		\dfrac{\{p\wedge B\} S \{p\}}{\{p\} IF\ B\ THEN\ S_1\ ELSE\ S_2\ FI\{q\}}
-	\end{equation}
-//
+\begin{equation}\label{eq:prove_pw_alt}
+\begin{gathered}
+	\{p\land B\}\ S\ \{p\} \\
+	\hline
+	\{p\}\ \mathbf{IF}\ B\ \mathbf{THEN}\ S_1\ \mathbf{ELSE}\ S_2\ \mathbf{FI}\ \{q\}
+\end{gathered}
+\end{equation}
+
 LOOP RULE:
-	\begin{equation}
-		\dfrac{\{p \wedge B\}S\{p\}}{\{p\}\ WHILE\ B\ DO\ S\ OD\ \{p \wedge \neg B\}}
-	\end{equation}
-//
+\begin{equation}\label{eq:prove_pw_loop}
+\begin{gathered}
+	\{p \land B\}\ S\ \{p\} \\
+	\hline
+	\{p\}\ \mathbf{WHILE}\ B\ \mathbf{DO}\ S\ \mathbf{OD}\ \{p \land \neg B\}
+\end{gathered}
+\end{equation}
+
 CONSEQUENCE RULE:
-	\begin{equation}
-		\dfrac{p \to p_1,{p_1}S{q_1},q1 \to q}{{p}\ S\ {q}}
-	\end{equation}
+\begin{equation}\label{eq:prove_pw_conseq}
+\begin{gathered}
+	p \to p_1,\{p_1\}\ S\ \{q_1\},q1 \to q \\
+	\hline
+	\{p\}\ S\ \{q\}
+\end{gathered}
+\end{equation}
+
+as listed in ~\cite{apt2010verification} 65f.
 %\end{split}
 %\end{align}
+\vspace*{0.5cm}
 
-The \textname{Hoare} calculus is a proof system consisting of axioms and rules that establish a relationship between pre- and postconditions of a set of basic programming constructs. Each of them is embodied by a Hoare triple {p} S {q}, p denoting the precondition, S the program section and q the postcondition. The horizontal bar is a fancier notation an implication: If all of the conditions above the bar are correct, the statenents below are true as well.
+More precisely, there are two versions. The above one is for partial correctness only. The case of divergence, a program never halting, is not covered here. The proof system consisting of axioms and rules establishes a relationship between pre- and postconditions of a set of basic programming constructs. These are the groundwork for further verification ventures. The horizontal bar is a fancier notation for an implication: If all of the conditions above the bar hold true, the statements below it are ensured to be correct as well.
 
-The \textterminal{SKIP} axiom states that it does not cause any change, which makes sense, as the instruction does infact nothing.
+Again, the $SKIP$ axiom in \eqref{eq:prove_pw_skip} confirms that \textterminal{SKIP} is unable to do anything to the state. The $ASSIGNMENT$ axiom says that the precondition matches the postcondition only that all occurrences of the variable are replaced by the new value within the precondition. This is a bit problematic since substitution is not a reversible (bijective) procedure, ergo a left to right evaluation becomes difficult. The composition displays its transitive properties once more in \eqref{eq:prove_pw_comp}. To obtain the postcondition of a composition, the postcondition of its first part is fed as precondition to the second part or vice versa. The $CONDITIONAL$ rule \eqref{eq:prove_pw_alt} merges the triples of the individual branches with the respectively associated condition for entering that branch. Perhaps most intriguing is the rule responsible for loops in \eqref{eq:prove_pw_loop}. The precondition becomes a conjunction with the negation of the loop condition but that is only the case (this transformation is only allowed to be conducted) if the conjunction of the precondition and the loop condition applied to the loop body ends in the precondition. $p$ is called a loop invariant in that regard because it does not change within the iteration. The binding material to plug the holes like enhancing the versatility of the $LOOP$ rule is found in the $CONSEQUENCE$ rule \eqref{eq:prove_pw_conseq}. A precondition can be strengthened by finding another one that implies the former precondition. On the other hand, a postcondition can always be relaxed by a weaker assertion. Essentially, the strongest predicate would be $\{false\}$, enveloping no state. A program annotated with $\{false\}$ at the end should never be found correct unless it diverges. The weakest assertion is $\{true\}$, encompassing all states, which is like the cartesian product of all possible variable values. Both strengthening and weakening must be exerted with care, for overdoing it would trigger type I \putquotes{false positive} errors. A program could be mistakenly identified as incorrect because e.g. the postcondition was needlessly rendered too weak and does no longer imply the final statement. \cite{kleuker2009formale} p. 228 additionally states:
 
-In the assignment axiom, it is indicated that the precondition can be derived from the postcondition by replacement of each of the occurences of the variable by the assigned expression. Example:
+\begin{equation}
+\begin{gathered}
+	\{p\}\ S_1\ \{q_1\}\land \{p\}\ S_2\ \{q_2\} \\
+	\hline
+	\{p\}\ \mathbf{IF}\ B\ \mathbf{THEN}\ S_1\ \mathbf{ELSE}\ S_2\ \mathbf{FI}\ \{q_1\lor q_2\}
+\end{gathered}
+\end{equation}
 
-%\DeclarePairedDelimiter\Hoare{\,\llparenthesis\,}{\,\rrparenthesis\,}
-%\begin{document}
-%\[
-%    \Hoare{x > 0} P \Hoare{y \cdot y < x}
-%\]
+and
 
-\newenvironment{hoare}[0]{\begin{equation}}{\end{equation}}
+\begin{equation}
+\begin{gathered}
+	var(B)\notin change(S_1)\land var(B)\notin change(S_2) \\
+	\hline
+	\{p\}\ \mathbf{IF}\ B\ \mathbf{THEN}\ S_1\ \mathbf{ELSE}\ S_2\ \mathbf{FI}\ \{(B\to q_1)\land (\lnot B \to q_2)\}
+\end{gathered}
+\end{equation}
 
-\begin{hoare}
-	\{x=10[x:=2*x]\} x=2*x \{x=10\} \equiv \{2*x=10\} x=2*x \{x=10\}
-\end{hoare}
+The \textname{Hoare} calculus by itself does not specify an algorithm yet. There is some flexibility in there. The analysis of a program may commence from the beginning onwards or push up from the ending, or even a combination thereof. However, there are a couple of reasons why the second option seems preferable. The assignment axiom does present an explicit instruction to receive the precondition from the postcondition. Going from left to right requires more thinking and case distinction.
 
-Resolving that precondition formula for x yields 5. So in order to arrive at a state z with z(x)=10 after the program section \textit{x=2*x}, x must have hold the value 5 just previously.
+Assuming that the precondition $p$ does not include the modified variable $x$, it would be intuitive that the strongest derived postcondition just adds the clause of x possessing the newly assigned value:
 
-The composition rule displays a transitive property. A sequential composition of two program parts can be evaluated by taking a look at one part and passing an obtained postcondition to the second part as its precondition, respectively vice versa when verifying from right to left.
+\begin{equation}
+\{p\}\ x:=2\ \{p\wedge x=2\}
+\end{equation}
 
-Encountering a selection is somewhat more troublesome. Either the B condition is found true at the point of execution whereupon S\_1 must be processed or B is evaluated to false and the processor pursues S\_2. Therefore, it is one of those two cases and the triple tries to account for both.
-
-The rule for while loops is particularly sophisticated. It requires one to think of a condition that holds true before and after each iteration, which is why such a condition is called a loop invariant p. After the loop has finished, p must still be true and the loop condition B untrue. Searching for p is a non-trivial, undecidable venture and a research matter up for discussion in the \secref{sec:challenges} section.
-
-Finally, the consequence rule serves as an interface and makes an important point: A precondition can always be substituted by one that encompasses a previous one, i.e. is a stronger assertion. Similarly, a postcondition may be weakened anytime.
-
-Some more notes about the use of the calculus and the effects of the constructs:
-As the system depicts only the mapping of relations, the order of evaluation is not quite fixed. The analysis of a program may commence from the beginning onwards or push up from the ending, or even a combination thereof. However, there are a couple of reasons why the second option seems preferable.
-
-The assignment axiom presents an explicit instruction to get the precondition from the postcondition. Going from left to right requires more thinking and case distinction.
-
-Assuming that the precondition p does not include the modified variable x, it would be intuitive that the strongest postcondition just adds the clause of x possessing the newly assigned value:
-\begin{hoare}
-\{p\} x=2 \{p\wedge x=2\}
-\end{hoare}
-
-If p does not contain x and the assigned value is a function of x, as there is no presumption about x, p will stay the same:
-\begin{hoare}
+If $p$ does not contain $x$ and the assigned value is a function of $x$, as there is no presumption about $x$, $p$ will stay the same:
+\begin{equation}
 \{p\} x=x+2 \{p\}
-\end{hoare}
+\end{equation}
 
-If p contains x and the value expression does not, the clauses in p that contain x would have to be discarded and and x possessing the newly assigned value added:
-\begin{hoare}
-\{p\} x=2 \{p[x:=]\wedge x=2\}
-\end{hoare}
+or one could insert some auxiliary anchor variable:
 
-\section{Challenges}\label{sec:challenges}
+\begin{equation}
+\{p\wedge X=x\} x=x+2 \{p\wedge X=x-2\}
+\end{equation}
+
+If $p$ contains $x$ and the value expression does not, the clauses in $p$ that contain $x$ would have to be discarded and and $x$ possessing the newly assigned value added:
+
+\begin{equation}
+\{p\}\ x:=2\ \{p[x:=]\wedge x:=2\}
+\end{equation}
+
+More sustainable seems to be the \textname{wlp} (weakest liberal precondition) algorithm by \textname{E. W. Dijkstra}:
+
+\begin{equation}\label{eq:prove_wlp_skip}
+\begin{gathered}
+	wlp(\mathbf{SKIP},q)\leftrightarrow q
+\end{gathered}
+\end{equation}
+
+\begin{equation}\label{eq:prove_wlp_assign}
+\begin{gathered}
+	wlp(u:=t,q)\leftrightarrow q[u:=t]
+\end{gathered}
+\end{equation}
+
+\begin{equation}\label{eq:prove_wlp_comp}
+\begin{gathered}
+	wlp(S_1;S_2,q)\leftrightarrow wlp(S_1,wlp(S_2,q))
+\end{gathered}
+\end{equation}
+
+\begin{equation}\label{eq:prove_wlp_alt}
+\begin{gathered}
+	wlp(\mathbf{IF}\ B\ \mathbf{THEN}\ S_1\ \mathbf{ELSE}\ S_2\ \mathbf{FI},q) \\
+	\leftrightarrow \\
+	(B\land wlp(S_1,q))\lor (\lnot B\land wlp(S_2,q))
+\end{gathered}
+\end{equation}
+
+\begin{equation}\label{eq:prove_wlp_loop_pre}
+\begin{gathered}
+	wlp(\mathbf{WHILE}\ B\ \mathbf{DO}\ S_1\ \mathbf{OD},q)\land B \\
+	\to \\
+	wlp(S_1,wlp(\mathbf{WHILE}\ B\ \mathbf{DO}\ S_1\ \mathbf{OD},q))
+\end{gathered}
+\end{equation}
+
+\begin{equation}\label{eq:prove_wlp_loop_post}
+\begin{gathered}
+	wlp(\mathbf{WHILE}\ B\ \mathbf{DO}\ S_1\ \mathbf{OD},q)\land \lnot B\to q
+\end{gathered}
+\end{equation}
+
+\begin{equation}\label{eq:prove_wlp_conseq}
+\begin{gathered}
+	\models\{p\}\ S\ \{q\}\ \iff\ p\to wlp(S,q)
+\end{gathered}
+\end{equation}
+as listed in ~\cite{apt2010verification} 87f.
+
+The $wlp$ is a function supposed to return the weakest liberal precondition of a program and a postcondition. \eqref{eq:prove_wlp_comp} indicates that the program is processed in reverse. In a composition, the $wlp$ of $S_1$ depends on the $wlp$ of $S_2$, so $S_2$ must be evaluated first. The already addressed skip and variable assignment handling is the same as before. The alternative is transformed into a logical disjunction of both branches. It is unknown which branch will be executed at runtime, so this can be imagined like the least common multiple. The problem of finding a loop invariant remains but there are statements concerning it.
+
+So the rough progressed algorithm is as follows: Apply $wlp$ to the overall program (the root \textnonterminal{prog}) and the given postcondition. Depending on the current program part, act accordingly:
+
+\underline{Skip:}
+Return the postcondition.
+
+\underline{Assignment:}
+To get the precondition, replace all occurrences of the assigned variable in the postcondition by the new value. This means the syntax/semantic tree of the assertion must be recursively examined for the variable.
+
+\underline{Composition:}
+Find $wlp$ of the rear program part using the given postcondition, then find $wlp$ of the anterior part by supplying the previously received precondition to determine the precondition of the composition. Of course this can be nested. This corresponds to a syntax tree from the language definition being descended rightwards, then working the way back up in accordance to a stack (recursive calls).
+
+\underline{Alternative:}
+Find $wlp$ of the program in the \textbf{THEN}-branch ($p_then$) and the \textbf{ELSE}-branch ($p_else$) in arbitrary order, then return $B\land p_then\lor \lnot B\land p_else$ with $B$ being the condition of the alternative. This possesses the potential of easily inflating the precondition.
+
+\underline{Loop:}
+Try to find a loop invariant $p$ automatically (some ideas are discussed in \secref{sec:challenges}) otherwise ask the user to present one. If it is indeed a loop invariant, it can simply be returned but it is unlikely to be sure of it (both automatic retrieval and user query), so doing the next inspection steps appears reasonable. Check if $p\land \lnot B$ implies the available postcondition (if it is an equivalent or stronger version of it). It cannot be a fitting invariant if that is not the case, retry another one. Find $wlp$ of the loop body with $p$ as the postcondition, then check the returned predicate whether it is implied by $p \land B$. It cannot be a fitting invariant if that is not the case, retry another one. With both checks being successful, $p$ can be picked as precondition of the loop. However, proving that one predicate implies another is an undecidable problem of its own (see \secref{sec:challenges}), thus it cannot be fully automatized, either, and must be user-supported.
+
+Ex:
+
+\section{sec:Challenges}\label{sec:challenges}
 \subsection{Finding invariants}
 
 A main challenge of using the Hoare calculus consists of finding fitting loop invariants. Those invariants are supposed to imply the postcondition.

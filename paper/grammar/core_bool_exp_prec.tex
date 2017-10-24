@@ -1,14 +1,19 @@
 \begin{grammarEx}
 	<bool\textunderscore exp> ::= <bool\textunderscore or>
 	
-	<bool\textunderscore or> ::= <bool\textunderscore and> \textbar{}\textbar{} <bool\textunderscore and>
+	<bool\textunderscore or> ::= <bool\textunderscore and> \lit{\opor{}} <bool\textunderscore and>
 
-	<bool\textunderscore{}and> ::= <bool\textunderscore neg> \&\& <bool\textunderscore{}neg>
+	<bool\textunderscore{}and> ::= <bool\textunderscore neg> \lit{\opand} <bool\textunderscore{}neg>
 
-	<bool\textunderscore neg> ::= $\neg{}$ <bool\textunderscore elem>
+	<bool\textunderscore neg> ::= \lit{\opneg{}} <bool\textunderscore elem>
 	\alt <bool\textunderscore elem>
 
-	<bool\textunderscore elem> ::= <exp> \lit{comp} <exp>
+	<bool\textunderscore elem> ::= <exp> \lit{\opless{}} <exp>
+	\alt <exp> \lit{\opgreater{}} <exp>
+	\alt <exp> \lit{\oplesseq{}} <exp>
+	\alt <exp> \lit{\opgreatereq{}} <exp>
+	\alt <exp> \lit{\opeq{}} <exp>
+	\alt <exp> \lit{\opuneq{}} <exp>
 	\alt \lit{true}
 	\alt \lit{false}
 \end{grammarEx}

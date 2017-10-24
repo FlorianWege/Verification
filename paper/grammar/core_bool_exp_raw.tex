@@ -1,15 +1,13 @@
 \begin{grammarEx}
-	<bool\textunderscore xp> ::= <bool\textunderscore exp> \lit{\&\&} <bool\textunderscore exp>
-	\alt <bool\textunderscore exp> \lit{\textbar\textbar} <bool\textunderscore exp>
-	\alt \lit{!} <bool\textunderscore exp>
-	\alt <exp> \lit{compOp} <exp>
+	<bool\textunderscore exp> ::= <bool\textunderscore exp> \lit{\opand} <bool\textunderscore exp>
+	\alt <bool\textunderscore exp> \lit{\opor} <bool\textunderscore exp>
+	\alt \lit{\opneg} <bool\textunderscore exp>
+	\alt <exp> \lit{\opless{}} <exp>
+	\alt <exp> \lit{\opgreater{}} <exp>
+	\alt <exp> \lit{\oplesseq{}} <exp>
+	\alt <exp> \lit{\opgreatereq{}} <exp>
+	\alt <exp> \lit{\opeq{}} <exp>
+	\alt <exp> \lit{\opuneq{}} <exp>
 	\alt \lit{true}
 	\alt \lit{false}
-
-	<compOp> ::= \lit{\textless{}}
-	\alt \lit{\textless{}=}
-	\alt \lit{\textgreater{}}
-	\alt \lit{\textgreater{}=}
-	\alt \lit{==}
-	\alt \lit{!=}
 \end{grammarEx}

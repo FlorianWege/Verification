@@ -5,7 +5,12 @@
 
 	<boolExp> ::= <boolExp> \lit{\&\&} <boolExp>
 	\alt <boolExp> \lit{\textbar\textbar} <boolExp>
-	\alt <exp> \lit{compOp} <exp>
+	\alt <exp> \lit{\textless} <exp>
+	\alt <exp> \lit{\textgreater} <exp>
+	\alt <exp> \lit{\textless{}=} <exp>
+	\alt <exp> \lit{\textgreater{}=} <exp>
+	\alt <exp> \lit{=} <exp>
+	\alt <exp> \lit{\textless\textgreater} <exp>
 	\alt \lit{true}
 	\alt \lit{false}
 \end{grammarEx}

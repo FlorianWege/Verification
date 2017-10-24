@@ -1,7 +1,7 @@
 \select@language {english}
 \contentsline {chapter}{\numberline {1}Introduction}{2}{chapter.1}
 \contentsline {section}{\numberline {1.1}Motivation}{2}{section.1.1}
-\contentsline {section}{\numberline {1.2}Analysis vs simulation}{3}{section.1.2}
+\contentsline {section}{\numberline {1.2}Analysis vs simulation}{4}{section.1.2}
 \contentsline {section}{\numberline {1.3}Basic approaches}{4}{section.1.3}
 \contentsline {section}{\numberline {1.4}What the paper is about}{6}{section.1.4}
 \contentsline {chapter}{\numberline {2}Preliminaries}{8}{chapter.2}
@@ -11,36 +11,35 @@
 \contentsline {section}{\numberline {3.1}On languages and grammars}{13}{section.3.1}
 \contentsline {subsection}{\numberline {3.1.1}Definitions}{13}{subsection.3.1.1}
 \contentsline {subsection}{\numberline {3.1.2}Ambuigity, Associativity, Precedence}{15}{subsection.3.1.2}
-\contentsline {subsection}{\numberline {3.1.3}The problem with left recursion}{18}{subsection.3.1.3}
+\contentsline {subsection}{\numberline {3.1.3}The problem with left recursion}{19}{subsection.3.1.3}
 \contentsline {subsection}{\numberline {3.1.4}Construction of an LL(1){} parser table}{21}{subsection.3.1.4}
 \contentsline {section}{\numberline {3.2}Core language}{24}{section.3.2}
 \contentsline {subsection}{\numberline {3.2.1}Commands}{24}{subsection.3.2.1}
-\contentsline {subsection}{\numberline {3.2.2}Numerical expressions}{25}{subsection.3.2.2}
-\contentsline {subsection}{\numberline {3.2.3}Boolean expressions}{29}{subsection.3.2.3}
-\contentsline {section}{\numberline {3.3}Semantics}{32}{section.3.3}
-\contentsline {section}{\numberline {3.4}Semantic tree}{32}{section.3.4}
-\contentsline {chapter}{\numberline {4}How to prove}{34}{chapter.4}
-\contentsline {section}{\numberline {4.1}From operational semantics}{34}{section.4.1}
-\contentsline {section}{\numberline {4.2}Transition to Hoare calculus}{35}{section.4.2}
-\contentsline {section}{\numberline {4.3}Challenges}{37}{section.4.3}
-\contentsline {subsection}{\numberline {4.3.1}Finding invariants}{37}{subsection.4.3.1}
-\contentsline {subsection}{\numberline {4.3.2}Resolving implications}{37}{subsection.4.3.2}
-\contentsline {chapter}{\numberline {5}Implementation}{38}{chapter.5}
-\contentsline {section}{\numberline {5.1}Java, Surface}{38}{section.5.1}
-\contentsline {section}{\numberline {5.2}Grammar, Lexer, parser}{40}{section.5.2}
-\contentsline {subsection}{\numberline {5.2.1}First, follow}{42}{subsection.5.2.1}
-\contentsline {section}{\numberline {5.3}Hoare}{48}{section.5.3}
-\contentsline {section}{\numberline {5.4}Exception handling}{48}{section.5.4}
-\contentsline {section}{\numberline {5.5}GUI}{48}{section.5.5}
-\contentsline {subsection}{\numberline {5.5.1}Editor}{48}{subsection.5.5.1}
-\contentsline {subsection}{\numberline {5.5.2}Display of tokens/syntax tree}{48}{subsection.5.5.2}
-\contentsline {subsection}{\numberline {5.5.3}Syntax chart with Hoare decoration}{48}{subsection.5.5.3}
-\contentsline {chapter}{\numberline {6}Fazit}{49}{chapter.6}
-\contentsline {section}{\numberline {6.1}Summerization}{49}{section.6.1}
-\contentsline {section}{\numberline {6.2}Remaining problems}{49}{section.6.2}
-\contentsline {section}{\numberline {6.3}Extendabilities}{49}{section.6.3}
-\contentsline {chapter}{\numberline {A}First, Follow, Parser Table listings}{52}{appendix.A}
-\contentsline {chapter}{\numberline {B}Lexer, Parser listings}{55}{appendix.B}
-\contentsline {chapter}{\numberline {C}Hoare listing}{58}{appendix.C}
-\contentsline {chapter}{\numberline {D}Grammmar for while programs}{68}{appendix.D}
-\contentsline {chapter}{\numberline {E}Grammar for Hoare-decorated while programs}{70}{appendix.E}
+\contentsline {subsection}{\numberline {3.2.2}Numeric expressions}{26}{subsection.3.2.2}
+\contentsline {subsection}{\numberline {3.2.3}Boolean expressions}{30}{subsection.3.2.3}
+\contentsline {section}{\numberline {3.3}Semantic tree}{34}{section.3.3}
+\contentsline {chapter}{\numberline {4}How to prove}{36}{chapter.4}
+\contentsline {section}{\numberline {4.1}Of operational semantics}{36}{section.4.1}
+\contentsline {section}{\numberline {4.2}Transition to Hoare calculus}{38}{section.4.2}
+\contentsline {section}{\numberline {4.3}sec:Challenges}{43}{section.4.3}
+\contentsline {subsection}{\numberline {4.3.1}Finding invariants}{43}{subsection.4.3.1}
+\contentsline {subsection}{\numberline {4.3.2}Resolving implications}{43}{subsection.4.3.2}
+\contentsline {chapter}{\numberline {5}Implementation}{44}{chapter.5}
+\contentsline {section}{\numberline {5.1}Java, Surface}{44}{section.5.1}
+\contentsline {section}{\numberline {5.2}Grammar, Lexer, parser}{46}{section.5.2}
+\contentsline {subsection}{\numberline {5.2.1}First, follow}{48}{subsection.5.2.1}
+\contentsline {section}{\numberline {5.3}Hoare}{54}{section.5.3}
+\contentsline {section}{\numberline {5.4}Exception handling}{54}{section.5.4}
+\contentsline {section}{\numberline {5.5}GUI}{54}{section.5.5}
+\contentsline {subsection}{\numberline {5.5.1}Editor}{54}{subsection.5.5.1}
+\contentsline {subsection}{\numberline {5.5.2}Display of tokens/syntax tree}{54}{subsection.5.5.2}
+\contentsline {subsection}{\numberline {5.5.3}Syntax chart with Hoare decoration}{54}{subsection.5.5.3}
+\contentsline {chapter}{\numberline {6}Fazit}{55}{chapter.6}
+\contentsline {section}{\numberline {6.1}Summerization}{55}{section.6.1}
+\contentsline {section}{\numberline {6.2}Remaining problems}{55}{section.6.2}
+\contentsline {section}{\numberline {6.3}Extendabilities}{55}{section.6.3}
+\contentsline {chapter}{\numberline {A}First, Follow, Parser Table listings}{58}{appendix.A}
+\contentsline {chapter}{\numberline {B}Lexer, Parser listings}{61}{appendix.B}
+\contentsline {chapter}{\numberline {C}Hoare listing}{64}{appendix.C}
+\contentsline {chapter}{\numberline {D}Grammmar for while programs}{74}{appendix.D}
+\contentsline {chapter}{\numberline {E}Grammar for Hoare-decorated while programs}{76}{appendix.E}
