@@ -52,7 +52,19 @@ public abstract class SemanticNode extends TNode<SemanticNode> implements Serial
     protected final static HoareWhileGrammar _grammar = HoareWhileGrammar.getInstance();
 
     public String getTypeName() {
-        return getClass().getSimpleName();
+        String s = getClass().getSimpleName();
+
+        StringBuilder sb = new StringBuilder();
+
+        for (int i = 0; i < s.length(); i++) {
+            Character c = s.charAt(i);
+
+            if (i > 0 && Character.isUpperCase(c)) sb.append("_");
+
+            sb.append(Character.toLowerCase(c));
+        }
+
+        return sb.toString();
     }
     public abstract String getContentString(@Nonnull IOUtil.BiFunc<SemanticNode, String, String> mapper);
     public String getContentString() {

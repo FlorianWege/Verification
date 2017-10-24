@@ -1,6 +1,8 @@
 package latex;
 
 import core.structures.semantics.SemanticNode;
+import core.structures.semantics.exp.ExpLit;
+import core.structures.semantics.exp.Id;
 import util.StringUtil;
 
 public class LatexSemanticNode extends LatexObject {
@@ -12,33 +14,33 @@ public class LatexSemanticNode extends LatexObject {
 
     @Override
     public void print(LatexStream stream) {
+        stream.println("[");
+
         if (_node.getChildren().isEmpty()) {
-            stream.println(StringUtil.latexify(_node.getTypeName().toString()) + " \\treeterminal{" + StringUtil.latexify(_node.getContentString()) + "}");
+            stream.println(StringUtil.latexify(_node.getTypeName()));
+
+            String terminal = null;
+
+            if (_node instanceof Id) terminal = ((Id) _node).getName();
+            if (_node instanceof ExpLit) terminal = ((ExpLit) _node).getVal().toBigInteger().toString();
+
+            if (terminal != null) stream.println("[\\treeterminal{" + terminal + "} ]");
+
+            stream.println("]");
 
             return;
         }
 
-        stream.println("." + StringUtil.latexify(_node.getTypeName().toString()));
+        stream.println(StringUtil.latexify(_node.getTypeName()) + " ");
 
         for (SemanticNode child : _node.getChildren()) {
-            //if (!(_node.getChildren().isEmpty())) {
-            
-                stream.println("[");
-            //}
+            stream.begin();
 
-            if (child.getChildren().isEmpty()) {
-                new LatexSemanticNode(child).print(stream);
-            } else {
-                stream.begin();
+            new LatexSemanticNode(child).print(stream);
 
-                new LatexSemanticNode(child).print(stream);
-
-                stream.end();
-            }
-
-            //if (!(_node.getChildren().isEmpty())) {
-                stream.println("]");
-            //}
+            stream.end();
         }
+
+        stream.println("]");
     }
 }

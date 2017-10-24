@@ -1,12 +1,12 @@
 package util;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Pattern;
-
 import com.google.common.html.HtmlEscapers;
 import core.structures.Terminal;
 import javafx.util.Pair;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Pattern;
 
 public class StringUtil {
 	public static final String bool_and = "\u2227";
@@ -35,9 +35,9 @@ public class StringUtil {
 		
 		replacements.add(new Pair<>("^", "\\\\^{}"));
 		
-		replacements.add(new Pair<>("||", "\\\\textbar\\\\textbar"));
-		replacements.add(new Pair<>("&&", "\\\\&\\\\&"));
-		replacements.add(new Pair<>(Terminal.EPSILON.toString(), "\\\\textepsilon{}"));
+		replacements.add(new Pair<>("|", "\\\\textbar"));
+		replacements.add(new Pair<>("&", "\\\\&"));
+		replacements.add(new Pair<>(Terminal.EPSILON.toString(), "\\\\straightepsilon{}"));
 		
 		replacements.add(new Pair<>("NUM", "num"));
 		replacements.add(new Pair<>("ID", "id"));

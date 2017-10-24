@@ -15,27 +15,27 @@ public class LatexSyntaxNode extends LatexObject {
 
     @Override
     public void print(LatexStream stream) {
+        stream.println("[");
+
         if (_node instanceof SyntaxNodeTerminal) {
             Token token = ((SyntaxNodeTerminal) _node).getToken();
 
             String tokenS = (token != null) ? token.getText() : Terminal.EPSILON.toString();
 
+            stream.println(StringUtil.latexify(_node.getSymbol().toString()));
+
             if (token != null) {
-                stream.println(StringUtil.latexify(_node.getSymbol().toString()) + " \\treeterminal{" + StringUtil.latexify(tokenS) + "}");
-            } else {
-                stream.println("\\treeterminal{" + StringUtil.latexify(tokenS) + "}");
+                stream.println(" [" + "\\treeterminal{" + StringUtil.latexify(tokenS) + "}" + " ]");
             }
+
+            stream.println("]");
 
             return;
         }
 
-        stream.println("." + StringUtil.latexify(_node.getSymbol().toString()));
+        stream.println(StringUtil.latexify(_node.getSymbol().toString()) + " ");
 
         for (SyntaxNode child : _node.getChildren()) {
-            if (!(child instanceof SyntaxNodeTerminal)) {
-                stream.println("[");
-            }
-
             if (child instanceof SyntaxNodeTerminal) {
                 new LatexSyntaxNode(child).print(stream);
             } else {
@@ -45,10 +45,8 @@ public class LatexSyntaxNode extends LatexObject {
 
                 stream.end();
             }
-
-            if (!(child instanceof SyntaxNodeTerminal)) {
-                stream.println("]");
-            }
         }
+
+        stream.println("]");
     }
 }

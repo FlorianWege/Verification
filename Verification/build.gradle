@@ -30,6 +30,8 @@ dependencies {
 	
 	compile 'org.testng:testng:' + '6.+'
 
+    compile files('libs/BigMath.jar')
+
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'
 }
