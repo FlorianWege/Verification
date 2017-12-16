@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.web.WebView?>
@@ -13,16 +12,12 @@
             <Font name="System Bold" size="18.0" />
          </font>
       </Label>
-      <SplitPane fx:id="_split" dividerPositions="0.5" orientation="VERTICAL" VBox.vgrow="ALWAYS">
-         <items>
-            <VBox fx:id="_pane_rationale">
-               <children>
-                  <Label text="rationale:" />
-                  <WebView fx:id="_textArea_rationale" minHeight="-1.0" minWidth="-1.0" prefHeight="-1.0" prefWidth="-1.0" VBox.vgrow="ALWAYS" />
-               </children>
-            </VBox>
-            <VBox fx:id="_pane_specHost" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" />
-         </items>
-      </SplitPane>
+      <VBox fx:id="_pane_rationale" VBox.vgrow="ALWAYS">
+         <children>
+            <Label text="rationale:" />
+            <WebView fx:id="_textArea_rationale" minHeight="-1.0" minWidth="-1.0" prefHeight="-1.0" prefWidth="-1.0" VBox.vgrow="ALWAYS" />
+         </children>
+      </VBox>
+      <VBox fx:id="_pane_specHost" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" />
    </children>
 </VBox>

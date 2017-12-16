@@ -10,19 +10,19 @@ import gui.ExtendedCodeArea;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import org.fxmisc.richtext.CodeArea;
 import util.ErrorUtil;
 import util.StringUtil;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class LoopAskInvDialog extends HoareDialog implements Initializable {
+public class LoopAskInvDialog extends HoareDialog implements gui.Initializable {
 	@FXML
 	private CodeArea _codeArea_invariant;
 	@FXML
@@ -34,7 +34,7 @@ public class LoopAskInvDialog extends HoareDialog implements Initializable {
 	private ExtendedCodeArea _extendedCodeArea_invariant;
 
 	public interface Callback {
-		void result(HoareCond invariant) throws Lexer.LexerException, Hoare.HoareException, Parser.ParserException, IOException;
+		void result(@Nonnull HoareCond invariant) throws Lexer.LexerException, Hoare.HoareException, Parser.ParserException, IOException;
 	}
 
 	public LoopAskInvDialog(@Nonnull Hoare.wlp_loop loop, @Nonnull Callback callback) throws IOException {
@@ -68,7 +68,7 @@ public class LoopAskInvDialog extends HoareDialog implements Initializable {
 	}
 
 	@Override
-	public void initialize(URL url, ResourceBundle resources) {
+	public void initialize(@Nonnull URL url, @Nullable ResourceBundle resources) {
 		try {
 			super.initialize(url, resources);
 

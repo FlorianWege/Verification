@@ -46,7 +46,7 @@ public class BoolOr extends BoolList {
 
             String expS = boolExp.getContentString(mapper);
 
-            if (!(boolExp instanceof BoolElem) && boolExp.compPrecedence(this) < 0) {
+            if (!(boolExp instanceof BoolElem) && boolExp.comp(this) < 0) {
                 expS = parenthesize(expS);
             }
 
@@ -59,13 +59,22 @@ public class BoolOr extends BoolList {
     @Nonnull
     @Override
     public SemanticNode replace(@Nonnull IOUtil.Func<SemanticNode, SemanticNode> replaceFunc) {
-        replaceChildren(replaceFunc);
+        BoolOr ret = new BoolOr();
+
+        for (BoolExp boolExp : getBoolExps()) {
+            ret.addBoolExp((BoolExp) boolExp.replace(replaceFunc));
+        }
 
         return replaceFunc.apply(this);
     }
 
+    @Nonnull
     @Override
-    public BoolExp reduce() {
+    public BoolExp reduce_spec(@Nonnull Reducer reducer) {
+        if (getBoolExps().size() == 1) {
+            return getBoolExps().get(0).reduce(reducer);
+        }
+
         BoolOr copy = (BoolOr) copy();
 
         boolean containsAnd = false;
@@ -73,22 +82,22 @@ public class BoolOr extends BoolList {
         for (BoolExp part : copy.getBoolExps()) {
             if (part instanceof BoolAnd) containsAnd = true;
         }
-
+        System.out.println("orA");
         if (containsAnd) {
-            BoolAnd cnf = copy.makeCNF();
-
-            System.out.println("cnf " + cnf);
-
-            copy = cnf.reduce().makeDNF();
-
-            System.out.println("DNF is " + copy);
+            System.out.println("orA1");
+            /*BoolAnd cnf = copy.makeCNF();
+            System.out.println("orA2");
+            BoolExp cnfReduced = cnf.reduce();
+            System.out.println("orA3");
+            copy = cnfReduced.makeDNF();
+            System.out.println("orA4");*/
         }
-
+        System.out.println("orB");
         //reduce parts and unwrap nested
         BoolOr tmpOr = new BoolOr();
 
         for (BoolExp boolExp : copy.getBoolExps()) {
-            tmpOr.addBoolExp(boolExp.reduce());
+            tmpOr.addBoolExp(boolExp.reduce(reducer));
         }
 
         //idempotency
@@ -103,7 +112,7 @@ public class BoolOr extends BoolList {
 
         //true found, nothing to do
         if (hasTrue) return new BoolLit(true);
-        System.out.println(boolExps);
+
         //search for complements
         for (BoolExp boolExp : boolExps) {
             boolExp = (BoolExp) boolExp.copy();
@@ -112,11 +121,11 @@ public class BoolOr extends BoolList {
                 Exp leftExp = ((ExpComp) boolExp).getLeftExp();
                 Exp rightExp = ((ExpComp) boolExp).getRightExp();
 
-                if (leftExp instanceof Sum) ((Sum) leftExp).cleanMu();
-                if (rightExp instanceof Sum) ((Sum) rightExp).cleanMu();
+                if (leftExp instanceof Sum) ((Sum) leftExp).cleanMu(new Exp.Reducer(leftExp));
+                if (rightExp instanceof Sum) ((Sum) rightExp).cleanMu(new Exp.Reducer(rightExp));
 
-                BoolExp reducedBoolExp = new ExpComp(leftExp, new ExpCompOp(ExpCompOp.Type.UNEQUAL), rightExp).reduce();
-                BoolExp reducedBoolExp2 = new ExpComp(leftExp, new ExpCompOp(ExpCompOp.Type.EQUAL), rightExp).reduce();
+                BoolExp reducedBoolExp = new ExpComp(leftExp, new ExpCompOp(ExpCompOp.Type.UNEQUAL), rightExp).reduce(reducer);
+                BoolExp reducedBoolExp2 = new ExpComp(leftExp, new ExpCompOp(ExpCompOp.Type.EQUAL), rightExp).reduce(reducer);
 
                 reducedBoolExp = new BoolOr(reducedBoolExp);
                 reducedBoolExp2 = new BoolOr(reducedBoolExp2);
@@ -151,50 +160,36 @@ public class BoolOr extends BoolList {
             ret.addChild(boolExp);
         }
 
-        /*BoolOr dnf = ret;
-        System.out.println("ret " + dnf);
+        return ret;
+    }
 
-        BoolAnd cnf = dnf.makeCNF();
+    @Nonnull
+    @Override
+    public BoolExp order_spec() {
+        List<BoolExp> newBoolExps = new ArrayList<>();
 
-        System.out.println("cnf " + cnf);
+        for (BoolExp boolExp : getBoolExps()) {
+            newBoolExps.add(boolExp.order());
+        }
 
-        dnf = cnf.makeDNF();
+        newBoolExps.sort(new Comparator<BoolExp>() {
+            @Override
+            public int compare(BoolExp a, BoolExp b) {
+                return a.comp(b);
+            }
+        });
 
-        System.out.println("dnf " + dnf);*/
+        BoolOr ret = new BoolOr();
 
-        /*if (!(dnf.equals(ret))) {
-
-
-            return dnf.reduce();
-        }*/
+        for (BoolExp boolExp : newBoolExps) {
+            ret.addChild(boolExp);
+        }
 
         return ret;
     }
 
     @Override
-    public void order() {
-        List<BoolExp> boolExps = getBoolExps();
-
-        for (BoolExp boolExp : boolExps) {
-            boolExp.order();
-        }
-
-        _children.clear();
-
-        boolExps.sort(new Comparator<BoolExp>() {
-            @Override
-            public int compare(BoolExp a, BoolExp b) {
-                return a.compPrecedence(b);
-            }
-        });
-
-        for (BoolExp boolExp : boolExps) {
-            addChild(boolExp);
-        }
-    }
-
-    @Override
-    public int comp(BoolExp b) {
+    public int comp_spec(BoolExp b) {
         List<BoolExp> boolExps = getBoolExps();
         List<BoolExp> bBoolExps = ((BoolOr) b).getBoolExps();
 
@@ -204,7 +199,7 @@ public class BoolOr extends BoolList {
             if (i >= boolExps.size()) return 1;
             if (i >= bBoolExps.size()) return -1;
 
-            int localRet = boolExps.get(i).compPrecedence(bBoolExps.get(i));
+            int localRet = boolExps.get(i).comp(bBoolExps.get(i));
 
             if (localRet != 0) return localRet;
         }

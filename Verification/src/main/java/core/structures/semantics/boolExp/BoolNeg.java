@@ -26,7 +26,7 @@ public class BoolNeg extends BoolExp {
     public String getContentString(@Nonnull IOUtil.BiFunc<SemanticNode, String, String> mapper) {
         String boolExpS = _boolExp.getContentString(mapper);
 
-        if (_boolExp.compPrecedence(this) <= 0) boolExpS = parenthesize(boolExpS);
+        if (_boolExp.comp(this) <= 0) boolExpS = parenthesize(boolExpS);
 
         return mapper.apply(this, _grammar.TERMINAL_OP_NEG.getPrimRule() + boolExpS);
     }
@@ -34,28 +34,31 @@ public class BoolNeg extends BoolExp {
     @Nonnull
     @Override
     public SemanticNode replace(@Nonnull IOUtil.Func<SemanticNode, SemanticNode> replaceFunc) {
-        return replaceFunc.apply(this);
+        return replaceFunc.apply(new BoolNeg((BoolExp) replaceFunc.apply(getChild())));
     }
 
+    @Nonnull
     @Override
-    public BoolExp reduce() {
-        BoolExp boolExp = _boolExp.reduce();
+    public BoolExp reduce_spec(@Nonnull Reducer reducer) {
+        BoolExp boolExp = getChild();
 
         //swap lit
         if (boolExp instanceof BoolLit) {
-            ((BoolLit) boolExp).neg();
+            boolExp = ((BoolLit) boolExp).neg();
 
-            return boolExp.reduce();
+            return boolExp.reduce(reducer);
         }
 
         //resolve double negs
-        if (boolExp instanceof BoolNeg) return boolExp.reduce();
+        if (boolExp instanceof BoolNeg) return ((BoolNeg) boolExp).getChild().reduce(reducer);
 
         //swap comp
         if (boolExp instanceof ExpComp) {
-            ((ExpComp) boolExp).neg();
+            boolExp = ((ExpComp) boolExp).neg();
 
-            return boolExp.reduce();
+            BoolExp ret = boolExp.reduce(reducer);
+
+            return ret;
         }
 
         //deMorgan
@@ -63,12 +66,10 @@ public class BoolNeg extends BoolExp {
             BoolList tmpList = ((BoolList) boolExp).ownConstruct();
 
             for (BoolExp part : ((BoolList) boolExp).getBoolExps()) {
-                tmpList.addBoolExp(part.reduce());
+                tmpList.addBoolExp(part.reduce(reducer));
             }
 
             List<BoolExp> tmpList2 = new ArrayList<>(tmpList.getBoolExps());
-
-            System.out.println("neg " + tmpList2);
 
             //merge split unequal
             if (boolExp instanceof BoolOr) {
@@ -81,15 +82,13 @@ public class BoolNeg extends BoolExp {
                         Exp leftExp = ((ExpComp) orPart).getLeftExp();
                         Exp rightExp = ((ExpComp) orPart).getRightExp();
 
-                        if (leftExp instanceof Sum) ((Sum) leftExp).cleanMu();
-                        if (rightExp instanceof Sum) ((Sum) rightExp).cleanMu();
+                        if (leftExp instanceof Sum) ((Sum) leftExp).cleanMu(new Exp.Reducer(leftExp));
+                        if (rightExp instanceof Sum) ((Sum) rightExp).cleanMu(new Exp.Reducer(rightExp));
 
-                        System.out.println("match " + orPart);
-                        BoolOr matchBoolExp = new BoolOr(new ExpComp(leftExp, new ExpCompOp(ExpCompOp.Type.UNEQUAL), rightExp).reduce());
-                        System.out.println("matchB " + matchBoolExp);
+                        BoolOr matchBoolExp = new BoolOr(new ExpComp(leftExp, new ExpCompOp(ExpCompOp.Type.UNEQUAL), rightExp).reduce(reducer));
+
                         //all parts of reduction contained?
                         if (tmpList2.containsAll(matchBoolExp.getBoolExps())) {
-                            System.out.println("contained");
                             tmpList2.removeAll(matchBoolExp.getBoolExps());
 
                             tmpList2.add(new ExpComp(leftExp, new ExpCompOp(ExpCompOp.Type.UNEQUAL), rightExp));
@@ -98,39 +97,34 @@ public class BoolNeg extends BoolExp {
                 }
             }
 
-            System.out.println("negB " + tmpList2);
-
             BoolList boolList = ((BoolList) boolExp).invertConstruct();
 
             for (BoolExp part : tmpList2) {
                 //avoid unequal split
                 if (part instanceof ExpComp && ((ExpComp) part).getExpOp().getType().equals(ExpCompOp.Type.UNEQUAL)) {
-                    boolList.addBoolExp(new ExpComp(((ExpComp) part).getLeftExp(), new ExpCompOp(ExpCompOp.Type.EQUAL), ((ExpComp) part).getRightExp()).reduce());
+                    boolList.addBoolExp(new ExpComp(((ExpComp) part).getLeftExp(), new ExpCompOp(ExpCompOp.Type.EQUAL), ((ExpComp) part).getRightExp()).reduce(reducer));
                 } else {
-                    boolList.addBoolExp(new BoolNeg(part).reduce());
+                    boolList.addBoolExp(new BoolNeg(part).reduce(reducer));
                 }
             }
 
-            System.out.println("ret " + boolList);
-
-            BoolExp ret2 = boolList.reduce();
-
-            System.out.println("ret2 " + ret2);
-
-            return ret2;
+            return boolList.reduce(reducer);
         }
 
         //nothing to do
         return new BoolNeg(boolExp);
     }
 
+    @Nonnull
     @Override
-    public void order() {
-        _boolExp.order();
+    public BoolExp order_spec() {
+        BoolExp newBoolExp = _boolExp.order();
+
+        return new BoolNeg(newBoolExp);
     }
 
     @Override
-    public int comp(BoolExp b) {
-        return _boolExp.compPrecedence(((BoolNeg) b)._boolExp);
+    public int comp_spec(BoolExp b) {
+        return _boolExp.comp(((BoolNeg) b)._boolExp);
     }
 }

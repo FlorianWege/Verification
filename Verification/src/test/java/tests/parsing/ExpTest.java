@@ -25,7 +25,7 @@ public class ExpTest {
 
 		Exp red = ((Exp) node).reduce();
 
-		red.order();
+		red = red.order();
 
 		System.out.println(red.getContentString());
 	}

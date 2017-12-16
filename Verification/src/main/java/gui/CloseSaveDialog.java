@@ -1,20 +1,20 @@
 package gui;
 
-import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class CloseSaveDialog implements Initializable {
+public class CloseSaveDialog implements gui.Initializable {
 	private final Alert _alert;
 
 	public interface CloseSaveInterface {
-		void result(CloseSaveDialog.Result result);
+		void result(@Nonnull CloseSaveDialog.Result result);
 	}
 	
 	private CloseSaveInterface _callback;
@@ -53,6 +53,6 @@ public class CloseSaveDialog implements Initializable {
 	}
 
 	@Override
-	public void initialize(URL location, ResourceBundle resources) {
+	public void initialize(@Nonnull URL location, @Nullable ResourceBundle resources) {
 	}
 }

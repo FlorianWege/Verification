@@ -9,18 +9,18 @@ import core.structures.semantics.prog.HoareCond;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import util.ErrorUtil;
 import util.IOUtil;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class AssignDialog extends HoareDialog implements Initializable {
+public class AssignDialog extends HoareDialog implements gui.Initializable {
 	@FXML
 	private Button _button_continue;
 
@@ -86,7 +86,7 @@ public class AssignDialog extends HoareDialog implements Initializable {
 	}
 
 	@Override
-	public void initialize(URL url, ResourceBundle resources) {
+	public void initialize(@Nonnull URL url, @Nullable ResourceBundle resources) {
 		try {
 			super.initialize(url, resources);
 

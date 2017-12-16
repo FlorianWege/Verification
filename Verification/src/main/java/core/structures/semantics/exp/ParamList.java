@@ -8,28 +8,29 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ParamList extends SemanticNode {
-    public List<Param> getParams() {
-        List<Param> ret = new ArrayList<>();
+    @Nonnull
+    public List<Exp> getParams() {
+        List<Exp> ret = new ArrayList<>();
 
         for (SemanticNode child : getChildren()) {
-            if (child instanceof Param) ret.add((Param) child);
+            ret.add((Exp) child);
         }
 
         return ret;
     }
 
-    public void addParam(@Nonnull Param param) {
+    public void addParam(@Nonnull Exp param) {
         addChild(param);
     }
 
     public void addParamList(@Nonnull ParamList paramList) {
-        for (Param param : paramList.getParams()) {
+        for (Exp param : paramList.getParams()) {
             addParam(param);
         }
     }
 
-    public ParamList(Param... params) {
-        for (Param param : params) {
+    public ParamList(@Nonnull Exp... params) {
+        for (Exp param : params) {
             addParam(param);
         }
     }
@@ -38,7 +39,7 @@ public class ParamList extends SemanticNode {
     public String getContentString(@Nonnull IOUtil.BiFunc<SemanticNode, String, String> mapper) {
         StringBuilder sb = new StringBuilder();
 
-        for (Param param : getParams()) {
+        for (Exp param : getParams()) {
             if (sb.length() > 0) sb.append(_grammar.TERMINAL_PARAM_SEP.getPrimRule());
 
             sb.append(param.getContentString(mapper));
@@ -47,11 +48,15 @@ public class ParamList extends SemanticNode {
         return mapper.apply(this, sb.toString());
     }
 
-    @Nonnull
     @Override
+    @Nonnull
     public SemanticNode replace(@Nonnull IOUtil.Func<SemanticNode, SemanticNode> replaceFunc) {
-        replaceChildren(replaceFunc);
+        ParamList ret = new ParamList();
 
-        return replaceFunc.apply(this);
+        for (Exp param : getParams()) {
+            ret.addParam((Exp) param.replace(replaceFunc));
+        }
+
+        return ret;
     }
 }

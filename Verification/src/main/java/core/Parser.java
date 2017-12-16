@@ -7,6 +7,7 @@ import core.structures.syntax.SyntaxNode;
 import core.structures.syntax.SyntaxNodeTerminal;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Iterator;
 import java.util.List;
 
@@ -16,7 +17,8 @@ import java.util.List;
 public class Parser {
 	private final Grammar _grammar;
 
-	public @Nonnull Grammar getGrammar() {
+	@Nonnull
+	public Grammar getGrammar() {
 		return _grammar;
 	}
 
@@ -27,24 +29,42 @@ public class Parser {
 	private ParserTable _ruleMap;
 	
 	public static class ParserException extends Exception {
+		private String _s;
+
+		@Override
+		public String getMessage() {
+			return "parserException: " + _s;
+		}
+
+		public ParserException(@Nullable String s) {
+			super(s);
+
+			_s = s;
+		}
+	}
+
+	public static class TokenParserException extends ParserException {
 		private final Token _token;
-		
+
+		@Nonnull
 		public Token getToken() {
 			return _token;
 		}
-		
+
 		@Override
+		@Nonnull
 		public String getMessage() {
 			return "parserException: " + _token;
-			
 		}
-		
-		public ParserException(Token token) {
+
+		public TokenParserException(@Nonnull Token token) {
+			super(null);
+
 			_token = token;
 		}
 	}
-	
-	public static class NoRuleException extends ParserException {
+
+	public static class NoRuleException extends TokenParserException {
 		private final NonTerminal _rule;
 		
 		@Override
@@ -52,7 +72,7 @@ public class Parser {
 			return String.format("line %d.%d: unexpected '%s' (%s) (no rule in %s) ", getToken().getLine() + 1, getToken().getLineOffset() + 1, getToken().getText(), getToken().getTerminal().toString(), _rule);
 		}
 		
-		public NoRuleException(Token token, NonTerminal rule) {
+		public NoRuleException(@Nonnull Token token, @Nonnull NonTerminal rule) {
 			super(token);
 			
 			_rule = rule;
@@ -72,30 +92,33 @@ public class Parser {
 			return "no more tokens but expected " + _nonTerminal;
 		}
 		
-		public NoMoreTokensException(NonTerminal nonTerminal, Terminal terminal) {
+		public NoMoreTokensException(@Nonnull NonTerminal nonTerminal, @Nonnull Terminal terminal) {
 			super(null);
 
 			_nonTerminal = nonTerminal;
 			_terminal = terminal;
 		}
 
-		public NoMoreTokensException(NonTerminal nonTerminal) {
-			this(nonTerminal, null);
+		public NoMoreTokensException(@Nonnull NonTerminal nonTerminal) {
+			super(null);
+
+			_nonTerminal = nonTerminal;
+			_terminal = null;
 		}
 	}
 	
-	public static class SuperfluousTokenException extends ParserException {
+	public static class SuperfluousTokenException extends TokenParserException {
 		@Override
 		public String getMessage() {
 			return "superfluous input " + getToken();
 		}
 		
-		public SuperfluousTokenException(Token token) {
+		public SuperfluousTokenException(@Nonnull Token token) {
 			super(token);
 		}
 	}
 	
-	public static class WrongTokenException extends ParserException {
+	public static class WrongTokenException extends TokenParserException {
 		private final NonTerminal _rule;
 		private final Symbol _childRule;
 		
@@ -104,7 +127,7 @@ public class Parser {
 			return String.format("line %d.%d: wrong token %s expected %s (in rule %s)", getToken().getLine(), getToken().getLineOffset(), getToken(), _childRule, _rule);
 		}
 		
-		public WrongTokenException(Token token, NonTerminal rule, Symbol childRule) {
+		public WrongTokenException(@Nonnull Token token, @Nonnull NonTerminal rule, @Nonnull Symbol childRule) {
 			super(token);
 
 			_rule = rule;
@@ -112,7 +135,7 @@ public class Parser {
 		}
 	}
 	
-	private ParserRule selectRule(NonTerminal nonTerminal, Token token) throws ParserException {
+	private ParserRule selectRule(@Nonnull NonTerminal nonTerminal, @Nonnull Token token) throws ParserException {
 		ParserRule rule = _ruleMap.get(nonTerminal, token.getTerminal());
 
 		if (rule == null) throw new NoRuleException(token, nonTerminal);
@@ -120,7 +143,7 @@ public class Parser {
 		return rule;
 	}
 	
-	private SyntaxNode getNode(NonTerminal nonTerminal) throws ParserException {
+	private SyntaxNode getNode(@Nonnull NonTerminal nonTerminal) throws ParserException {
 		ParserRule nextRule = selectRule(nonTerminal, _token);
 
 		SyntaxNode node = new SyntaxNode(nonTerminal, nextRule);
@@ -147,7 +170,9 @@ public class Parser {
 		return node;
 	}
 	
-	public SyntaxNode parse(List<Token> tokens) throws ParserException {
+	public SyntaxNode parse(@Nonnull List<Token> tokens) throws ParserException {
+		if (_grammar.getStartSymbol() == null) throw new ParserException("no start symbol");
+
 		_tokens = tokens;
 		
 		if (_tokens.isEmpty()) throw new NoMoreTokensException(_grammar.getStartSymbol());
@@ -176,7 +201,7 @@ public class Parser {
 		return root;
 	}
 
-	public SyntaxNode parse(String input) throws Lexer.LexerException, ParserException {
+	public SyntaxNode parse(@Nonnull String input) throws Lexer.LexerException, ParserException {
 		Lexer lexer = new Lexer(_grammar);
 
 		return parse(lexer.tokenize(input).getTokens());

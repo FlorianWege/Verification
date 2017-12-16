@@ -3,16 +3,17 @@ package gui.hoare;
 import core.structures.semantics.SemanticNode;
 import core.structures.semantics.prog.HoareCond;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import org.fxmisc.richtext.StyleClassedTextArea;
 import util.ErrorUtil;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class EndDialog extends HoareDialog implements Initializable {
+public class EndDialog extends HoareDialog implements gui.Initializable {
 	@FXML
 	private StyleClassedTextArea _textArea_result;
 	
@@ -37,7 +38,7 @@ public class EndDialog extends HoareDialog implements Initializable {
 	}
 
 	@Override
-	public void initialize(URL url, ResourceBundle resources) {
+	public void initialize(@Nonnull URL url, @Nullable ResourceBundle resources) {
 		try {
 			super.initialize(url, resources);
 

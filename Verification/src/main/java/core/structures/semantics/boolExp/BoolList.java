@@ -1,5 +1,6 @@
 package core.structures.semantics.boolExp;
 
+import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import java.util.List;
 
@@ -7,38 +8,43 @@ public abstract class BoolList extends BoolExp {
     public abstract List<BoolExp> getBoolExps();
     public abstract void addBoolExp(BoolExp boolExp);
 
-    public @Nonnull BoolList ownConstruct() {
+    @CheckReturnValue
+    @Nonnull
+    public BoolList ownConstruct() {
         if (this instanceof BoolAnd) return new BoolAnd();
         if (this instanceof BoolOr) return new BoolOr();
 
+        assert(false) : "null";
+
         return null;
     }
 
-    public @Nonnull BoolList invertConstruct() {
+    @CheckReturnValue
+    @Nonnull
+    public BoolList invertConstruct() {
         if (this instanceof BoolAnd) return new BoolOr();
         if (this instanceof BoolOr) return new BoolAnd();
 
+        assert(false) : "null";
+
         return null;
     }
 
-    /*@Override
-    public BoolExp reduce() {
-        //reduce parts and unwrap nested
-        BoolOr tmpOr = new BoolOr();
+    @CheckReturnValue
+    @Nonnull
+    public BoolExp reduceShallow() {
+        if (getBoolExps().size() == 1) return getBoolExps().get(0);
 
+        return this;
+    }
+
+    public boolean isPure() {
         for (BoolExp boolExp : getBoolExps()) {
-            tmpOr.addBoolExp(boolExp.reduce());
+            if (this instanceof BoolAnd && boolExp instanceof BoolOr) return false;
+            if (this instanceof BoolOr && boolExp instanceof BoolAnd) return false;
+            if (boolExp instanceof BoolNeg) return false;
         }
 
-        //idempotency
-        Set<BoolExp> boolExps = new LinkedHashSet<>(tmpOr.getBoolExps());
-
-        BoolList ret = ownConstruct();
-
-        for (BoolExp boolExp : boolExps) {
-            ret.addBoolExp(boolExp);
-        }
-
-        return ret;
-    }*/
+        return true;
+    }
 }

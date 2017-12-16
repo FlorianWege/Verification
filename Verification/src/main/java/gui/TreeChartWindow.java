@@ -1,6 +1,7 @@
 package gui;
 
 import core.structures.NonTerminal;
+import core.structures.TNode;
 import core.structures.semantics.SemanticNode;
 import core.structures.semantics.prog.HoareCond;
 import core.structures.syntax.SyntaxNode;
@@ -17,7 +18,6 @@ import javafx.collections.ObservableMap;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 import javafx.scene.control.CheckBox;
@@ -40,13 +40,14 @@ import util.ErrorUtil;
 import util.IOUtil;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 import java.util.function.Predicate;
 
-public class TreeChartWindow implements Initializable {
+public class TreeChartWindow implements gui.Initializable {
 	@FXML
 	private AnchorPane _pane_root;
 	@FXML
@@ -145,11 +146,11 @@ public class TreeChartWindow implements Initializable {
 		_tabPane.getSelectionModel().select(_tab_semantic);
 	}
 
-	void setVisible(boolean show) {
+	public void setVisible(boolean show) {
 		if (show) _stage.show(); else _stage.hide();
 	}
 	
-	private abstract class TreeNode<T> {
+	private abstract class TreeNode<T extends TNode> {
 		protected final T _refNode;
 
 		private double _x;
@@ -169,8 +170,8 @@ public class TreeChartWindow implements Initializable {
 		private final Text _text = new Text();
 		private final Text _subText = new Text();
 
-		private final Text _preCondText = new Text();
-		private final Text _postCondText = new Text();
+		protected final Text _preCondText = new Text();
+		protected final Text _postCondText = new Text();
 		
 		private final List<TreeNode> _children = new ArrayList<>();
 		
@@ -200,7 +201,7 @@ public class TreeChartWindow implements Initializable {
 		private final double MARGIN_X = 20D;
 		public final double MARGIN_Y = 30D;
 		
-		double getWidth() {
+		public double getWidth() {
 			double ret = 0D;
 			
 			for (TreeNode child : _children) {
@@ -210,7 +211,7 @@ public class TreeChartWindow implements Initializable {
 			return Math.max(getLocalWidth(), ret) + MARGIN_X;
 		}
 		
-		double getHeight() {
+		private double getHeight() {
 			double ret = getLocalHeight();
 			double childHeight = 0D;
 			
@@ -228,7 +229,7 @@ public class TreeChartWindow implements Initializable {
 
 		protected abstract Pane getPane();
 
-		void addChild(@Nonnull TreeNode child) {
+		private void addChild(@Nonnull TreeNode child) {
 			_children.add(child);
 			
 			Path line = new Path();
@@ -239,7 +240,7 @@ public class TreeChartWindow implements Initializable {
 		
 		private final Map<TreeNode, Path> _pathMap = new LinkedHashMap<>();
 		
-		void update() {
+		private void update() {
 			double localWidth = getLocalWidth();
 			double localHeight = getLocalHeight();
 			
@@ -325,17 +326,9 @@ public class TreeChartWindow implements Initializable {
 					childX += child.getWidth() / 2;
 				}
 			}
-
-			HoareCond preCond = _preCondMapP.get().get(_refNode);
-			HoareCond postCond = _postCondMapP.get().get(_refNode);
-
-			_preCondText.setFill(Color.BLUE);
-			_preCondText.setText((preCond != null) ? "pre: " + preCond.getContentString() : null);
-			_postCondText.setFill(Color.BLUE);
-			_postCondText.setText((postCond != null) ? "post: " + postCond.getContentString() : null);
 		}
 		
-		void setXY(double x, double y) {
+		public void setXY(double x, double y) {
 			_x = x;
 			_y = y;
 			
@@ -401,12 +394,14 @@ public class TreeChartWindow implements Initializable {
 
 	private class SyntaxTreeNode extends TreeNode<SyntaxNode> {
 		@Override
-		protected @Nonnull Map<SyntaxNode, TreeNode<SyntaxNode>> getNodeMap() {
+		@Nonnull
+		protected Map<SyntaxNode, TreeNode<SyntaxNode>> getNodeMap() {
 			return _syntax_nodeMap;
 		}
 
 		@Override
-		protected @Nonnull TreeNode<SyntaxNode> createInstance(SyntaxNode refNode) {
+		@Nonnull
+		protected TreeNode<SyntaxNode> createInstance(@Nonnull SyntaxNode refNode) {
 			return new SyntaxTreeNode(refNode);
 		}
 
@@ -434,13 +429,13 @@ public class TreeChartWindow implements Initializable {
 			for (SyntaxNode child : node.getChildren()) {
 				List<SyntaxNode> sub = calcChildren(child);
 
-				if (_syntax_includedNonTerminals.contains(child.getSymbol())) {
+				if ((child.getSymbol() instanceof NonTerminal) && _syntax_includedNonTerminals.contains(child.getSymbol())) {
 					if (!child.synthesize(false, true, null).isEmpty()) ret.add(child);
 				} else {
 					sub.removeIf(new Predicate<SyntaxNode>() {
 						@Override
-						public boolean test(SyntaxNode node) {
-							return !_syntax_includedNonTerminals.contains(node.getSymbol()) || node.synthesize(false, true, null).isEmpty();
+						public boolean test(@Nonnull SyntaxNode node) {
+							return (node.getSymbol() instanceof NonTerminal) && !_syntax_includedNonTerminals.contains(node.getSymbol()) || node.synthesize(false, true, null).isEmpty();
 						}
 					});
 
@@ -496,6 +491,14 @@ public class TreeChartWindow implements Initializable {
 
 		public SemanticTreeNode(@Nonnull SemanticNode refNode) {
 			super(refNode);
+
+			HoareCond preCond = _preCondMapP.get().get(_refNode);
+			HoareCond postCond = _postCondMapP.get().get(_refNode);
+
+			_preCondText.setFill(Color.BLUE);
+			_preCondText.setText((preCond != null) ? "pre: " + preCond.getContentString() : null);
+			_postCondText.setFill(Color.BLUE);
+			_postCondText.setText((postCond != null) ? "post: " + postCond.getContentString() : null);
 		}
 	}
 
@@ -593,15 +596,17 @@ public class TreeChartWindow implements Initializable {
 		updateTree();
 	}
 
-	private TreeNode<SyntaxNode> getTreeSyntaxNode(SemanticNode semanticNode) {
+	private TreeNode<SyntaxNode> getTreeSyntaxNode(@Nullable SemanticNode semanticNode) {
 		if (semanticNode == null) return null;
 
-		if (!_syntax_nodeMap.containsKey(semanticNode)) return null;
+		SyntaxNode syntaxNode = semanticNode.getSyntax();
 
-		return _syntax_nodeMap.get(semanticNode);
+		if (!_syntax_nodeMap.containsKey(syntaxNode)) return null;
+
+		return _syntax_nodeMap.get(syntaxNode);
 	}
 
-	private TreeNode<SemanticNode> getTreeSemanticNode(SemanticNode semanticNode) {
+	private TreeNode<SemanticNode> getTreeSemanticNode(@Nullable SemanticNode semanticNode) {
 		if (semanticNode == null) return null;
 
 		if (!_semantic_nodeMap.containsKey(semanticNode)) return null;
@@ -610,26 +615,26 @@ public class TreeChartWindow implements Initializable {
 	}
 
 	@Override
-	public void initialize(URL url, ResourceBundle resources) {
+	public void initialize(@Nonnull URL url, @Nullable ResourceBundle resources) {
 		try {
 			_pane_syntax.getTransforms().add(_scale);
 
 			_syntaxTreeP.addListener(new ChangeListener<SyntaxNode>() {
 				@Override
-				public void changed(ObservableValue<? extends SyntaxNode> obs, SyntaxNode oldVal, SyntaxNode newVal) {
+				public void changed(@Nonnull ObservableValue<? extends SyntaxNode> obs, @Nullable SyntaxNode oldVal, @Nullable SyntaxNode newVal) {
 					updateAll();
 				}
 			});
 			_semanticTreeP.addListener(new ChangeListener<SemanticNode>() {
 				@Override
-				public void changed(ObservableValue<? extends SemanticNode> obs, SemanticNode oldVal, SemanticNode newVal) {
+				public void changed(@Nonnull ObservableValue<? extends SemanticNode> obs, @Nullable SemanticNode oldVal, @Nullable SemanticNode newVal) {
 					updateAll();
 				}
 			});
 
 			Timeline t = new Timeline(new KeyFrame(Duration.millis(1000), new EventHandler<ActionEvent>() {
 				@Override
-				public void handle(ActionEvent event) {
+				public void handle(@Nonnull ActionEvent event) {
 					updateScale();
 				}
 			}));
@@ -641,7 +646,7 @@ public class TreeChartWindow implements Initializable {
 
 			_currentNodeP.addListener(new ChangeListener<SemanticNode>() {
 				@Override
-				public void changed(ObservableValue<? extends SemanticNode> obs, SemanticNode oldVal, SemanticNode newVal) {
+				public void changed(@Nonnull ObservableValue<? extends SemanticNode> obs, @Nullable SemanticNode oldVal, @Nullable SemanticNode newVal) {
 					TreeNode<SyntaxNode> oldSyntaxNode = getTreeSyntaxNode(oldVal);
 					TreeNode<SyntaxNode> newSyntaxNode = getTreeSyntaxNode(newVal);
 
@@ -657,7 +662,7 @@ public class TreeChartWindow implements Initializable {
 			});
 			_currentHoareNodeP.addListener(new ChangeListener<SemanticNode>() {
 				@Override
-				public void changed(ObservableValue<? extends SemanticNode> obs, SemanticNode oldVal, SemanticNode newVal) {
+				public void changed(@Nonnull ObservableValue<? extends SemanticNode> obs, @Nullable SemanticNode oldVal, @Nullable SemanticNode newVal) {
 					TreeNode<SyntaxNode> oldSyntaxNode = getTreeSyntaxNode(oldVal);
 					TreeNode<SyntaxNode> newSyntaxNode = getTreeSyntaxNode(newVal);
 

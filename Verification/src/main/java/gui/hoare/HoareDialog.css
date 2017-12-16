@@ -55,7 +55,6 @@ body {
     margin-bottom: 10px;
     padding-top: 5px;
     padding-bottom: 5px;
-    /*line-height: 12px;*/
 }
 
 .param {
@@ -126,7 +125,6 @@ body {
 
 .table-header {
     -fx-background-color: -fx-box-border, -fx-inner-border, -fx-body-color;
-    /*-fx-background-insets: 0, 0 1 1 0, 1 2 2 1;*/
     -fx-font-weight: bold;
     -fx-size: 2em;
     -fx-text-fill: -fx-selection-bar-text;

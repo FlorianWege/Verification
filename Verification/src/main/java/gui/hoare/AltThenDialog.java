@@ -7,18 +7,18 @@ import core.structures.semantics.prog.Skip;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import util.ErrorUtil;
 import util.StringUtil;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class AltThenDialog extends HoareDialog implements Initializable {
+public class AltThenDialog extends HoareDialog implements gui.Initializable {
 	@FXML
 	private Button _button_continue;
 
@@ -60,7 +60,7 @@ public class AltThenDialog extends HoareDialog implements Initializable {
 	}
 
 	@Override
-	public void initialize(URL url, ResourceBundle resources) {
+	public void initialize(@Nonnull URL url, @Nullable ResourceBundle resources) {
 		try {
 			super.initialize(url, resources);
 

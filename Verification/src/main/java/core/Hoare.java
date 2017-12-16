@@ -21,28 +21,28 @@ public class Hoare {
 	}
 
 	public interface ActionInterface {
-		void beginNode(SemanticNode node, HoareCond postCond);
-		void endNode(SemanticNode node, HoareCond preCond);
+		void beginNode(@Nonnull SemanticNode node, @Nonnull HoareCond postCond);
+		void endNode(@Nonnull SemanticNode node, @Nonnull HoareCond preCond);
 
-		void reqSkipDialog(Skip skip, HoareCond preCond, HoareCond postCond, Skip_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException;
+		void reqSkipDialog(@Nonnull Skip skip, @Nonnull HoareCond preCond, @Nonnull HoareCond postCond, @Nonnull Skip_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException;
 
-		void reqAssignDialog(Assign assign, HoareCond preCond, HoareCond postCond, Assign_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException;
+		void reqAssignDialog(@Nonnull Assign assign, @Nonnull HoareCond preCond, @Nonnull HoareCond postCond, @Nonnull Assign_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException;
 
-		void reqCompNextDialog(wlp_comp comp, CompNext_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException;
-		void reqCompMergeDialog(wlp_comp comp, CompMerge_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException;
+		void reqCompNextDialog(@Nonnull wlp_comp comp, @Nonnull CompNext_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException;
+		void reqCompMergeDialog(@Nonnull wlp_comp comp, @Nonnull CompMerge_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException;
 
-		void reqAltFirstDialog(wlp_alt alt, AltThen_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException;
-		void reqAltElseDialog(wlp_alt alt, AltElse_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException;
-		void reqAltMergeDialog(wlp_alt alt, AltMerge_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException;
+		void reqAltFirstDialog(@Nonnull wlp_alt alt, @Nonnull AltThen_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException;
+		void reqAltElseDialog(@Nonnull wlp_alt alt, @Nonnull AltElse_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException;
+		void reqAltMergeDialog(@Nonnull wlp_alt alt, @Nonnull AltMerge_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException;
 
-		void reqLoopAskInvDialog(wlp_loop loop, LoopAskInv_callback callback) throws IOException;
-		void reqLoopCheckPostCondDialog(wlp_loop loop, LoopCheckPostCond_callback callback) throws IOException;
-		void reqLoopGetBodyCondDialog(wlp_loop loop, LoopGetBodyCond_callback callback) throws IOException, LexerException, HoareException, ParserException, SemanticNode.CopyException;
-		void reqLoopCheckBodyCondDialog(wlp_loop loop, LoopCheckBodyCond_callback callback) throws IOException;
-		void reqLoopAcceptInvCondDialog(wlp_loop loop, LoopAcceptInv_callback callback) throws IOException, LexerException, HoareException, ParserException, SemanticNode.CopyException;
+		void reqLoopAskInvDialog(@Nonnull wlp_loop loop, @Nonnull LoopAskInv_callback callback) throws IOException;
+		void reqLoopCheckPostCondDialog(@Nonnull wlp_loop loop, @Nonnull LoopCheckPostCond_callback callback) throws IOException;
+		void reqLoopGetBodyCondDialog(@Nonnull wlp_loop loop, @Nonnull LoopGetBodyCond_callback callback) throws IOException, LexerException, HoareException, ParserException, SemanticNode.CopyException;
+		void reqLoopCheckBodyCondDialog(@Nonnull wlp_loop loop, @Nonnull LoopCheckBodyCond_callback callback) throws IOException;
+		void reqLoopAcceptInvCondDialog(@Nonnull wlp_loop loop, @Nonnull LoopAcceptInv_callback callback) throws IOException, LexerException, HoareException, ParserException, SemanticNode.CopyException;
 
-		void reqConseqCheckPreDialog(SemanticNode node, HoareCond origPreCond, HoareCond newPreCond, ConseqCheck_callback callback) throws IOException, LexerException, ParserException, HoareException;
-		void reqConseqCheckPostDialog(SemanticNode node, HoareCond origPostCond, HoareCond newPostCond, ConseqCheck_callback callback) throws IOException, HoareException, ParserException, LexerException;
+		void reqConseqCheckPreDialog(@Nonnull SemanticNode node, @Nonnull HoareCond origPreCond, @Nonnull HoareCond newPreCond, @Nonnull ConseqCheck_callback callback) throws IOException, LexerException, ParserException, HoareException;
+		void reqConseqCheckPostDialog(@Nonnull SemanticNode node, @Nonnull HoareCond origPostCond, @Nonnull HoareCond newPostCond, @Nonnull ConseqCheck_callback callback) throws IOException, HoareException, ParserException, LexerException;
 	}
 
 	public interface Skip_callback {
@@ -80,7 +80,7 @@ public class Hoare {
 		void result() throws HoareException, LexerException, IOException, ParserException, SemanticNode.CopyException;
 	}
 	public interface LoopCheckBodyCond_callback {
-		void result(boolean yes) throws HoareException, LexerException, IOException, ParserException, SemanticNode.CopyException;
+		void result() throws HoareException, LexerException, IOException, ParserException, SemanticNode.CopyException;
 	}
 	public interface LoopAcceptInv_callback {
 		void result() throws HoareException, LexerException, IOException, ParserException, SemanticNode.CopyException;
@@ -190,7 +190,7 @@ public class Hoare {
 			exec_next();
 		}
 
-		public wlp_comp(Comp compNode, HoareCond postCond, wlp_callback callback) {
+		public wlp_comp(@Nonnull Comp compNode, @Nonnull HoareCond postCond, @Nonnull wlp_callback callback) {
 			_compNode = compNode;
 			_postCond = postCond;
 			_callback = callback;
@@ -291,6 +291,8 @@ public class Hoare {
 		public HoareCond _postCond;
 		private wlp_callback _callback;
 
+		public HoareCond _matchInvariant;
+
 		public HoareCond _postInvariant;
 		public HoareCond _preInvariant;
 
@@ -307,11 +309,22 @@ public class Hoare {
 			});
 		}
 
-		private void exec_tryInvariant_checkBodyCond() throws IOException {
-			_actionHandler.reqLoopCheckBodyCondDialog(this, new LoopCheckBodyCond_callback() {
+		private void exec_tryInvariant_checkBodyCond_conseqCheck(@Nonnull HoareCond matchCond) throws IOException, HoareException, ParserException, LexerException {
+			_actionHandler.reqConseqCheckPreDialog(_whileNode, matchCond, _postInvariant, new ConseqCheck_callback() {
 				@Override
 				public void result(boolean yes) throws HoareException, LexerException, IOException, ParserException, SemanticNode.CopyException {
 					if (yes) exec_acceptInvariant(); else exec_askInvariant();
+				}
+			});
+		}
+
+		private void exec_tryInvariant_checkBodyCond() throws IOException {
+			_actionHandler.reqLoopCheckBodyCondDialog(this, new LoopCheckBodyCond_callback() {
+				@Override
+				public void result() throws HoareException, LexerException, IOException, ParserException, SemanticNode.CopyException {
+					HoareCond matchCond = HoareCond.makeAnd(_postInvariant, new HoareCond(_whileNode.getBoolExp()));
+
+					exec_tryInvariant_checkBodyCond_conseqCheck(matchCond);
 				}
 			});
 		}
@@ -417,7 +430,7 @@ public class Hoare {
 	}
 
 	public static class HoareException extends Exception {
-		public HoareException(String msg) {
+		public HoareException(@Nonnull String msg) {
 			super(msg);
 		}
 	}

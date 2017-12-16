@@ -21,7 +21,11 @@ import java.util.function.Function;
 
 public class IOUtil {
 	public static String getResourceAsString(@Nonnull String name) throws IOException, URISyntaxException {
-		URI uri = IOUtil.class.getClassLoader().getResource(name).toURI();
+		URL url = IOUtil.class.getClassLoader().getResource(name);
+
+		if (url == null) throw new IOException("resource " + name + " not found");
+
+		URI uri = url.toURI();
 		
 		Path path = Paths.get(uri);
 		
@@ -105,9 +109,10 @@ public class IOUtil {
 		private void verifyBufferSize(int sz) {
 			if (sz > buf.length) {
 				byte[] old = buf;
+
 				buf = new byte[Math.max(sz, 2 * buf.length )];
+
 				System.arraycopy(old, 0, buf, 0, old.length);
-				old = null;
 			}
 		}
 
@@ -125,14 +130,16 @@ public class IOUtil {
 		}
 
 		@Override
-		public final void write(byte b[]) {
+		public final void write(@Nonnull byte b[]) {
 			verifyBufferSize(size + b.length);
+
 			System.arraycopy(b, 0, buf, size, b.length);
+
 			size += b.length;
 		}
 
 		@Override
-		public final void write(byte b[], int off, int len) {
+		public final void write(@Nonnull byte b[], int off, int len) {
 			verifyBufferSize(size + len);
 			System.arraycopy(b, off, buf, size, len);
 			size += len;
@@ -189,7 +196,7 @@ public class IOUtil {
 		}
 
 		@Override
-		public final int read(byte[] b, int off, int len) {
+		public final int read(@Nonnull byte[] b, int off, int len) {
 			if (pos >= count)
 				return -1;
 
@@ -231,6 +238,8 @@ public class IOUtil {
 		} catch(IOException | ClassNotFoundException e) {
 			ErrorUtil.logE(e);
 		}
+
+		assert(obj != null) : "null";
 
 		return obj;
 	}

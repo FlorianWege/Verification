@@ -10,15 +10,19 @@ import util.IOUtil;
 import util.StringUtil;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.List;
 
 public class BoolImpl extends BoolExp {
     private BoolExp _source;
     private BoolExp _target;
 
+    @Nonnull
     public BoolExp getSource() {
         return _source;
     }
 
+    @Nonnull
     public BoolExp getTarget() {
         return _target;
     }
@@ -35,13 +39,14 @@ public class BoolImpl extends BoolExp {
         addChild(target);
     }
 
-    private Exp isolateId(ExpComp expComp, Id id) {
+    @Nullable
+    private Exp isolateId(@Nonnull ExpComp expComp, @Nonnull Id id) {
         expComp = (ExpComp) expComp.copy();
 
         if (!expComp.findType(Id.class).contains(id)) return null;
 
         //left side=0
-        expComp.order();
+        expComp = (ExpComp) expComp.order();
 
         Exp leftExp = expComp.getLeftExp();
         ExpCompOp compOp = expComp.getExpOp();
@@ -63,12 +68,12 @@ public class BoolImpl extends BoolExp {
 
             toSubtract.neg();
 
-            leftExp = new Sum(leftExp, toSubtract).reduce();
-            rightExp = new Sum(rightExp, toSubtract).reduce();
+            leftExp = new Sum(leftExp, toSubtract).reduce(null);
+            rightExp = new Sum(rightExp, toSubtract).reduce(null);
 
-            expComp = new ExpComp(leftExp, compOp, rightExp);
+            //expComp = new ExpComp(leftExp, compOp, rightExp);
 
-            leftExp.order();
+            leftExp = leftExp.order();
 
             if (rightExp.equals(id)) return leftExp;
 
@@ -78,30 +83,7 @@ public class BoolImpl extends BoolExp {
         return leftExp;
     }
 
-    /*private BoolOr reduceC_side(BoolExp boolExp) {
-        boolExp = boolExp.reduce();
-
-        BoolOr dnf = boolExp.makeDNF();
-
-        BoolOr newOr = new BoolOr();
-
-        for (BoolExp part : dnf.getBoolExps()) {
-            //each part is an And at best
-
-            BoolAnd partAnd = new BoolAnd(part);
-
-            part = reduceC_reduceAnd(partAnd);
-
-            newOr.addBoolExp(part);
-        }
-
-        return newOr;
-    }*/
-
-    private BoolExp splitB() {
-        return new BoolOr(new BoolNeg((BoolExp) _source.copy()), (BoolExp) _target.copy()).reduce();
-    }
-
+    @Nonnull
     private BoolExp split_left(boolean splitOr, boolean splitAnd) {
         BoolExp left = getSource();
         BoolExp right = getTarget();
@@ -131,6 +113,7 @@ public class BoolImpl extends BoolExp {
         return new BoolImpl(left, right);
     }
 
+    @Nonnull
     private BoolExp split_right(boolean splitOr, boolean splitAnd) {
         BoolExp left = getSource();
         BoolExp right = getTarget();
@@ -160,6 +143,7 @@ public class BoolImpl extends BoolExp {
         return new BoolImpl(left, right);
     }
 
+    @Nonnull
     public BoolExp split(boolean splitOr, boolean splitAnd) {
         BoolExp left = (BoolExp) _source.copy();
         BoolExp right = (BoolExp) _target.copy();
@@ -180,7 +164,7 @@ public class BoolImpl extends BoolExp {
             BoolExp leftSolved = split_left(splitOr, splitAnd);
 
             if (leftSolved instanceof BoolList) {
-                BoolList newList = ((BoolList) leftSolved).invertConstruct();
+                BoolList newList = ((BoolList) leftSolved).ownConstruct();
 
                 for (BoolExp part : ((BoolList) leftSolved).getBoolExps()) {
                     newList.addBoolExp(((BoolImpl) part).split_right(splitOr, splitAnd));
@@ -193,11 +177,12 @@ public class BoolImpl extends BoolExp {
         return new BoolImpl(left, right);
     }
 
+    @Nonnull
     @Override
-    public BoolExp reduce() {
+    public BoolExp reduce_spec(@Nonnull Reducer reducer) {
         //morph both sides to DNF
-        BoolExp source = _source.makeDNF().reduce();
-        BoolExp target = _target.makeDNF().reduce();
+        BoolExp source = _source.makeDNFOr().reduceShallow();
+        BoolExp target = _target.makeDNFOr().reduceShallow();
 
         BoolImpl impl = new BoolImpl(source, target);
 
@@ -209,92 +194,106 @@ public class BoolImpl extends BoolExp {
             //source = reduceC_side((BoolExp) ((BoolImpl) split).getSource().copy());
             //target = reduceC_side((BoolExp) ((BoolImpl) split).getTarget().copy());
 
-            /*BoolAnd sourceAnd = new BoolAnd(source);
+//            BoolAnd sourceAnd = new BoolAnd(source);
+//            BoolAnd targetAnd = new BoolAnd(target);
+//
+//            Set<Id> ids = targetAnd.findType(Id.class);
+//
+//            BoolExp last;
+//
+//            do {
+//                last = targetAnd;
+//
+//                for (Id id : ids) {
+//                    BoolExp origin = null;
+//                    Exp toReplace = null;
+//
+//                    for (BoolExp part : sourceAnd.getBoolExps()) {
+//                        Exp exp = isolateId((ExpComp) part, id);
+//
+//                        if (exp != null) {
+//                            origin = part;
+//                            toReplace = exp;
+//
+//                            break;
+//                        }
+//                    }
+//
+//                    if (toReplace != null) {
+//                        List<BoolExp> boolExps = new ArrayList<>();
+//
+//                        for (BoolExp part : targetAnd.getBoolExps()) {
+//                            if (part.equals(origin)) {
+//                                boolExps.add(part);
+//
+//                                continue;
+//                            }
+//
+//                            Exp finalToReplace = toReplace;
+//
+//                            part = (BoolExp) part.replace(new IOUtil.IdWithParams<SemanticNode, SemanticNode>() {
+//                                @Override
+//                                public SemanticNode apply(SemanticNode semanticNode) {
+//                                    if (semanticNode.equals(id)) {
+//                                        return finalToReplace;
+//                                    }
+//
+//                                    return semanticNode;
+//                                }
+//                            });
+//
+//                            part = part.reduce();
+//                            boolExps.add(part);
+//                        }
+//
+//                        targetAnd = new BoolAnd();
+//
+//                        for (BoolExp part : boolExps) {
+//                            targetAnd.addBoolExp(part);
+//                        }
+//                    }
+//                }
+//            } while (!last.equals(targetAnd));
+//
+//            target = targetAnd.reduce();
+//
+//            target.order();
+
+            BoolAnd sourceAnd = new BoolAnd(source);
             BoolAnd targetAnd = new BoolAnd(target);
 
-            Set<Id> ids = targetAnd.findType(Id.class);
-
-            BoolExp last;
-
-            do {
-                last = targetAnd;
-
-                for (Id id : ids) {
-                    BoolExp origin = null;
-                    Exp toReplace = null;
-
-                    for (BoolExp part : sourceAnd.getBoolExps()) {
-                        Exp exp = isolateId((ExpComp) part, id);
-
-                        if (exp != null) {
-                            origin = part;
-                            toReplace = exp;
-
-                            break;
-                        }
-                    }
-
-                    if (toReplace != null) {
-                        List<BoolExp> boolExps = new ArrayList<>();
-
-                        for (BoolExp part : targetAnd.getBoolExps()) {
-                            if (part.equals(origin)) {
-                                boolExps.add(part);
-
-                                continue;
-                            }
-
-                            Exp finalToReplace = toReplace;
-
-                            part = (BoolExp) part.replace(new IOUtil.Func<SemanticNode, SemanticNode>() {
-                                @Override
-                                public SemanticNode apply(SemanticNode semanticNode) {
-                                    if (semanticNode.equals(id)) {
-                                        return finalToReplace;
-                                    }
-
-                                    return semanticNode;
-                                }
-                            });
-
-                            part = part.reduce();
-                            boolExps.add(part);
-                        }
-
-                        targetAnd = new BoolAnd();
-
-                        for (BoolExp part : boolExps) {
-                            targetAnd.addBoolExp(part);
-                        }
-                    }
+            if (sourceAnd.isPure() && targetAnd.isPure()) {
+                List<BoolExp> sourceAndParts = sourceAnd.getBoolExps();
+                List<BoolExp> targetAndParts = targetAnd.getBoolExps();
+                System.out.println("LEFTRIGHT " + sourceAndParts + ";" + targetAndParts);
+                if (sourceAndParts.containsAll(targetAndParts)) {
+                    System.out.println("FOUND TRUE");
+                    return new BoolLit(true);
                 }
-            } while (!last.equals(targetAnd));
+            }
 
-            target = targetAnd.reduce();
-
-            target.order();*/
-
-            BoolExp ret = new BoolOr(new BoolNeg(source), target).reduce();
-
-            return ret;
+            return new BoolOr(new BoolNeg(source), target).reduce(reducer);
         }
+        System.out.println("return " + split.getTypeName());
+        return split.reduce(reducer);
+    }
 
-        return split.reduce();
+    @Nonnull
+    @Override
+    public BoolExp order_spec() {
+        BoolExp newSource = _source.order();
+        BoolExp newTarget = _target.order();
+
+        return new BoolImpl(newSource, newTarget);
     }
 
     @Override
-    public void order() {
-        _source.order();
-        _target.order();
-    }
-
-    @Override
-    public int comp(BoolExp b) {
-        int ret = _source.compPrecedence(((BoolImpl) b)._source);
+    public int comp_spec(BoolExp b) {
+        int ret = _source.comp(((BoolImpl) b)._source);
 
         if (ret != 0) return ret;
 
-        return (_target.compPrecedence(((BoolImpl) b)._target));
+        return (_target.comp(((BoolImpl) b)._target));
     }
 
     @Override

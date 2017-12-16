@@ -1,21 +1,24 @@
 package core;
 
-import java.io.PrintStream;
-import java.io.Serializable;
-import java.util.*;
-
 import core.structures.LexerRule;
 import core.structures.NonTerminal;
 import core.structures.ParserRule;
 import core.structures.Terminal;
 import util.StringUtil;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.io.PrintStream;
+import java.io.Serializable;
+import java.util.*;
+
 public class Grammar implements Serializable {
 	public Grammar() {
 	}
 	
 	private ParserTable _parserTable;
-	
+
+	@Nonnull
 	public ParserTable getParserTable() {
 		return _parserTable;
 	}
@@ -26,11 +29,13 @@ public class Grammar implements Serializable {
 	
 	private NonTerminal _startSymbol;
 	private List<NonTerminal> _startSymbols = new ArrayList<>();
-	
+
+	@Nullable
 	public NonTerminal getStartSymbol() {
 		return _startSymbol;
 	}
 
+	@Nonnull
 	public List<NonTerminal> getStartSymbols() {
 		return new ArrayList<>(_startSymbols);
 	}
@@ -41,18 +46,20 @@ public class Grammar implements Serializable {
 	}
 	
 	private final Map<SymbolKey, Symbol> _symbols = new LinkedHashMap<>();
-	
+
+	@Nonnull
 	public Map<SymbolKey, Symbol> getSymbols() {
 		return _symbols;
 	}
-	
+
 	private final Set<Terminal> _terminals = new LinkedHashSet<>();
-	
+
+	@Nonnull
 	public Set<Terminal> getTerminals() {
 		return _terminals;
 	}
 	
-	public Terminal createTerminal(SymbolKey key) {
+	public Terminal createTerminal(@Nonnull SymbolKey key) {
 		assert(!_symbols.containsKey(key)) : "key " + key + " already exists";
 
 		Terminal terminal = new Terminal(key);
@@ -63,7 +70,7 @@ public class Grammar implements Serializable {
 		return terminal;
 	}
 	
-	public Terminal createTerminal(String keyS) {
+	public Terminal createTerminal(@Nonnull String keyS) {
 		return createTerminal(new SymbolKey(keyS));
 	}
 	
@@ -73,7 +80,7 @@ public class Grammar implements Serializable {
 		return _nonTerminals;
 	}
 	
-	public NonTerminal createNonTerminal(SymbolKey key) {
+	public NonTerminal createNonTerminal(@Nonnull SymbolKey key) {
 		assert(!_symbols.containsKey(key)) : "key " + key + " already exists";
 		
 		NonTerminal nonTerminal = new NonTerminal(key);
@@ -84,15 +91,15 @@ public class Grammar implements Serializable {
 		return nonTerminal;
 	}
 	
-	public NonTerminal createNonTerminal(String keyS) {
+	public NonTerminal createNonTerminal(@Nonnull String keyS) {
 		return createNonTerminal(new SymbolKey(keyS));
 	}
 
-	public ParserRule createRule(NonTerminal nonTerminal, Symbol... symbols) {
+	public ParserRule createRule(@Nonnull NonTerminal nonTerminal, @Nonnull Symbol... symbols) {
 		return nonTerminal.createRule(symbols);
 	}
 	
-	public ParserRule createRule(NonTerminal nonTerminal, String s) {
+	public ParserRule createRule(@Nonnull NonTerminal nonTerminal, @Nonnull String s) {
 		String[] sArr = s.split("\\s+");
 		
 		Vector<Symbol> symbols = new Vector<>();
@@ -108,7 +115,7 @@ public class Grammar implements Serializable {
 		return nonTerminal.createRule(symbols);
 	}
 	
-	public void printLatex(PrintStream outStream) {
+	public void printLatex(@Nonnull PrintStream outStream) {
 		for (Symbol sym : _symbols.values()) {
 			if (sym instanceof NonTerminal) {
 				NonTerminal nonTerminal = (NonTerminal) sym;
@@ -166,7 +173,7 @@ public class Grammar implements Serializable {
 		}
 	}
 	
-	protected void merge(Grammar other) {
+	protected void merge(@Nonnull Grammar other) {
 		_parserTable.merge(other.getParserTable());
 		_terminals.addAll(other.getTerminals());
 		_nonTerminals.addAll(other.getNonTerminals());

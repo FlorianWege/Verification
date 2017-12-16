@@ -1,16 +1,35 @@
 package core.structures.semantics.exp;
 
+import core.structures.semantics.SemanticNode;
+import util.IOUtil;
+
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class Func extends ExpElem {
-    private final List<Param> _params = new ArrayList<>();
+public abstract class IdWithParams extends Id {
+    private final List<Exp> _params = new ArrayList<>();
 
-    public List<Param> getParams() {
+    public IdWithParams(String name) {
+        super(name);
+    }
+
+    public List<Exp> getParams() {
         return new ArrayList<>(_params);
     }
 
-    public void addParam(Param param) {
+    public void addParam(@Nonnull Exp param) {
         _params.add(param);
+    }
+
+    @Override
+    public String getContentString(@Nonnull IOUtil.BiFunc<SemanticNode, String, String> mapper) {
+        return mapper.apply(this, getName());
+    }
+
+    @Nonnull
+    @Override
+    public SemanticNode replace(@Nonnull IOUtil.Func<SemanticNode, SemanticNode> replaceFunc) {
+        return replaceFunc.apply(this);
     }
 }

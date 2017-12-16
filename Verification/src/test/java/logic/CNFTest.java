@@ -1,18 +1,16 @@
 package logic;
 
-import java.io.IOException;
-
+import core.Grammar;
+import core.Lexer;
+import core.Parser;
+import core.Parser.ParserException;
 import core.structures.semantics.SemanticNode;
 import core.structures.semantics.boolExp.BoolExp;
 import core.structures.syntax.SyntaxNode;
+import grammars.BoolExpGrammar;
 import org.testng.annotations.Test;
 
-import core.Grammar;
-import core.Lexer;
-import core.Lexer.LexerResult;
-import core.Parser;
-import core.Parser.ParserException;
-import grammars.BoolExpGrammar;
+import java.io.IOException;
 
 public class CNFTest {
 	private Grammar grammar = BoolExpGrammar.getInstance();

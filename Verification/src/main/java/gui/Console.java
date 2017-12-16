@@ -1,18 +1,18 @@
 package gui;
 
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.control.TextArea;
 import util.IOUtil;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class Console implements Initializable, JavaFXMain.PrintInterface {
+public class Console implements gui.Initializable, JavaFXMain.PrintInterface {
 	@FXML
 	private TextArea _textArea_log;
 	
@@ -29,7 +29,7 @@ public class Console implements Initializable, JavaFXMain.PrintInterface {
 	}
 
 	@Override
-	public void initialize(URL url, ResourceBundle resources) {
+	public void initialize(@Nonnull URL url, @Nullable ResourceBundle resources) {
 		updateVisibility();
 	}
 

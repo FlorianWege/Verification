@@ -15,6 +15,7 @@ import javafx.scene.paint.Color;
 import javafx.util.Callback;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.function.Predicate;
 
 public abstract class NodeTreeView<T extends TNode<T>> {
@@ -27,14 +28,14 @@ public abstract class NodeTreeView<T extends TNode<T>> {
 
 		_treeView.setCellFactory(new Callback<TreeView<T>, TreeCell<T>>() {
 			@Override
-			public TreeCell<T> call(TreeView<T> val) {
+			public TreeCell<T> call(@Nonnull TreeView<T> val) {
 				return new TreeNodeCell();
 			}
 		});
 
 		_nodeTreeP.addListener(new ChangeListener<T>() {
 			@Override
-			public void changed(ObservableValue<? extends T> obs, T oldVal, T newVal) {
+			public void changed(@Nonnull ObservableValue<? extends T> obs, @Nullable T oldVal, @Nullable T newVal) {
 				update();
 			}
 		});
@@ -45,7 +46,7 @@ public abstract class NodeTreeView<T extends TNode<T>> {
 
 		protected abstract Background getBackground();
 
-		public void addChild(TreeNode child) {
+		public void addChild(@Nonnull TreeNode child) {
 			getChildren().add(child);
 		}
 		
@@ -63,7 +64,7 @@ public abstract class NodeTreeView<T extends TNode<T>> {
 		}
 
 		@Override
-		public void commitEdit(T item) {
+		public void commitEdit(@Nonnull T item) {
 			super.commitEdit(item);
 		}
 
@@ -73,7 +74,7 @@ public abstract class NodeTreeView<T extends TNode<T>> {
 		}
 
 		@Override
-		public void updateItem(T item, boolean empty) {
+		public void updateItem(@Nonnull T item, boolean empty) {
 			super.updateItem(item, empty);
 			
 			if (empty) {

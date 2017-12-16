@@ -33,7 +33,7 @@ public class ExpCompOp extends SemanticNode implements Serializable {
         return super.equals(other);
     }
 
-    private Type _type;
+    private final Type _type;
 
     public @Nonnull Type getType() {
         return _type;
@@ -54,6 +54,8 @@ public class ExpCompOp extends SemanticNode implements Serializable {
             if (rule.equals(_grammar.RULE_GREATER_EQUAL)) return Type.EQUAL_GREATER;
             if (rule.equals(_grammar.RULE_UNEQUAL)) return Type.UNEQUAL;
 
+            assert(false) : "null";
+
             return null;
         }
     };
@@ -68,6 +70,8 @@ public class ExpCompOp extends SemanticNode implements Serializable {
             if (type.equals(Type.GREATER)) return _grammar.RULE_GREATER;
             if (type.equals(Type.EQUAL_GREATER)) return _grammar.RULE_GREATER_EQUAL;
             if (type.equals(Type.UNEQUAL)) return _grammar.RULE_UNEQUAL;
+
+            assert(false) : "null";
 
             return null;
         }
@@ -84,37 +88,41 @@ public class ExpCompOp extends SemanticNode implements Serializable {
     private final Function<Type, Type> _negFunc = new IOUtil.Func<Type, Type>() {
         @Override
         public Type apply(Type type) {
-            if (type.equals(Type.EQUAL)) return Type.UNEQUAL;
-            if (type.equals(Type.UNEQUAL)) return Type.EQUAL;
-            if (type.equals(Type.LESS)) return Type.EQUAL_GREATER;
-            if (type.equals(Type.GREATER)) return Type.EQUAL_LESS;
-            if (type.equals(Type.EQUAL_LESS)) return Type.GREATER;
-            if (type.equals(Type.EQUAL_GREATER)) return Type.LESS;
+            switch (type) {
+                case EQUAL: return Type.UNEQUAL;
+                case UNEQUAL: return Type.EQUAL;
+                case LESS: return Type.EQUAL_GREATER;
+                case GREATER: return Type.EQUAL_LESS;
+                case EQUAL_LESS: return Type.GREATER;
+                case EQUAL_GREATER: return Type.LESS;
+            }
 
             return null;
         }
     };
 
-    public void neg() {
-        _type = _negFunc.apply(_type);
+    public ExpCompOp neg() {
+        return new ExpCompOp(_negFunc.apply(_type));
     }
 
     private final Function<Type, Type> _swapFunc = new IOUtil.Func<Type, Type>() {
         @Override
         public Type apply(Type type) {
-            if (type.equals(Type.EQUAL)) return Type.EQUAL;
-            if (type.equals(Type.UNEQUAL)) return Type.UNEQUAL;
-            if (type.equals(Type.LESS)) return Type.GREATER;
-            if (type.equals(Type.GREATER)) return Type.LESS;
-            if (type.equals(Type.EQUAL_LESS)) return Type.EQUAL_GREATER;
-            if (type.equals(Type.EQUAL_GREATER)) return Type.EQUAL_LESS;
+            switch (type) {
+                case EQUAL: return Type.EQUAL;
+                case UNEQUAL: return Type.UNEQUAL;
+                case LESS: return Type.GREATER;
+                case GREATER: return Type.LESS;
+                case EQUAL_LESS: return Type.EQUAL_GREATER;
+                case EQUAL_GREATER: return Type.EQUAL_LESS;
+            }
 
             return null;
         }
     };
 
-    public void swap() {
-        _type = _swapFunc.apply(_type);
+    public ExpCompOp swap() {
+        return new ExpCompOp(_swapFunc.apply(_type));
     }
 
     public int comp(ExpCompOp b) {

@@ -1,5 +1,7 @@
 package core;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.Serializable;
 
 /**
@@ -14,7 +16,7 @@ public class SymbolKey implements Serializable {
 	}
 	
 	@Override
-	public boolean equals(Object other) {
+	public boolean equals(@Nullable Object other) {
 		if (other instanceof String) other = new SymbolKey((String) other);
 		
 		if (!(other instanceof SymbolKey)) return false;
@@ -27,7 +29,7 @@ public class SymbolKey implements Serializable {
 		return _name;
 	}
 	
-	public SymbolKey(String name) {
+	public SymbolKey(@Nonnull String name) {
 		_name = name;
 	}
 }

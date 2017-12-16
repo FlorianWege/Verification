@@ -4,14 +4,17 @@ import core.structures.NonTerminal;
 import core.structures.ParserRule;
 import core.structures.Terminal;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.PrintStream;
 import java.io.Serializable;
 import java.util.*;
 
 public class ParserTable implements Serializable {
 	private final Map<NonTerminal, Map<Terminal, ParserRule>> _map = new HashMap<>();
-	
-	public ParserRule get(NonTerminal parserRule, Terminal lexerRule) {
+
+	@Nullable
+	public ParserRule get(@Nonnull NonTerminal parserRule, @Nonnull Terminal lexerRule) {
 		if (!_map.containsKey(parserRule)) return null;
 		
 		Map<Terminal, ParserRule> sourceRuleMap = _map.get(parserRule);
@@ -19,7 +22,7 @@ public class ParserTable implements Serializable {
 		return sourceRuleMap.get(lexerRule);
 	}
 	
-	public void set(NonTerminal parserRule, Terminal lexerRule, ParserRule targetRule) {
+	public void set(@Nonnull NonTerminal parserRule, @Nonnull Terminal lexerRule, @Nonnull ParserRule targetRule) {
 		if (!_map.containsKey(parserRule)) _map.put(parserRule, new HashMap<>());
 		
 		Map<Terminal, ParserRule> subMap = _map.get(parserRule);
@@ -29,11 +32,11 @@ public class ParserTable implements Serializable {
 		subMap.put(lexerRule, targetRule);
 	}
 	
-	void merge(ParserTable other) {
+	public void merge(@Nonnull ParserTable other) {
 		_map.putAll(other._map);
 	}
 	
-	public void print(PrintStream out) {
+	public void print(@Nonnull PrintStream out) {
 		for (Map.Entry<NonTerminal, Map<Terminal, ParserRule>> lexerMapEntry : _map.entrySet()) {
 			Map<Terminal, ParserRule> lexerMap = lexerMapEntry.getValue();
 			
@@ -46,8 +49,11 @@ public class ParserTable implements Serializable {
 	}
 	
 	//private final Map<NonTerminal, Set<Terminal>> _followMap = new LinkedHashMap<>();
-	
-	private Set<Terminal> getFollow(NonTerminal nonTerminal, Grammar grammar, Set<NonTerminal> recursiveSet) {
+
+	@Nonnull
+	private Set<Terminal> getFollow(@Nonnull NonTerminal nonTerminal, @Nonnull Grammar grammar, @Nonnull Set<NonTerminal> recursiveSet) {
+		assert(grammar.getStartSymbol() != null) : "no start symbol";
+
 		//if (_followMap.containsKey(nonTerminal)) return _followMap.get(nonTerminal);
 
 		Set<Terminal> ret = new LinkedHashSet<>();
@@ -92,12 +98,14 @@ public class ParserTable implements Serializable {
 
 		return ret;
 	}
-	
-	private Set<Terminal> getFollow(NonTerminal nonTerminal, Grammar grammar) {
+
+	@Nonnull
+	private Set<Terminal> getFollow(@Nonnull NonTerminal nonTerminal, @Nonnull Grammar grammar) {
 		return getFollow(nonTerminal, grammar, new LinkedHashSet<>());
 	}
-	
-	private Set<Terminal> getFirst(List<Symbol> symbols, Set<NonTerminal> recursiveSet) {
+
+	@Nonnull
+	private Set<Terminal> getFirst(@Nonnull List<Symbol> symbols, @Nonnull Set<NonTerminal> recursiveSet) {
 		if (symbols.contains(Terminal.EPSILON)) return new LinkedHashSet<>(Collections.singletonList(Terminal.EPSILON));
 
 		Set<Terminal> ret = new LinkedHashSet<>();
@@ -122,8 +130,9 @@ public class ParserTable implements Serializable {
 	}
 	
 	//private final Map<NonTerminal, Set<Terminal>> _firstMap = new LinkedHashMap<>();
-	
-	private Set<Terminal> getFirst(NonTerminal nonTerminal, Set<NonTerminal> recursiveSet) {
+
+	@Nonnull
+	private Set<Terminal> getFirst(@Nonnull NonTerminal nonTerminal, @Nonnull Set<NonTerminal> recursiveSet) {
 		//if (_firstMap.containsKey(nonTerminal)) return _firstMap.get(nonTerminal);
 		
 		Set<Terminal> ret = new LinkedHashSet<>();
@@ -140,12 +149,13 @@ public class ParserTable implements Serializable {
 		
 		return ret;
 	}
-	
-	private Set<Terminal> getFirst(NonTerminal nonTerminal) {
+
+	@Nonnull
+	private Set<Terminal> getFirst(@Nonnull NonTerminal nonTerminal) {
 		return getFirst(nonTerminal, new LinkedHashSet<>());
 	}
 	
-	public ParserTable(Grammar grammar) {
+	public ParserTable(@Nonnull Grammar grammar) {
 		Map<NonTerminal, Set<Terminal>> firstMap = new LinkedHashMap<>();
 		Map<NonTerminal, Set<Terminal>> followMap = new LinkedHashMap<>();
 		

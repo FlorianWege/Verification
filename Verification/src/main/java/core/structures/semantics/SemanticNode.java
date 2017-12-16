@@ -1,18 +1,21 @@
 package core.structures.semantics;
 
 import core.*;
-import core.structures.TNode;
 import core.structures.ParserRule;
+import core.structures.TNode;
 import core.structures.semantics.boolExp.*;
 import core.structures.semantics.exp.*;
 import core.structures.semantics.prog.*;
 import core.structures.syntax.SyntaxNode;
 import core.structures.syntax.SyntaxNodeTerminal;
 import grammars.HoareWhileGrammar;
+import util.ErrorUtil;
 import util.IOUtil;
 import util.StringUtil;
 
+import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.PrintStream;
 import java.io.Serializable;
 import java.math.BigInteger;
@@ -20,9 +23,10 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.UnaryOperator;
 
 public abstract class SemanticNode extends TNode<SemanticNode> implements Serializable {
+    protected static ErrorUtil.NestedPrinter _printer = ErrorUtil.PRINTER;
+
     @Override
     public int hashCode() {
         return getContentString().hashCode();
@@ -37,10 +41,10 @@ public abstract class SemanticNode extends TNode<SemanticNode> implements Serial
         return super.equals(other);
     }
 
-    public Set<Id> findType(Class<? extends SemanticNode> type) {
-        Set<Id> ret = new HashSet<>();
+    public <T extends SemanticNode> Set<T> findType(Class<? extends SemanticNode> type) {
+        Set<T> ret = new HashSet<>();
 
-        if (type.isInstance(this)) ret.add((Id) this);
+        if (type.isInstance(this)) ret.add((T) this);
 
         for (SemanticNode child : getChildren()) {
             ret.addAll(child.findType(type));
@@ -66,6 +70,7 @@ public abstract class SemanticNode extends TNode<SemanticNode> implements Serial
 
         return sb.toString();
     }
+
     public abstract String getContentString(@Nonnull IOUtil.BiFunc<SemanticNode, String, String> mapper);
     public String getContentString() {
         return getContentString(new IOUtil.BiFunc<SemanticNode, String, String>() {
@@ -76,6 +81,7 @@ public abstract class SemanticNode extends TNode<SemanticNode> implements Serial
         });
     }
 
+    @Nonnull
     @Override
     public String getTreeText() {
         return !getChildren().isEmpty() ? getTypeName() : getChildName() + ": " + getContentString();
@@ -88,18 +94,10 @@ public abstract class SemanticNode extends TNode<SemanticNode> implements Serial
 
     protected final List<SemanticNode> _children = new ArrayList<>();
 
+    @Nonnull
     @Override
     public List<SemanticNode> getChildren() {
         return _children;
-    }
-
-    protected void replaceChildren(@Nonnull IOUtil.Func<SemanticNode, SemanticNode> replaceFunc) {
-        _children.replaceAll(new UnaryOperator<SemanticNode>() {
-            @Override
-            public SemanticNode apply(SemanticNode child) {
-                return child.replace(replaceFunc);
-            }
-        });
     }
 
     private String _childName;
@@ -122,11 +120,14 @@ public abstract class SemanticNode extends TNode<SemanticNode> implements Serial
         child._childName = label;
     }
 
-    public abstract @Nonnull SemanticNode replace(@Nonnull IOUtil.Func<SemanticNode, SemanticNode> replaceFunc);
+    @CheckReturnValue
+    @Nonnull
+    public abstract SemanticNode replace(@Nonnull IOUtil.Func<SemanticNode, SemanticNode> replaceFunc);
 
     private SyntaxNode _syntax = null;
 
-    public @Nonnull List<Token> tokenize() {
+    @Nonnull
+    public List<Token> tokenize() {
         return (_syntax != null) ? _syntax.tokenize(false) : new ArrayList<>();
     }
 
@@ -374,7 +375,7 @@ public abstract class SemanticNode extends TNode<SemanticNode> implements Serial
 
                     newNode = id;
                 }
-            } else if (subRule.equals(_grammar.RULE_NUM)) {
+            } else if (subRule.equals(_grammar.RULE_EXP_LIT)) {
                 SyntaxNode numSyntaxNode = syntaxNode.findChild(_grammar.TERMINAL_EXP_LIT);
 
                 newNode = transform(numSyntaxNode);
@@ -395,7 +396,7 @@ public abstract class SemanticNode extends TNode<SemanticNode> implements Serial
 
                 SemanticNode paramNode = transform(paramSyntaxNode);
 
-                if (paramNode != null) paramListNode.addParam((Param) paramNode);
+                if (paramNode != null) paramListNode.addParam((Exp) paramNode);
 
                 SemanticNode paramList_Node = transform(syntaxNode.findChild(_grammar.NON_TERMINAL_PARAM_LIST_));
 
@@ -411,7 +412,7 @@ public abstract class SemanticNode extends TNode<SemanticNode> implements Serial
 
                 SemanticNode paramNode = transform(paramSyntaxNode);
 
-                if (paramNode != null) paramListNode.addParam((Param) paramNode);
+                if (paramNode != null) paramListNode.addParam((Exp) paramNode);
 
                 SyntaxNode paramList_SyntaxNode = syntaxNode.findChild(_grammar.NON_TERMINAL_PARAM_LIST_);
 
@@ -548,12 +549,13 @@ public abstract class SemanticNode extends TNode<SemanticNode> implements Serial
         return newNode;
     }
 
+    @Nullable
     public SyntaxNode getSyntax() {
         return _syntax;
     }
 
     public class CopyException extends RuntimeException {
-        public CopyException(Exception e) {
+        public CopyException(@Nonnull Exception e) {
             super(e);
         }
     }

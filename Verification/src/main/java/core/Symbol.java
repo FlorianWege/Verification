@@ -1,5 +1,7 @@
 package core;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.Serializable;
 
 public abstract class Symbol implements Serializable {
@@ -15,7 +17,7 @@ public abstract class Symbol implements Serializable {
 	}
 	
 	@Override
-	public boolean equals(Object other) {
+	public boolean equals(@Nullable Object other) {
 		if (other instanceof Symbol) return _key.equals(((Symbol) other).getKey());
 		
 		return _key.equals(other);
@@ -28,7 +30,7 @@ public abstract class Symbol implements Serializable {
 	
 	public abstract String toLatexString();
 	
-	protected Symbol(SymbolKey key) {
+	protected Symbol(@Nonnull SymbolKey key) {
 		_key = key;
 	}
 }

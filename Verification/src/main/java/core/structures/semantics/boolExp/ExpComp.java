@@ -4,6 +4,7 @@ import core.structures.semantics.SemanticNode;
 import core.structures.semantics.exp.*;
 import util.IOUtil;
 
+import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -12,9 +13,9 @@ import java.util.Map;
 import java.util.Set;
 
 public class ExpComp extends BoolElem {
-    private Exp _leftExp;
-    private ExpCompOp _expCompOp;
-    private Exp _rightExp;
+    private final Exp _leftExp;
+    private final ExpCompOp _expCompOp;
+    private final Exp _rightExp;
 
     public Exp getLeftExp() {
         return _leftExp;
@@ -38,37 +39,70 @@ public class ExpComp extends BoolElem {
         addChild(_rightExp);
     }
 
-    public void neg() {
-        _expCompOp.neg();
+    @CheckReturnValue
+    @Nonnull
+    public ExpComp neg() {
+        Exp leftExp = getLeftExp();
+        Exp rightExp = getRightExp();
+
+        if (!leftExp.findType(ExpMu.class).isEmpty() || !rightExp.findType(ExpMu.class).isEmpty()) {
+            leftExp = (Exp) leftExp.replace(new IOUtil.Func<SemanticNode, SemanticNode>() {
+                @Override
+                public SemanticNode apply(SemanticNode semanticNode) {
+                    if (semanticNode instanceof ExpMu) {
+                        return new Prod(new ExpLit(-1), new ExpMu());
+                    }
+
+                    return semanticNode;
+                }
+            });
+            rightExp = (Exp) rightExp.replace(new IOUtil.Func<SemanticNode, SemanticNode>() {
+                @Override
+                public SemanticNode apply(SemanticNode semanticNode) {
+                    if (semanticNode instanceof ExpMu) {
+                        return new Prod(new ExpLit(-1), new ExpMu());
+                    }
+
+                    return semanticNode;
+                }
+            });
+
+            return new ExpComp(leftExp, getExpOp(), rightExp);
+        }
+
+        return new ExpComp(leftExp, getExpOp().neg(), rightExp);
     }
 
-    public void swap() {
-        Exp leftExp = _leftExp;
-
-        _leftExp = _rightExp;
-        _expCompOp.swap();
-        _rightExp = leftExp;
+    @CheckReturnValue
+    @Nonnull
+    public ExpComp swap() {
+        return new ExpComp(getRightExp(), getExpOp().swap(), getLeftExp());
     }
 
-    public void div(ExpLit lit) {
+    @CheckReturnValue
+    @Nonnull
+    public ExpComp div(ExpLit lit) {
         assert (!lit.getVal().equals(BigDecimal.ZERO));
 
-        _leftExp = new Prod(_leftExp, lit.makeInv());
-        _rightExp = new Prod(_rightExp, lit.makeInv());
+        Exp leftExp = new Prod(_leftExp, lit.makeInv());
+        ExpCompOp compOp = (lit.isNeg()) ? _expCompOp.swap() : _expCompOp;
+        Exp rightExp = new Prod(_rightExp, lit.makeInv());
 
-        if (lit.isNeg()) _expCompOp.swap();
+        return new ExpComp(leftExp, compOp, rightExp);
     }
 
+    @Nonnull
     @Override
-    public BoolExp reduce() {
-        Exp leftExp = _leftExp.reduce();
-        Exp rightExp = _rightExp.reduce();
+    public BoolExp reduce_spec(@Nonnull Reducer reducer) {
+        Exp leftExp = _leftExp.reduce(new Exp.Reducer(_leftExp));
+
+        Exp rightExp = _rightExp.reduce(new Exp.Reducer(_rightExp));
         ExpCompOp expCompOp = (ExpCompOp) _expCompOp.copy();
 
         //split
-        if (expCompOp.getType().equals(ExpCompOp.Type.UNEQUAL)) return new BoolOr(new ExpComp(leftExp, new ExpCompOp(ExpCompOp.Type.LESS), rightExp).reduce(), new ExpComp(leftExp, new ExpCompOp(ExpCompOp.Type.GREATER), rightExp).reduce());
-        if (expCompOp.getType().equals(ExpCompOp.Type.EQUAL_GREATER)) return new BoolOr(new ExpComp(leftExp, new ExpCompOp(ExpCompOp.Type.EQUAL), rightExp).reduce(), new ExpComp(leftExp, new ExpCompOp(ExpCompOp.Type.GREATER), rightExp).reduce());
-        if (expCompOp.getType().equals(ExpCompOp.Type.EQUAL_LESS)) return new BoolOr(new ExpComp(leftExp, new ExpCompOp(ExpCompOp.Type.EQUAL), rightExp).reduce(), new ExpComp(leftExp, new ExpCompOp(ExpCompOp.Type.LESS), rightExp).reduce());
+        if (expCompOp.getType().equals(ExpCompOp.Type.UNEQUAL)) return new BoolOr(new ExpComp(leftExp, new ExpCompOp(ExpCompOp.Type.LESS), rightExp).reduce(reducer), new ExpComp(leftExp, new ExpCompOp(ExpCompOp.Type.GREATER), rightExp).reduce(reducer));
+        if (expCompOp.getType().equals(ExpCompOp.Type.EQUAL_GREATER)) return new BoolOr(new ExpComp(leftExp, new ExpCompOp(ExpCompOp.Type.EQUAL), rightExp).reduce(reducer), new ExpComp(leftExp, new ExpCompOp(ExpCompOp.Type.GREATER), rightExp).reduce(reducer));
+        if (expCompOp.getType().equals(ExpCompOp.Type.EQUAL_LESS)) return new BoolOr(new ExpComp(leftExp, new ExpCompOp(ExpCompOp.Type.EQUAL), rightExp).reduce(reducer), new ExpComp(leftExp, new ExpCompOp(ExpCompOp.Type.LESS), rightExp).reduce(reducer));
 
         if (expCompOp.getType().equals(ExpCompOp.Type.LESS)) {
             leftExp = new Sum(leftExp, new ExpMu());
@@ -82,7 +116,7 @@ public class ExpComp extends BoolElem {
         }
 
         //both sides of equal shape
-        if (leftExp.compPrecedence(rightExp) == 0) {
+        if (leftExp.comp(rightExp) == 0) {
             if (expCompOp.getType().equals(ExpCompOp.Type.EQUAL)) return new BoolLit(true);
             if (expCompOp.getType().equals(ExpCompOp.Type.UNEQUAL)) return new BoolLit(false);
             if (expCompOp.getType().equals(ExpCompOp.Type.LESS)) return new BoolLit(false);
@@ -94,9 +128,9 @@ public class ExpComp extends BoolElem {
         //shift everything to left side
         rightExp = new Sum(rightExp);
 
-        leftExp = new Sum(leftExp, rightExp.makeNeg()).reduce();
+        leftExp = new Sum(leftExp, rightExp.makeNeg()).reduce(new Exp.Reducer(leftExp));
 
-        rightExp = new Sum(rightExp, rightExp.makeNeg()).reduce();
+        rightExp = new Sum(rightExp, rightExp.makeNeg()).reduce(new Exp.Reducer(rightExp));
 
         //remove unnecessary coefficients
         ExpLit divLit = null;
@@ -116,10 +150,10 @@ public class ExpComp extends BoolElem {
         }
 
         if ((divLit != null) && (!divLit.isZero())) {
-            leftExp = new Prod(divLit.makeInv(), leftExp).reduce();
-            rightExp = new Prod(divLit.makeInv(), rightExp).reduce();
+            leftExp = new Prod(divLit.makeInv(), leftExp).reduce(new Exp.Reducer(leftExp));
+            rightExp = new Prod(divLit.makeInv(), rightExp).reduce(new Exp.Reducer(rightExp));
 
-            expCompOp.swap();
+            expCompOp = expCompOp.swap();
         }
 
         //a*x^2+b*x+c=0
@@ -131,11 +165,11 @@ public class ExpComp extends BoolElem {
             Map<Exp, Exp> coeffMap = new LinkedHashMap<>();
 
             for (Exp part : leftSum.getExps()) {
-                Prod partProd = new Prod(part.reduce());
+                Prod partProd = new Prod(part.reduce(new Exp.Reducer(part)));
 
                 Exp coeff = partProd.cutCoeff(Collections.singleton(id));
 
-                Exp reducedPart = partProd.reduce();
+                Exp reducedPart = partProd.reduce(new Exp.Reducer(partProd));
 
                 Exp exponent;
 
@@ -147,7 +181,7 @@ public class ExpComp extends BoolElem {
                     exponent = new ExpLit(0);
                 }
 
-                if (!coeffMap.containsKey(exponent)) coeffMap.put(exponent, coeff);
+                if (!coeffMap.containsKey(exponent)) coeffMap.put(exponent, new ExpLit(0));
 
                 coeffMap.put(exponent, new Sum(coeffMap.get(exponent), coeff));
             }
@@ -171,20 +205,25 @@ public class ExpComp extends BoolElem {
                     coeff1 = new Prod(coeff1, coeff2.makeInv());
                     coeff0 = new Prod(coeff0, coeff2.makeInv());
 
-                    Exp q = coeff0.makeNeg().reduce();
-                    Exp pNegHalf = new Prod(coeff1.makeNeg(), new ExpLit(1, 2)).reduce();
+                    Exp negCoeff0 = coeff0.makeNeg();
 
-                    Exp radix = new Sum(new Pow(pNegHalf, new ExpLit(2)), q).reduce();
+                    Exp q = negCoeff0.reduce(new Exp.Reducer(negCoeff0));
 
-                    Exp sqrt = new Pow(radix, new ExpLit(1, 2)).reduce();
-                    System.out.println("q: " + q);
-                    System.out.println("-p/2: " + pNegHalf);
-                    System.out.println("radix: " + radix);
-                    System.out.println("sqrt: " + sqrt);
-                    BoolExp pos = new ExpComp(new Sum(pNegHalf, sqrt), new ExpCompOp(ExpCompOp.Type.EQUAL), (Exp) id.copy()).reduce();
-                    BoolExp neg = new ExpComp(new Sum(pNegHalf, sqrt.makeNeg()), new ExpCompOp(ExpCompOp.Type.EQUAL), (Exp) id.copy()).reduce();
-                    System.out.println("pos " + pos);
-                    System.out.println("neg " + neg);
+                    Prod prod = new Prod(coeff1.makeNeg(), new ExpLit(1, 2));
+
+                    Exp pNegHalf = prod.reduce(new Exp.Reducer(prod));
+
+                    Sum sum = new Sum(new Pow(pNegHalf, new ExpLit(2)), q);
+
+                    Exp radix = sum.reduce(new Exp.Reducer(sum));
+
+                    Pow pow = new Pow(radix, new ExpLit(1, 2));
+
+                    Exp sqrt = pow.reduce(new Exp.Reducer(pow));
+
+                    BoolExp pos = new ExpComp(new Sum(pNegHalf, sqrt), new ExpCompOp(ExpCompOp.Type.EQUAL), (Exp) id.copy()).reduce(reducer);
+                    BoolExp neg = new ExpComp(new Sum(pNegHalf, sqrt.makeNeg()), new ExpCompOp(ExpCompOp.Type.EQUAL), (Exp) id.copy()).reduce(reducer);
+
                     return new BoolOr(pos, neg);
                 }
             }
@@ -215,24 +254,64 @@ public class ExpComp extends BoolElem {
             }
         }
 
+        if (expCompOp.getType().equals(ExpCompOp.Type.EQUAL)) {
+            if (leftExp instanceof ExpMu) return new BoolLit(false);
+
+            if (leftExp instanceof Prod) {
+                ExpLit lit = ((Prod) leftExp).getLit();
+                Exp cut = ((Prod) leftExp).cutLit();
+
+                if (cut instanceof ExpMu) return new BoolLit(lit.isNeg());
+            }
+
+            /*if (leftExp instanceof Sum) {
+                for (Exp summand : ((Sum) leftExp).getExps()) {
+                    if (summand instanceof ExpMu) return new BoolLit(false);
+
+                    if (summand instanceof Prod) {
+                        ExpLit lit = ((Prod) summand).getLit();
+                        Exp cut = ((Prod) summand).cutLit();
+
+                        if (cut instanceof ExpMu) return new BoolLit(lit.isNeg());
+                    }
+                }
+            }*/
+        }
+
         return new ExpComp(leftExp, expCompOp, rightExp);
     }
 
     @Override
-    public void order() {
-        _leftExp.order();
-        _rightExp.order();
+    @Nonnull
+    public BoolExp order_spec() {
+        Exp leftExp = _leftExp;
+        Exp rightExp = _rightExp;
 
-        if (_leftExp.compPrecedence(_rightExp) > 0) swap();
+        //shift everything to left side
+        rightExp = new Sum(rightExp);
+
+        Sum leftSum = new Sum(leftExp, rightExp.makeNeg());
+
+        leftExp = leftSum.reduce(new Exp.Reducer(leftSum));
+
+        Sum rightSum = new Sum(rightExp, rightExp.makeNeg());
+
+        rightExp = rightSum.reduce(new Exp.Reducer(rightSum));
+
+        ExpComp ret = new ExpComp(leftExp, getExpOp(), rightExp);
+
+        if (ret.getLeftExp().comp(ret.getRightExp()) > 0) ret = ret.swap();
+
+        return ret;
     }
 
     @Override
-    public int comp(BoolExp b) {
-        int leftRet = _leftExp.compPrecedence(((ExpComp) b)._leftExp);
+    public int comp_spec(BoolExp b) {
+        int leftRet = _leftExp.comp(((ExpComp) b)._leftExp);
 
         if (leftRet != 0) return leftRet;
 
-        int rightRet = _rightExp.compPrecedence(((ExpComp) b)._rightExp);
+        int rightRet = _rightExp.comp(((ExpComp) b)._rightExp);
 
         if (rightRet != 0) return rightRet;
 
@@ -247,10 +326,10 @@ public class ExpComp extends BoolElem {
     @Nonnull
     @Override
     public SemanticNode replace(@Nonnull IOUtil.Func<SemanticNode, SemanticNode> replaceFunc) {
-        _leftExp = (Exp) _leftExp.replace(replaceFunc);
-        _expCompOp = (ExpCompOp) _expCompOp.replace(replaceFunc);
-        _rightExp = (Exp) _rightExp.replace(replaceFunc);
+        Exp leftExp = (Exp) _leftExp.replace(replaceFunc);
+        ExpCompOp expCompOp = (ExpCompOp) _expCompOp.replace(replaceFunc);
+        Exp rightExp = (Exp) _rightExp.replace(replaceFunc);
 
-        return replaceFunc.apply(this);
+        return replaceFunc.apply(new ExpComp(leftExp, expCompOp, rightExp));
     }
 }

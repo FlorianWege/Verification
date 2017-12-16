@@ -1,13 +1,18 @@
 package core.structures.semantics.exp;
 
-public class FactId extends Id {
-    private final Param _param;
+import core.structures.semantics.SemanticNode;
+import util.IOUtil;
 
-    public Param getParam() {
+import javax.annotation.Nonnull;
+
+public class FactId extends IdWithParams {
+    private final Exp _param;
+
+    public Exp getParam() {
         return _param;
     }
 
-    public FactId(Param param) {
+    public FactId(@Nonnull Exp param) {
         super("fact");
 
         _param = param;
@@ -15,7 +20,7 @@ public class FactId extends Id {
         addParam(param);
     }
 
-    public FactId(ParamList paramList) {
+    public FactId(@Nonnull ParamList paramList) {
         super("fact");
 
         if (paramList.getParams().size() != 1) throw new RuntimeException("mismatching params count (1)");
@@ -23,16 +28,33 @@ public class FactId extends Id {
         _param = paramList.getParams().get(0);
     }
 
+    @Nonnull
     @Override
-    public Exp reduce() {
-        Param param = (Param) _param.reduce();
+    public Exp reduce_spec(@Nonnull Reducer reducer) {
+        Exp param = _param.reduce(reducer);
 
         if (param instanceof ExpLit) {
-            ((ExpLit) param).fact();
+            param = ((ExpLit) param).fact();
 
             return param;
         }
 
-        return new FactId(param);
+        return new Fact(param);
+    }
+
+    @Nonnull
+    @Override
+    public Exp order_spec() {
+        return new FactId(_param.order());
+    }
+
+    @Override
+    public int comp_spec(@Nonnull Exp b) {
+        return 0;
+    }
+
+    @Override
+    public String getContentString(@Nonnull IOUtil.BiFunc<SemanticNode, String, String> mapper) {
+        return null;
     }
 }

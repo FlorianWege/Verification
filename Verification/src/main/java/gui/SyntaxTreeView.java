@@ -1,9 +1,5 @@
 package gui;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import core.structures.TNode;
 import core.structures.syntax.SyntaxNode;
 import core.structures.syntax.SyntaxNodeTerminal;
 import javafx.beans.property.ObjectProperty;
@@ -19,6 +15,9 @@ import javafx.scene.layout.CornerRadii;
 import javafx.scene.paint.Color;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 
 public class SyntaxTreeView extends NodeTreeView<SyntaxNode> {
 	private final CheckBox _checkBox_filterEps;
@@ -30,7 +29,7 @@ public class SyntaxTreeView extends NodeTreeView<SyntaxNode> {
 
 		_checkBox_filterEps.selectedProperty().addListener(new ChangeListener<Boolean>() {
 			@Override
-			public void changed(ObservableValue<? extends Boolean> obs, Boolean oldVal, Boolean newVal) {
+			public void changed(@Nonnull ObservableValue<? extends Boolean> obs, @Nullable Boolean oldVal, @Nullable Boolean newVal) {
 				update();
 			}
 		});
@@ -38,12 +37,12 @@ public class SyntaxTreeView extends NodeTreeView<SyntaxNode> {
 
 	@Override
 	protected boolean filter(@Nonnull TreeItem<SyntaxNode> nodeItem) {
-		if (_checkBox_filterEps.isSelected()) return false;
+		return !_checkBox_filterEps.isSelected() && ((TreeNode) nodeItem).getReqChildren() <= 0;
 
-		return ((TreeNode) nodeItem).getReqChildren() <= 0;
 	}
 
 	@Override
+	@Nonnull
 	protected NodeTreeView.TreeNode createNode(@Nonnull SyntaxNode node) {
 		return new TreeNode(node);
 	}

@@ -3,12 +3,8 @@ package tests.parsing;
 import grammars.HoareWhileGrammar;
 import org.testng.annotations.Test;
 
-import core.Grammar;
-import core.Lexer;
 import core.Lexer.LexerException;
-import core.Lexer.LexerResult;
 import core.Parser;
-import core.Parser.NoRuleException;
 import core.Parser.ParserException;
 import grammars.WhileGrammar;
 import util.IOUtil;

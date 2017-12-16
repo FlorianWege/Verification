@@ -1,6 +1,5 @@
 package gui;
 
-import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Label;
@@ -9,12 +8,13 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class ErrorDialog implements Initializable {
+public class ErrorDialog implements gui.Initializable {
 	private final Alert _alert;
 
 	public void show() {
@@ -54,6 +54,6 @@ public class ErrorDialog implements Initializable {
 	}
 	
 	@Override
-	public void initialize(URL url, ResourceBundle resources) {
+	public void initialize(@Nonnull URL url, @Nullable ResourceBundle resources) {
 	}
 }

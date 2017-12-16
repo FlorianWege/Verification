@@ -1,14 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import org.fxmisc.richtext.CodeArea?>
 
-<VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" xmlns="http://javafx.com/javafx/8.0.102" xmlns:fx="http://javafx.com/fxml/1">
+<VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" xmlns="http://javafx.com/javafx/8.0.151" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <Label text="invariant:" />
-      <CodeArea fx:id="_codeArea_invariant" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" VBox.vgrow="ALWAYS" />
+      <HBox>
+         <children>
+            <RadioButton mnemonicParsing="false" />
+            <Label text="user:" />
+         </children>
+      </HBox>
+      <CodeArea fx:id="_codeArea_invariant" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" />
+      <HBox>
+         <children>
+            <RadioButton disable="true" mnemonicParsing="false" />
+            <Label disable="true" text="calc:" />
+         </children>
+      </HBox>
+      <ComboBox disable="true" maxWidth="1.7976931348623157E308" />
       <Button fx:id="_button_suggest" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Suggest" />
    </children>
 </VBox>

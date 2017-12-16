@@ -1,4 +1,4 @@
-PRE {x >= 0 && y >= 0}
+PRE {x >= 0 & y >= 0}
 	quo := 0;
 	rem := x;
 	
@@ -6,4 +6,4 @@ PRE {x >= 0 && y >= 0}
 		rem := rem - y;
 		quo := quo + 1
 	OD
-POST {quo * y + rem = x && 0 <= rem ∧ rem < y}
+POST {quo * y + rem = x & 0 <= rem & rem < y}

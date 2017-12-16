@@ -4,21 +4,143 @@ import core.Lexer;
 import core.Parser;
 import core.structures.semantics.SemanticNode;
 import grammars.BoolExpGrammar;
+import org.junit.Assert;
 
+import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Stack;
 import java.util.function.UnaryOperator;
 
+import static core.structures.semantics.boolExp.BoolExp.Reducer.Law.START;
+
 public abstract class BoolExp extends SemanticNode {
-	public abstract BoolExp reduce();
-	public abstract void order();
+	@CheckReturnValue
+	@Nonnull
+	public abstract BoolExp reduce_spec(@Nonnull Reducer reducer);
+
+	private Reducer _reducer = null;
+
+	@CheckReturnValue
+	@Nonnull
+	public final BoolExp reduce(@Nullable Reducer reducer) {
+		if (reducer == null) reducer = new Reducer(this);
+
+		BoolExp ret = reduce_spec(reducer);
+
+		reducer.addEntry(this, Reducer.Law.UNKNOWN);
+
+		return ret;
+	}
+
+	public static class Reducer implements Serializable {
+		public enum Law {
+			START,
+			IDEMPOTENCY,
+			UNKNOWN,
+			UNWRAP
+		}
+
+		private class Entry {
+			private BoolExp _boolExp;
+			private Law _law;
+
+			public BoolExp getBoolExp() {
+				return _boolExp;
+			}
+
+			public Law getLaw() {
+				return _law;
+			}
+
+			public Entry(@Nonnull BoolExp boolExp, @Nonnull Law law) {
+				_boolExp = boolExp;
+				_law = law;
+			}
+		}
+
+		private List<Entry> _entries = new LinkedList<>();
+		private BoolExp _ret = null;
+
+		@Nonnull
+		public List<Entry> getEntries() {
+			return _entries;
+		}
+
+		@Nonnull
+		public BoolExp getRet() {
+			return _ret;
+		}
+
+		public void exec() {
+
+		}
+
+		public void addEntry(@Nonnull BoolExp boolExp, @Nonnull Law law) {
+			if (_entries.isEmpty() || !_entries.get(_entries.size() - 1).getBoolExp().getContentString().equals(boolExp.getContentString())) {
+				_entries.add(new Entry(boolExp, law));
+
+			}
+
+			_ret = boolExp;
+		}
+
+		public Reducer(@Nonnull BoolExp boolExp) {
+			_entries.add(new Entry(boolExp, START));
+		}
+	}
+
+	public final Reducer reduceEx() {
+		Reducer ret = new Reducer(this);
+
+		_reducer = ret;
+
+		BoolExp boolExp = reduce(ret);
+
+		_reducer = null;
+
+		return ret;
+	}
+
+	private static Stack<BoolExp> _orderStack = new Stack<>();
+
+	@CheckReturnValue
+	@Nonnull
+	public abstract BoolExp order_spec();
+
+	@CheckReturnValue
+	@Nonnull
+	public final BoolExp order() {
+		/*_printer.println("enter " + getTypeName());
+		_printer.begin();
+
+		_orderStack.push(this);*/
+
+		BoolExp ret = order_spec();
+
+		/*_orderStack.pop();
+
+		_printer.end();
+		_printer.println("leave " + getTypeName());
+
+		if (_reduceStack.isEmpty()) {
+			_printer.println("finished");
+		} else {
+			_printer.println("reenter" + _reduceStack.peek().getTypeName());
+		}*/
+
+		return ret;
+	}
 
 	@Override
 	public int hashCode() {
 		BoolExp copy = (BoolExp) copy();
 
-		copy.order();
+		copy = copy.order();
 
 		return copy.toString().hashCode();
 	}
@@ -30,21 +152,23 @@ public abstract class BoolExp extends SemanticNode {
 	@Override
 	public boolean equals(Object other) {
 		if (other instanceof BoolExp) {
-			BoolExp thisCopy = (BoolExp) copy();
-			BoolExp otherCopy = (BoolExp) ((BoolExp) other).copy();
+			BoolExp a = this;
+			BoolExp b = ((BoolExp) other);
 
-			thisCopy.order();
-			otherCopy.order();
+			a = a.order();
+			b = b.order();
 
-			return thisCopy.superEquals(otherCopy);
+			boolean ret = a.superEquals(b);
+
+			return ret;
 		}
 
 		return super.equals(other);
 	}
 
-	public abstract int comp(BoolExp b);
+	public abstract int comp_spec(BoolExp b);
 
-	public int compPrecedence(BoolExp b) {
+	public final int comp(BoolExp b) {
 		List<Class<? extends BoolExp>> types = new ArrayList<>();
 
 		types.add(BoolLit.class);
@@ -56,16 +180,17 @@ public abstract class BoolExp extends SemanticNode {
 		if (types.indexOf(getClass()) < types.indexOf(b.getClass())) return -1;
 		if (types.indexOf(getClass()) > types.indexOf(b.getClass())) return 1;
 
-		return comp(b);
+		return comp_spec(b);
 	}
 
-	private int _changesC = 0;
+	private static int _changesC = 0;
 
-	private @Nonnull BoolExp resolveNeg_step() {
+	@Nonnull
+	private BoolExp resolveNeg_step() {
 		BoolExp ret = this;
 
-		if (this instanceof BoolNeg) {
-			BoolExp child = ((BoolNeg) BoolExp.this).getChild();
+		if (ret instanceof BoolNeg) {
+			BoolExp child = ((BoolNeg) ret).getChild();
 
 			if (child instanceof BoolNeg) {
 				ret = ((BoolNeg) child).getChild();
@@ -100,23 +225,25 @@ public abstract class BoolExp extends SemanticNode {
 		return ret;
 	}
 
-	public @Nonnull BoolExp resolveNeg() {
+	@Nonnull
+	public BoolExp resolveNeg() {
 		BoolExp ret = (BoolExp) copy();
 
 		do {
 			_changesC = 0;
 
-			ret = resolveNeg_step();
+			ret = ret.resolveNeg_step();
 		} while (_changesC > 0);
 
 		return ret;
 	}
 
-	private @Nonnull BoolExp makeDNF_resolveDistributive() {
+	@Nonnull
+	private BoolExp makeDNF_resolveDistributive() {
 		BoolExp ret = this;
 
-		if (this instanceof BoolAnd) {
-			List<BoolExp> boolExps = ((BoolAnd) this).getBoolExps();
+		if (ret instanceof BoolAnd) {
+			List<BoolExp> boolExps = ((BoolAnd) ret).getBoolExps();
 			BoolOr newOr = new BoolOr();
 
 			boolExps.replaceAll(new UnaryOperator<BoolExp>() {
@@ -190,7 +317,8 @@ public abstract class BoolExp extends SemanticNode {
 		return ret;
 	}
 
-	public @Nonnull BoolOr makeDNF() {
+	@Nonnull
+	public BoolExp makeDNF() {
 		BoolExp ret = resolveNeg();
 
 		do {
@@ -199,12 +327,20 @@ public abstract class BoolExp extends SemanticNode {
 			ret = ret.makeDNF_resolveDistributive();
 		} while (_changesC > 0);
 
-		if (ret instanceof BoolOr) return (BoolOr) ret;
-
-		return new BoolOr(ret);
+		return ret;
 	}
 
-	protected @Nonnull BoolExp makeCNF_resolveDistributive() {
+	@Nonnull
+	public BoolOr makeDNFOr() {
+		BoolExp boolExp = makeDNF();
+
+		if (boolExp instanceof BoolOr) return (BoolOr) boolExp;
+
+		return new BoolOr(boolExp);
+	}
+
+	@Nonnull
+	protected BoolExp makeCNF_resolveDistributive() {
 		BoolExp ret = this;
 
 		if (this instanceof BoolOr) {
@@ -263,6 +399,7 @@ public abstract class BoolExp extends SemanticNode {
 				ret = newAnd;
 			}
 		}
+		Assert.assertTrue(ret.toString().length() < 30);
 
 		if (!ret.equals(this)) {
 			ret.getChildren().replaceAll(new UnaryOperator<SemanticNode>() {
@@ -282,7 +419,8 @@ public abstract class BoolExp extends SemanticNode {
 		return ret;
 	}
 
-	public @Nonnull BoolAnd makeCNF() {
+	@Nonnull
+	public BoolExp makeCNF() {
 		BoolExp ret = resolveNeg();
 
 		do {
@@ -291,16 +429,25 @@ public abstract class BoolExp extends SemanticNode {
 			ret = ret.makeCNF_resolveDistributive();
 		} while (_changesC > 0);
 
-		if (ret instanceof BoolAnd) return (BoolAnd) ret;
-
-		return new BoolAnd(ret);
+		return ret;
 	}
 
-	public String parenthesize(String s) {
+	@Nonnull
+	public BoolAnd makeCNFAnd() {
+		BoolExp boolExp = makeCNF();
+
+		if (boolExp instanceof BoolAnd) return (BoolAnd) boolExp;
+
+		return new BoolAnd(boolExp);
+	}
+
+	@Nonnull
+	public String parenthesize(@Nonnull String s) {
 		return _grammar.TERMINAL_BRACKET_OPEN.getPrimRule() + s + _grammar.TERMINAL_BRACKET_CLOSE.getPrimRule();
 	}
 
-	public static BoolExp fromString(String s) throws Lexer.LexerException, Parser.ParserException {
+	@Nonnull
+	public static BoolExp fromString(@Nonnull String s) throws Lexer.LexerException, Parser.ParserException {
 		return (BoolExp) fromString(s, BoolExpGrammar.getInstance());
 	}
 }

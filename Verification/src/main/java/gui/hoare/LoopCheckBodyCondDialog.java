@@ -7,22 +7,20 @@ import core.structures.semantics.prog.HoareCond;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import util.ErrorUtil;
 import util.StringUtil;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class LoopCheckBodyCondDialog extends HoareDialog implements Initializable {
+public class LoopCheckBodyCondDialog extends HoareDialog implements gui.Initializable {
 	@FXML
-	private Button _button_accept;
-	@FXML
-	private Button _button_reject;
+	private Button _button_continue;
 
 	private final Hoare.wlp_loop _loop;
 	private final Callback _callback;
@@ -30,7 +28,7 @@ public class LoopCheckBodyCondDialog extends HoareDialog implements Initializabl
 	private final HoareCond _preInvariant;
 
 	public interface Callback {
-		void result(boolean yes) throws Lexer.LexerException, Hoare.HoareException, Parser.ParserException, IOException;
+		void result() throws Lexer.LexerException, Hoare.HoareException, Parser.ParserException, IOException;
 	}
 
 	public LoopCheckBodyCondDialog(@Nonnull Hoare.wlp_loop loop, @Nonnull Callback callback) throws IOException {
@@ -75,25 +73,15 @@ public class LoopCheckBodyCondDialog extends HoareDialog implements Initializabl
 	}
 
 	@Override
-	public void initialize(URL url, ResourceBundle resources) {
+	public void initialize(@Nonnull URL url, @Nullable ResourceBundle resources) {
 		try {
 			super.initialize(url, resources);
 
-			_button_accept.setOnAction(new EventHandler<ActionEvent>() {
+			_button_continue.setOnAction(new EventHandler<ActionEvent>() {
 				@Override
 				public void handle(ActionEvent event) {
 					try {
-						_callback.result(true);
-					} catch (Exception e) {
-						ErrorUtil.logEFX(e);
-					}
-				}
-			});
-			_button_reject.setOnAction(new EventHandler<ActionEvent>() {
-				@Override
-				public void handle(ActionEvent event) {
-					try {
-						_callback.result(false);
+						_callback.result();
 					} catch (Exception e) {
 						ErrorUtil.logEFX(e);
 					}

@@ -10,7 +10,6 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.ContentDisplay;
@@ -25,6 +24,8 @@ import org.fxmisc.richtext.CodeArea;
 import util.IOUtil;
 import util.StringUtil;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -32,7 +33,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
-public class ConseqCheckTable implements Initializable {
+public class ConseqCheckTable implements gui.Initializable {
     @FXML
     private TableView<Row> _tableView;
     @FXML
@@ -146,9 +147,11 @@ public class ConseqCheckTable implements Initializable {
 
         for (TableColumn<?, ?> col : _tableView.getColumns()) {
             col.prefWidthProperty().bind(_tableView.widthProperty().subtract(15D).divide(split_columnsCount));
+            col.setSortable(false);
 
             for (TableColumn<?, ?> col2 : col.getColumns()) {
                 col2.prefWidthProperty().bind(col.widthProperty().divide(col.getColumns().size()));
+                col2.setSortable(false);
             }
         }
     }
@@ -171,12 +174,12 @@ public class ConseqCheckTable implements Initializable {
         }
 
         public void calc() {
-            _calc = _source.reduce();
+            _calc = _source.reduceEx().getRet();
 
             updateResult();
         }
 
-        public Row(BoolExp impl) {
+        public Row(@Nonnull BoolExp impl) {
             _source = impl;
         }
     }
@@ -322,7 +325,7 @@ public class ConseqCheckTable implements Initializable {
     }
 
     @Override
-    public void initialize(URL url, ResourceBundle resources) {
+    public void initialize(@Nonnull URL url, @Nullable ResourceBundle resources) {
 
     }
 }

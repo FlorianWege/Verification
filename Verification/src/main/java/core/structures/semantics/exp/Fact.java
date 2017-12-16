@@ -6,7 +6,7 @@ import util.IOUtil;
 import javax.annotation.Nonnull;
 
 public class Fact extends Exp {
-    private Exp _exp;
+    private final Exp _exp;
 
     public @Nonnull Exp getChild() {
         return _exp;
@@ -22,7 +22,7 @@ public class Fact extends Exp {
     public String getContentString(@Nonnull IOUtil.BiFunc<SemanticNode, String, String> mapper) {
         String expS = _exp.getContentString(mapper);
 
-        if (!(_exp instanceof ExpElem) && _exp.compPrecedence(this) < 0) expS = parenthesize(expS);
+        if (!(_exp instanceof ExpElem) && _exp.comp(this) < 0) expS = parenthesize(expS);
 
         return mapper.apply(this, expS + _grammar.TERMINAL_OP_FACT.getPrimRule());
     }
@@ -30,19 +30,18 @@ public class Fact extends Exp {
     @Nonnull
     @Override
     public SemanticNode replace(@Nonnull IOUtil.Func<SemanticNode, SemanticNode> replaceFunc) {
-        _exp = (Exp) _exp.replace(replaceFunc);
+        Exp exp = (Exp) _exp.replace(replaceFunc);
 
-        return replaceFunc.apply(_exp);
+        return replaceFunc.apply(new Fact(exp));
     }
 
+    @Nonnull
     @Override
-    public Exp reduce() {
-        Exp exp = (Exp) _exp.copy();
-
-        exp = exp.reduce();
+    public Exp reduce_spec(@Nonnull Reducer reducer) {
+        Exp exp = _exp.reduce(reducer);
 
         if (exp instanceof ExpLit) {
-            ((ExpLit) exp).fact();
+            exp = ((ExpLit) exp).fact();
 
             return exp;
         }
@@ -53,7 +52,7 @@ public class Fact extends Exp {
 
             for (Exp exp2 : ((Sum) exp).getExps()) {
                 if (exp2 instanceof ExpLit) {
-                    lit.add((ExpLit) exp2);
+                    lit = lit.add((ExpLit) exp2);
                 } else {
                     sum.addExp(exp2);
                 }
@@ -61,7 +60,7 @@ public class Fact extends Exp {
 
             Prod prod = new Prod();
 
-            Exp remExp = sum.reduce();
+            Exp remExp = sum.reduce(reducer);
 
             prod.addExp(new Fact(remExp));
 
@@ -75,22 +74,23 @@ public class Fact extends Exp {
 
                 prod.addExp(newSum);
 
-                lit.sub(new ExpLit(1));
+                lit = lit.sub(new ExpLit(1));
             }
 
-            return prod;
+            return prod.reduce(reducer);
         }
 
         return new Fact(exp);
     }
 
+    @Nonnull
     @Override
-    public void order() {
-        _exp.order();
+    public Exp order_spec() {
+        return new Fact(_exp.order());
     }
 
     @Override
-    public int comp(Exp b) {
+    public int comp_spec(@Nonnull Exp b) {
         return _exp.comp(((Fact) b)._exp);
     }
 }

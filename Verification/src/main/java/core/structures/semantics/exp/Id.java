@@ -4,8 +4,6 @@ import core.structures.semantics.SemanticNode;
 import util.IOUtil;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.List;
 
 public class Id extends ExpElem {
     private final String _name;
@@ -19,16 +17,6 @@ public class Id extends ExpElem {
         super();
 
         _name = name;
-    }
-
-    private final List<Param> _params = new ArrayList<>();
-
-    public List<Param> getParams() {
-        return new ArrayList<>(_params);
-    }
-
-    public void addParam(Param param) {
-        _params.add(param);
     }
 
     @Override
@@ -55,23 +43,20 @@ public class Id extends ExpElem {
         return replaceFunc.apply(this);
     }
 
+    @Nonnull
     @Override
-    public Exp reduce() {
-        Id ret = new Id(_name);
+    public Exp reduce_spec(@Nonnull Reducer reducer) {
+        return new Id(getName());
+    }
 
-        for (Param param : getParams()) {
-            ret.addParam((Param) param.copy());
-        }
-
-        return ret;
+    @Nonnull
+    @Override
+    public Exp order_spec() {
+        return new Id(getName());
     }
 
     @Override
-    public void order() {
-    }
-
-    @Override
-    public int comp(Exp b) {
+    public int comp_spec(@Nonnull Exp b) {
         return getName().compareTo(((Id) b).getName());
     }
 }

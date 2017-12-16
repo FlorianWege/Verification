@@ -1,19 +1,11 @@
 package core.structures.semantics.prog;
 
-import core.structures.Terminal;
 import core.structures.semantics.SemanticNode;
-import core.structures.semantics.boolExp.BoolExp;
-import core.structures.semantics.boolExp.BoolOr;
-import core.structures.semantics.exp.Exp;
-import core.structures.semantics.exp.Sum;
-import javafx.util.Pair;
 import util.IOUtil;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 public class Comp extends Prog {
     public @Nonnull List<Prog> getProgs() {
@@ -60,8 +52,12 @@ public class Comp extends Prog {
     @Nonnull
     @Override
     public SemanticNode replace(@Nonnull IOUtil.Func<SemanticNode, SemanticNode> replaceFunc) {
-        replaceChildren(replaceFunc);
+        Comp ret = new Comp();
 
-        return replaceFunc.apply(this);
+        for (Prog prog : getProgs()) {
+            ret.addProg(prog);
+        }
+
+        return replaceFunc.apply(ret);
     }
 }

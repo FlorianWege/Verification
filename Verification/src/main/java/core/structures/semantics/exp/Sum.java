@@ -2,6 +2,7 @@ package core.structures.semantics.exp;
 
 import core.structures.semantics.SemanticNode;
 import util.IOUtil;
+import util.Util;
 
 import javax.annotation.Nonnull;
 import java.math.BigInteger;
@@ -10,7 +11,8 @@ import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
 public class Sum extends Exp {
-    public @Nonnull List<Exp> getExps() {
+    @Nonnull
+    public List<Exp> getExps() {
         List<Exp> ret = new ArrayList<>();
 
         for (SemanticNode child : getChildren()) {
@@ -32,7 +34,7 @@ public class Sum extends Exp {
         }
     }
 
-    public Sum(Exp... exps) {
+    public Sum(@Nonnull Exp... exps) {
         for (Exp exp : exps) {
             addExp(exp);
         }
@@ -51,7 +53,7 @@ public class Sum extends Exp {
         }
     }
 
-    public void cleanMu() {
+    public void cleanMu(@Nonnull Reducer reducer) {
         _children.removeIf(new Predicate<SemanticNode>() {
             @Override
             public boolean test(SemanticNode semanticNode) {
@@ -60,9 +62,9 @@ public class Sum extends Exp {
                 if (semanticNode instanceof Prod) {
                     Prod prod = (Prod) semanticNode.copy();
 
-                    prod.cutLit();
+                    Exp exp = prod.cutLit().reduce(reducer);
 
-                    if (prod.reduce() instanceof ExpMu) return true;
+                    if (exp instanceof ExpMu) return true;
                 }
 
                 return false;
@@ -75,24 +77,25 @@ public class Sum extends Exp {
         StringBuilder sb = new StringBuilder();
 
         for (Exp exp : getExps()) {
-            exp = (Exp) exp.copy();
-
             boolean isNeg = false;
 
             if (exp instanceof ExpLit && ((ExpLit) exp).isNeg()) {
-                ((ExpLit) exp).neg();
+                exp = ((ExpLit) exp).neg();
 
                 isNeg = true;
             }
 
             if (exp instanceof Prod) {
-                ExpLit lit = ((Prod) exp).cutLit();
+                ExpLit lit = ((Prod) exp).getLit();
+
+                exp = ((Prod) exp).cutLit();
 
                 if (lit.isNeg()) {
-                    lit.neg();
+                    lit = lit.neg();
 
                     isNeg = true;
                 }
+
 
                 if (!lit.equals(1)) exp = new Prod(lit, exp);
             }
@@ -105,7 +108,7 @@ public class Sum extends Exp {
 
             String expS = exp.getContentString(mapper);
 
-            if (!(exp instanceof ExpElem) && exp.compPrecedence(this) < 0) {
+            if (!(exp instanceof ExpElem) && exp.comp(this) < 0) {
                 expS = parenthesize(expS);
             }
 
@@ -118,19 +121,54 @@ public class Sum extends Exp {
     @Nonnull
     @Override
     public SemanticNode replace(@Nonnull IOUtil.Func<SemanticNode, SemanticNode> replaceFunc) {
-        replaceChildren(replaceFunc);
+        Sum ret = new Sum();
 
-        return replaceFunc.apply(this);
+        for (Exp exp : getExps()) {
+            ret.addExp((Exp) exp.replace(replaceFunc));
+        }
+
+        return replaceFunc.apply(ret);
     }
 
+    /*public Exp factorize() {
+        List<Exp> exps = getExps();
+
+        //factorize (no zeroes)
+        exps.removeIf(new Predicate<Exp>() {
+            @Override
+            public boolean test(Exp exp) {
+                return exp.equals(new ExpLit(0));
+            }
+        });
+
+        if (exps.isEmpty()) return new ExpLit(0);
+
+        Set<Exp> sharedFactors = new LinkedHashSet<>();
+
+        Prod firstProd = new Prod(exps.get(0));
+
+        ExpLit lit = firstProd.getLit();
+
+        firstProd = new Prod(firstProd.cutLit());
+
+        sharedFactors.addAll(firstProd.getExps());
+
+        for (Exp exp : exps) {
+            Prod prod = new Prod(exp);
+
+
+        }
+    }*/
+
     @Override
-    public Exp reduce() {
+    @Nonnull
+    public Exp reduce_spec(@Nonnull Reducer reducer) {
         List<Exp> exps = getExps();
 
         exps.replaceAll(new UnaryOperator<Exp>() {
             @Override
             public Exp apply(Exp exp) {
-                return exp.reduce();
+                return exp.reduce(reducer);
             }
         });
 
@@ -166,6 +204,7 @@ public class Sum extends Exp {
             newSum.addExp(sum);
         }*/
 
+        //
         Sum newSum = new Sum();
 
         for (Exp exp : exps) {
@@ -178,19 +217,18 @@ public class Sum extends Exp {
         for (Exp exp : newSum.getExps()) {
             Prod prod = !(exp instanceof Prod) ? new Prod(exp) : (Prod) exp;
 
-            ExpLit lit = prod.cutLit();
+            ExpLit lit = prod.getLit();
+            exp = prod.cutLit();
 
-            Exp key = (Exp) prod.copy();
+            Exp key = exp.order();
 
-            key.order();
+            if (!idMap.containsKey(key)) idMap.put(key, new Prod(new ExpLit(0)));
 
-            if (idMap.containsKey(key)) {
-                ExpLit prev = idMap.get(key).cutLit();
+            ExpLit prev = idMap.get(key).getLit();
 
-                lit.add(prev);
-            }
+            lit = lit.add(prev);
 
-            Prod newProd = (Prod) prod.copy();
+            Prod newProd = new Prod(exp);
 
             newProd.addExp(lit);
 
@@ -200,11 +238,11 @@ public class Sum extends Exp {
         newSum = new Sum();
 
         for (Exp exp : idMap.values()) {
-            newSum.addExp(exp.reduce());
+            newSum.addExp(exp.reduce(reducer));
         }
 
         //merge lits
-        ExpLit lit = new ExpLit(0);
+        Util.Wrap<ExpLit> litWrap = new Util.Wrap<>(new ExpLit(0));
 
         List<Exp> newExps = newSum.getExps();
 
@@ -212,7 +250,7 @@ public class Sum extends Exp {
             @Override
             public boolean test(Exp exp) {
                 if (exp instanceof ExpLit) {
-                    lit.add((ExpLit) exp);
+                    litWrap.set(litWrap.get().add((ExpLit) exp));
 
                     return true;
                 }
@@ -220,6 +258,8 @@ public class Sum extends Exp {
                 return false;
             }
         });
+
+        ExpLit lit = litWrap.get();
 
         if (!lit.getNum().equals(BigInteger.ZERO)) newExps.add(lit);
 
@@ -238,29 +278,32 @@ public class Sum extends Exp {
     }
 
     @Override
-    public void order() {
-        List<Exp> exps = getExps();
+    @Nonnull
+    public Exp order_spec() {
+        List<Exp> newExps = new ArrayList<>();
 
-        for (Exp exp : exps) {
-            exp.order();
+        for (Exp exp : getExps()) {
+            newExps.add(exp.order());
         }
 
-        _children.clear();
-
-        exps.sort(new Comparator<Exp>() {
+        newExps.sort(new Comparator<Exp>() {
             @Override
             public int compare(Exp a, Exp b) {
-                return a.compPrecedence(b);
+                return a.comp(b);
             }
         });
 
-        for (Exp exp : exps) {
-            addChild(exp);
+        Sum ret = new Sum();
+
+        for (Exp exp : newExps) {
+            ret.addChild(exp);
         }
+
+        return ret;
     }
 
     @Override
-    public int comp(Exp b) {
+    public int comp_spec(@Nonnull Exp b) {
         List<Exp> exps = getExps();
         List<Exp> bExps = ((Sum) b).getExps();
 
@@ -270,7 +313,7 @@ public class Sum extends Exp {
             if (i >= exps.size()) return 1;
             if (i >= bExps.size()) return -1;
 
-            int localRet = exps.get(i).compPrecedence(bExps.get(i));
+            int localRet = exps.get(i).comp(bExps.get(i));
 
             if (localRet != 0) return localRet;
         }

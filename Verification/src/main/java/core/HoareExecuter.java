@@ -18,7 +18,7 @@ public class HoareExecuter {
     private ActionInterface _actionHandler;
 
     public interface ActionInterface extends Hoare.ActionInterface {
-        void finished(SemanticNode node, HoareCond preCond, HoareCond postCond, boolean yes) throws IOException;
+        void finished(@Nonnull SemanticNode node, @Nonnull HoareCond preCond, @Nonnull HoareCond postCond, boolean yes) throws IOException;
     }
 
     private Hoare _hoare;
@@ -36,16 +36,16 @@ public class HoareExecuter {
             return _children;
         }
 
-        public void addChild(HoareNode child) {
+        public void addChild(@Nonnull HoareNode child) {
             _children.add(child);
         }
 
-        public HoareNode(HoareBlock actualNode) {
+        public HoareNode(@Nonnull HoareBlock actualNode) {
             _refNode = actualNode;
         }
     }
 
-    private List<HoareNode> collectChildren(SemanticNode node) {
+    private List<HoareNode> collectChildren(@Nonnull SemanticNode node) {
         List<HoareNode> ret = new ArrayList<>();
 
         for (SemanticNode child : node.getChildren()) {
@@ -111,7 +111,7 @@ public class HoareExecuter {
             });
         }
 
-        public Executer(HoareNode node, int nestDepth, ExecInterface callback) throws IOException, Hoare.HoareException, Parser.NoRuleException, Lexer.LexerException {
+        public Executer(@Nonnull HoareNode node, int nestDepth, @Nonnull ExecInterface callback) throws IOException, Hoare.HoareException, Parser.NoRuleException, Lexer.LexerException {
             _node = node;
             _callback = callback;
 
@@ -173,7 +173,7 @@ public class HoareExecuter {
         }
     }
 
-    public HoareExecuter(ObjectProperty<SemanticNode> syntaxTreeP, ObjectProperty<SemanticNode> currentHoareNodeP, ActionInterface actionHandler) throws Exception {
+    public HoareExecuter(@Nonnull ObjectProperty<SemanticNode> syntaxTreeP, @Nonnull ObjectProperty<SemanticNode> currentHoareNodeP, @Nonnull ActionInterface actionHandler) throws Exception {
         _semanticTreeP = syntaxTreeP;
         _currentHoareNodeP = currentHoareNodeP;
         _actionHandler = actionHandler;

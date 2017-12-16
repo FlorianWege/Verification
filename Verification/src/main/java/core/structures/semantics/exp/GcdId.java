@@ -1,18 +1,20 @@
 package core.structures.semantics.exp;
 
-public class GcdId extends Id {
-    private final Param _a;
-    private final Param _b;
+import javax.annotation.Nonnull;
 
-    public Param getA() {
+public class GcdId extends IdWithParams {
+    private final Exp _a;
+    private final Exp _b;
+
+    public Exp getA() {
         return _a;
     }
 
-    public Param getB() {
+    public Exp getB() {
         return _b;
     }
 
-    public GcdId(Param a, Param b) {
+    public GcdId(Exp a, Exp b) {
         super("gcd");
 
         _a = a;
@@ -22,7 +24,7 @@ public class GcdId extends Id {
         addParam(b);
     }
 
-    public GcdId(ParamList paramList) {
+    public GcdId(@Nonnull ParamList paramList) {
         super("gcd");
 
         if (paramList.getParams().size() != 2) throw new RuntimeException("mismatching params count (2)");
@@ -31,17 +33,20 @@ public class GcdId extends Id {
         _b = paramList.getParams().get(1);
     }
 
+    @Nonnull
     @Override
-    public Exp reduce() {
-        Param a = (Param) _a.reduce();
-        Param b = (Param) _b.reduce();
+    public Exp reduce_spec(@Nonnull Reducer reducer) {
+        Exp a = _a.reduce(reducer);
+        Exp b = _b.reduce(reducer);
 
         if (a instanceof ExpLit && b instanceof ExpLit) {
-            ((ExpLit) a).gcd((ExpLit) b);
+            a = ((ExpLit) a).gcd((ExpLit) b);
 
             return a;
         }
 
         return new GcdId(a, b);
     }
+
+    //TODO overwrite order_spec/comp_spec
 }

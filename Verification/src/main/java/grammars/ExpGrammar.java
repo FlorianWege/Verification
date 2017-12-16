@@ -45,7 +45,7 @@ public class ExpGrammar extends Grammar {
 	public final ParserRule RULE_EXP_ELEM_FACT_;
 	public final ParserRule RULE_OP_FACT_FACT_;
 	public final ParserRule RULE_ID_PARAM_LIST;
-	public final ParserRule RULE_NUM;
+	public final ParserRule RULE_EXP_LIT;
 	public final ParserRule RULE_PARENS_EXP;
 	public final ParserRule RULE_PARENS_PARAM_PARAM_LIST_;
 	public final ParserRule RULE_PARAM_SEP_PARAM_PARAM_LIST_;
@@ -55,7 +55,7 @@ public class ExpGrammar extends Grammar {
 		super();
 		
 		//lexer rules
-		TERMINAL_EXP_LIT = createTerminal("NUM");
+		TERMINAL_EXP_LIT = createTerminal("EXP_LIT");
 		TERMINAL_PAREN_OPEN = createTerminal("PAREN_OPEN");
 		TERMINAL_PAREN_CLOSE = createTerminal("PAREN_CLOSE");
 		TERMINAL_OP_PLUS = createTerminal("OP_PLUS");
@@ -123,7 +123,7 @@ public class ExpGrammar extends Grammar {
 		createRule(NON_TERMINAL_FACT_, Terminal.EPSILON);
 		
 		RULE_ID_PARAM_LIST = createRule(NON_TERMINAL_EXP_ELEM, "ID param_list");
-		RULE_NUM = createRule(NON_TERMINAL_EXP_ELEM, "NUM");
+		RULE_EXP_LIT = createRule(NON_TERMINAL_EXP_ELEM, "EXP_LIT");
 		RULE_PARENS_EXP = createRule(NON_TERMINAL_EXP_ELEM, "PAREN_OPEN exp PAREN_CLOSE");
 
 		RULE_PARENS_PARAM_PARAM_LIST_ = createRule(NON_TERMINAL_PARAM_LIST, "PAREN_OPEN param param_list' PAREN_CLOSE");

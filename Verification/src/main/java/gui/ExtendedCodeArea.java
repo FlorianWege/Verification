@@ -1,5 +1,6 @@
 package gui;
 
+import core.Grammar;
 import core.Lexer;
 import core.Parser;
 import core.Token;
@@ -106,12 +107,12 @@ public class ExtendedCodeArea {
 		setSpecialInputHandling();
 	}
 
-	enum NumType {
+	public enum NumType {
 		NORMAL,
 		EXTENDED
 	}
 
-	public void setLineNumbers(NumType numType) {
+	public void setLineNumbers(@Nonnull NumType numType) {
 		switch (numType) {
 			case NORMAL: {
 				_numFactory = LineNumberFactory.get(_textArea);
@@ -129,6 +130,7 @@ public class ExtendedCodeArea {
 
 	public void enableArrows(boolean on) {
 		_arrowFactory = on ? new IntFunction<Node>() {
+			@Nonnull
 			private Node makeCurrentNodeTriangle(int line) {
 				Polygon triangle = new Polygon(0D, 0D, 10D, 5D, 0D, 10D);
 
@@ -155,6 +157,7 @@ public class ExtendedCodeArea {
 				return triangle;
 			}
 
+			@Nonnull
 			private Node makeCurrentHoareNodeTriangle(int line) {
 				Polygon triangle = new Polygon(0D, 0D, 10D, 5D, 0D, 10D);
 
@@ -198,11 +201,13 @@ public class ExtendedCodeArea {
 		private static final Font DEFAULT_FONT = Font.font("monospace", FontPosture.ITALIC, 13);
 		private static final Background DEFAULT_BACKGROUND = new Background(new BackgroundFill(Color.web("#ddd"), null, null));
 
-		public static @Nonnull IntFunction<Node> get(@Nonnull StyledTextArea<?> area, @Nonnull ObjectProperty<SemanticNode> currentNodeP) {
+		@Nonnull
+		public static IntFunction<Node> get(@Nonnull StyledTextArea<?> area, @Nonnull ObjectProperty<SemanticNode> currentNodeP) {
 			return get(area, digits -> "%0" + digits + "d", currentNodeP);
 		}
 
-		public static @Nonnull IntFunction<Node> get(@Nonnull StyledTextArea<?> area, @Nonnull IntFunction<String> format, @Nonnull ObjectProperty<SemanticNode> currentNodeP) {
+		@Nonnull
+		public static IntFunction<Node> get(@Nonnull StyledTextArea<?> area, @Nonnull IntFunction<String> format, @Nonnull ObjectProperty<SemanticNode> currentNodeP) {
 			return new LineNumberFactoryEx(area, format, currentNodeP);
 		}
 
@@ -359,16 +364,40 @@ public class ExtendedCodeArea {
 		setErrorPos(pos, false);
 	}
 
+	private Grammar _grammar_highlight = null;
+
+	public void setHighlightGrammar(@Nullable Grammar grammar) {
+		_grammar_highlight = grammar;
+
+		highlight();
+	}
+
+	private boolean _highlight_onlyKeywords = true;
+
+	public void setHighlightOnlyKeywords(boolean flag) {
+		_highlight_onlyKeywords = flag;
+
+		highlight();
+	}
+
 	private void highlight() {
-		if (_parser == null) return;
+		if (_grammar_highlight == null) return;
 
 		Set<String> keywords = new LinkedHashSet<>();
 
-		for (Terminal terminal : _parser.getGrammar().getTerminals()) {
-			if (!terminal.isKeyword()) continue;
+		for (Terminal terminal : _grammar_highlight.getTerminals()) {
+			if (!terminal.isKeyword() && (_highlight_onlyKeywords || !terminal.hasRegexRule())) continue;
 
 			for (LexerRule rule : terminal.getRules()) {
 				keywords.add(Pattern.quote(rule.toString()));
+			}
+		}
+
+		if (!_highlight_onlyKeywords) {
+			for (Terminal terminal : _grammar_highlight.getTerminals()) {
+				if (terminal.hasRegexRule()) continue;
+
+				keywords.add(terminal.getKey().toString());
 			}
 		}
 
@@ -436,8 +465,10 @@ public class ExtendedCodeArea {
 				_parsingNode = _parser.parse(input);
 			} catch (Lexer.LexerException e) {
 				setErrorPos(e.getCurPos());
+			} catch (Parser.TokenParserException e) {
+				setErrorPos(e.getToken().getPos());
 			} catch (Parser.ParserException e) {
-				setErrorPos(e.getToken() != null ? e.getToken().getPos() : null);
+				setErrorPos(null);
 			}
 
 			if (_parsingNode != null) {
@@ -448,8 +479,10 @@ public class ExtendedCodeArea {
 		}
 	}
 
-	public void setParser(Parser parser) {
+	public void setParser(@Nullable Parser parser) {
 		_parser = parser;
+
+		setHighlightGrammar((_parser != null) ? _parser.getGrammar() : null);
 
 		if (_parserTimeline != null) _parserTimeline.stop();
 

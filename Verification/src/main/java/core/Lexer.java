@@ -23,7 +23,7 @@ public class Lexer {
 		_grammar = grammar;
 	}
 	
-	private Token createToken(Terminal terminal, LexerRule rule, String text, int line, int lineOffset, int pos) {
+	private Token createToken(@Nonnull Terminal terminal, @Nonnull LexerRule rule, @Nonnull String text, int line, int lineOffset, int pos) {
 		return new Token(terminal, rule, text, line, lineOffset, pos);
 	}
 	
@@ -54,10 +54,10 @@ public class Lexer {
 		
 		@Override
 		public String getMessage() {
-			return String.format("cannot find token at pos %d.%d (%d): >>%s<<", _y + 1, _x + 1, _curPos, _inputString.substring(_curPos));
+			return String.format("cannot find token at pos %d.%d (%d): >>%s<<", getLine() + 1, getLineOffset() + 1, getCurPos(), getInputString().substring(getCurPos()));
 		}
 		
-		public LexerException(int y, int x, int curPos, String inputString) {
+		public LexerException(int y, int x, int curPos, @Nonnull String inputString) {
 			super();
 			
 			_y = y;
@@ -67,7 +67,7 @@ public class Lexer {
 		}
 	}
 	
-	private String removeComments(String s) {
+	private String removeComments(@Nonnull String s) {
 		StringBuilder sb = new StringBuilder();
 		
 		for (String line : s.split("[\\r\\n]+")) {
@@ -90,7 +90,7 @@ public class Lexer {
 			return _tokens;
 		}
 		
-		public void print(PrintStream stream) {
+		public void print(@Nonnull PrintStream stream) {
 			stream.println("tokens:");
 			
 			for (int i = 0; i < getTokens().size(); i++) {
@@ -98,25 +98,25 @@ public class Lexer {
 			}
 		}
 		
-		LexerResult(List<Token> tokens) {
+		public LexerResult(@Nonnull List<Token> tokens) {
 			_tokens = new ArrayList<>(tokens);
 		}
 	}
 	
-	public LexerResult tokenize(String s) throws LexerException {
+	public LexerResult tokenize(@Nonnull String s) throws LexerException {
 		s = removeComments(s);
 		
 		List<Terminal> terminals = new ArrayList<>(_grammar.getTerminals());
 		
 		terminals.sort(new Comparator<Terminal>() {
-			private boolean isRegEx(Terminal terminal) {
+			private boolean isRegEx(@Nonnull Terminal terminal) {
 				for (LexerRule rule : terminal.getRules()) if (rule.isRegEx()) return true;
 				
 				return false;
 			}
 			
 			@Override
-			public int compare(Terminal terminalA, Terminal terminalB) {
+			public int compare(@Nonnull Terminal terminalA, @Nonnull Terminal terminalB) {
 				if (terminalA.getRules().isEmpty() || terminalB.getRules().isEmpty()) return 0;
 				
 				if (isRegEx(terminalA)) return 1;

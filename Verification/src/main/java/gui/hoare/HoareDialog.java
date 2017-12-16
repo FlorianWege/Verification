@@ -25,7 +25,7 @@ import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.regex.Pattern;
 
-public abstract class HoareDialog implements Initializable {
+public abstract class HoareDialog implements gui.Initializable {
     @FXML
     private Label _label_title;
 
@@ -33,11 +33,6 @@ public abstract class HoareDialog implements Initializable {
     private Pane _pane_rationale;
     @FXML
     private WebView _textArea_rationale;
-
-    @FXML
-    private Pane _pane_output;
-    @FXML
-    private WebView _textArea_output;
 
     @FXML
     private Pane _pane_specHost;
@@ -151,7 +146,7 @@ public abstract class HoareDialog implements Initializable {
             if (_preCond != null) {
                 String preCondS = (preCondMapper != null) ? _preCond.getContentString(preCondMapper) : _preCond.getContentString();
                 String nodeS = (nodeMapper != null) ? _node.getContentString(nodeMapper) : _node.getContentString();
-                String postCondS = (postCondMapper != null) ? _postCond.getContentString(postCondMapper) : _postCond.getContentString();
+                String postCondS = (_postCond != null) ? ((postCondMapper != null) ? _postCond.getContentString(postCondMapper) : _postCond.getContentString()) : null;
 
                 String s = "output:" + StringUtil.html_line_sep + preCondS + " " + nodeS + " " + postCondS;
 
@@ -209,15 +204,6 @@ public abstract class HoareDialog implements Initializable {
         setText(_textArea_rationale, msg);
     }
 
-    private void updateOutput() {
-        String msg = null;
-
-        _pane_output.setVisible(msg != null && !msg.isEmpty());
-        _pane_output.managedProperty().bind(_pane_output.visibleProperty());
-
-        setText(_textArea_output, msg);
-    }
-
     public void inflate(File file) throws IOException {
         _root = IOUtil.inflateFXML(new File("HoareDialog.fxml"), new Initializable() {
             @FXML
@@ -229,11 +215,6 @@ public abstract class HoareDialog implements Initializable {
             private WebView _textArea_rationale;
 
             @FXML
-            private Pane _pane_output;
-            @FXML
-            private WebView _textArea_output;
-
-            @FXML
             private Pane _pane_specHost;
 
             @Override
@@ -241,8 +222,6 @@ public abstract class HoareDialog implements Initializable {
                 HoareDialog.this._label_title = _label_title;
                 HoareDialog.this._pane_rationale = _pane_rationale;
                 HoareDialog.this._textArea_rationale = _textArea_rationale;
-                HoareDialog.this._pane_output = _pane_output;
-                HoareDialog.this._textArea_output = _textArea_output;
                 HoareDialog.this._pane_specHost = _pane_specHost;
 
                 try {
@@ -259,11 +238,10 @@ public abstract class HoareDialog implements Initializable {
     }
 
     @Override
-    public void initialize(URL url, ResourceBundle resources) {
+    public void initialize(@Nonnull URL url, @Nullable ResourceBundle resources) {
         try {
             _label_title.setText(getTitle());
             updateRationale();
-            updateOutput();
         } catch (Exception e) {
             ErrorUtil.logEFX(e);
         }

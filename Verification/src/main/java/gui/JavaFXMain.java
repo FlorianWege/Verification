@@ -57,7 +57,7 @@ public class JavaFXMain extends Application {
 		_mainWindow = new MainWindow(primaryStage);
 	}
 
-	public static void main(String[] args) {
+	public static void main(@Nonnull String[] args) {
 		launch(args);
 	}
 }

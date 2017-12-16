@@ -3,19 +3,20 @@ package gui.hoare;
 import core.structures.semantics.boolExp.BoolAnd;
 import core.structures.semantics.boolExp.BoolExp;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.TitledPane;
 import javafx.scene.layout.VBox;
 import util.IOUtil;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 
-public class ConseqCheckAnd implements Initializable {
+public class ConseqCheckAnd implements gui.Initializable {
     @FXML
     private TitledPane _titledPane;
     @FXML
@@ -34,13 +35,13 @@ public class ConseqCheckAnd implements Initializable {
     private ConseqCheckTable _end;
 
     public interface CallBack {
-        void set(BoolExp result);
+        void set(@Nonnull BoolExp result);
     }
 
     private List<BoolExp> _parts = new ArrayList<>();
     private Map<Integer, BoolExp> _map = new LinkedHashMap<>();
 
-    public ConseqCheckAnd(BoolAnd boolAnd, CallBack callback) throws IOException {
+    public ConseqCheckAnd(@Nonnull BoolAnd boolAnd, @Nonnull CallBack callback) throws IOException {
         _boolAnd = boolAnd;
         _callback = callback;
 
@@ -48,6 +49,8 @@ public class ConseqCheckAnd implements Initializable {
 
         _titledPane.setText(boolAnd.getContentString());
         _titledPane.getStylesheets().add(getClass().getResource("HoareDialog.css").toExternalForm());
+
+        _titledPane.applyCss();
 
         _table = new ConseqCheckTable(new ConseqCheckTable.ActionInterface() {
             @Override
@@ -89,7 +92,7 @@ public class ConseqCheckAnd implements Initializable {
     }
 
     @Override
-    public void initialize(URL url, ResourceBundle resources) {
+    public void initialize(@Nonnull URL url, @Nullable ResourceBundle resources) {
 
     }
 }

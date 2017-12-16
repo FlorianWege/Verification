@@ -9,7 +9,7 @@ import javax.annotation.Nonnull;
 import java.util.function.Function;
 
 public class BoolLit extends BoolElem {
-    private boolean _val;
+    private final boolean _val;
 
     public boolean getVal() {
         return _val;
@@ -31,8 +31,8 @@ public class BoolLit extends BoolElem {
         }.apply(syntaxNodeTerminal.getToken().getRule());
     }
 
-    public void neg() {
-        _val = !_val;
+    public BoolExp neg() {
+        return new BoolLit(!_val);
     }
 
     @Override
@@ -46,17 +46,20 @@ public class BoolLit extends BoolElem {
         return replaceFunc.apply(this);
     }
 
+    @Nonnull
     @Override
-    public BoolExp reduce() {
+    public BoolExp reduce_spec(@Nonnull Reducer reducer) {
+        return new BoolLit(_val);
+    }
+
+    @Nonnull
+    @Override
+    public BoolExp order_spec() {
         return new BoolLit(_val);
     }
 
     @Override
-    public void order() {
-    }
-
-    @Override
-    public int comp(BoolExp b) {
-        return Boolean.valueOf(_val).compareTo(((BoolLit) b)._val);
+    public int comp_spec(BoolExp b) {
+        return Boolean.compare(_val, ((BoolLit) b)._val);
     }
 }

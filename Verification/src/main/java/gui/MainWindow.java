@@ -2,13 +2,13 @@ package gui;
 
 import gui.CloseSaveDialog.Result;
 import gui.FileTab.AutoParseException;
+import gui.testPlayground.TestPlaygroundWindow;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
@@ -22,13 +22,14 @@ import util.ErrorUtil;
 import util.IOUtil;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.Vector;
 
-public class MainWindow implements Initializable, JavaFXMain.PrintInterface, JavaFXMain.StopInterface {
+public class MainWindow implements gui.Initializable, JavaFXMain.PrintInterface, JavaFXMain.StopInterface {
 	@FXML
 	private MenuItem _menu_new;
 	@FXML
@@ -353,8 +354,6 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 	private void initTestPlayground() throws IOException {
 		_testPlaygroundWindow = new TestPlaygroundWindow();
 
-		_testPlaygroundWindow.getStage();
-
 		_menu_testPlayground.selectedProperty().bindBidirectional(_testPlaygroundWindow.getShownProperty());
 	}
 
@@ -374,7 +373,7 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 		if (tab instanceof FileTab && !((FileTab) tab).isSaved()) {
 			CloseSaveDialog diag = new CloseSaveDialog((FileTab) tab, new CloseSaveDialog.CloseSaveInterface() {
 				@Override
-				public void result(Result result) {
+				public void result(@Nonnull Result result) {
 					try {
 						switch (result) {
 						case YES: {
@@ -517,9 +516,9 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 		});
 		_menu_open.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
-			public void handle(ActionEvent event) {
+			public void handle(@Nonnull ActionEvent event) {
 				try {
-					_savesDir.mkdirs(); if (!_savesDir.exists()) throw new Exception("could not create " + _savesDir);
+					boolean success = _savesDir.mkdirs(); if (!_savesDir.exists()) throw new Exception("could not create " + _savesDir);
 					
 					File file = _diag_open.showOpenDialog(_stage);
 					
@@ -625,7 +624,7 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 						_diag_save.setTitle("Save code");
 						_diag_save.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Code", "*.c"));
 						
-						_savesDir.mkdirs(); if (!_savesDir.exists()) throw new Exception("could not create " + _savesDir);
+						boolean success = _savesDir.mkdirs(); if (!_savesDir.exists()) throw new Exception("could not create " + _savesDir);
 						
 						File file = _diag_save.showSaveDialog(_stage);
 						
@@ -718,7 +717,7 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 	}
 	
 	@Override
-	public void initialize(URL url, ResourceBundle resources) {
+	public void initialize(@Nonnull URL url, @Nullable ResourceBundle resources) {
 		try {
 			initMenu();
 			initParse();
@@ -732,12 +731,12 @@ public class MainWindow implements Initializable, JavaFXMain.PrintInterface, Jav
 	}
 
 	@Override
-	public void writeToOut(String s) {
+	public void writeToOut(@Nullable String s) {
 		_console.writeToOut(s);
 	}
 
 	@Override
-	public void writeToErr(String s) {
+	public void writeToErr(@Nullable String s) {
 		_console.writeToErr(s);
 	}
 

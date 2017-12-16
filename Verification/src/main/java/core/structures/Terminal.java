@@ -1,10 +1,11 @@
 package core.structures;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
-
 import core.Symbol;
 import core.SymbolKey;
+
+import javax.annotation.Nonnull;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * rule for the lexer (terminals, their key starting with an uppercase letter)
@@ -84,7 +85,7 @@ public class Terminal extends Symbol {
 		_rules.add(rule);
 	}
 
-	public LexerRule addRuleRegEx(String ruleS) {
+	public LexerRule addRuleRegEx(@Nonnull String ruleS) {
 		LexerRule lexerRule = new LexerRule(ruleS, true);
 
 		addRule(lexerRule);
@@ -92,7 +93,7 @@ public class Terminal extends Symbol {
 		return lexerRule;
 	}
 	
-	public LexerRule addRule(String ruleS) {
+	public LexerRule addRule(@Nonnull String ruleS) {
 		LexerRule lexerRule = new LexerRule(ruleS, false);
 
 		addRule(lexerRule);

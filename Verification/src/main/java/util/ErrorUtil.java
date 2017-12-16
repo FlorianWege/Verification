@@ -3,6 +3,7 @@ package util;
 import gui.ErrorDialog;
 
 import javax.annotation.Nonnull;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
@@ -32,4 +33,28 @@ public class ErrorUtil {
 		
 		diag.show();
 	}
+
+	public static class NestedPrinter {
+		private PrintStream _stream;
+
+		private int _nestDepth = 0;
+
+		public void begin() {
+			_nestDepth++;
+		}
+
+		public void end() {
+			_nestDepth--;
+		}
+
+		public void println(String s) {
+			_stream.println(StringUtil.repeat("\t", _nestDepth) + s);
+		}
+
+		public NestedPrinter(PrintStream stream) {
+			_stream = stream;
+		}
+	}
+
+	public final static NestedPrinter PRINTER = new NestedPrinter(System.out);
 }

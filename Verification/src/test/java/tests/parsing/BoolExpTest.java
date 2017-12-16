@@ -2,16 +2,11 @@ package tests.parsing;
 
 import core.Lexer;
 import core.Parser;
-import core.Token;
 import core.structures.semantics.SemanticNode;
 import core.structures.semantics.boolExp.BoolExp;
-import core.structures.semantics.exp.Exp;
 import core.structures.syntax.SyntaxNode;
 import grammars.BoolExpGrammar;
-import grammars.ExpGrammar;
 import org.testng.annotations.Test;
-
-import java.util.List;
 
 public class BoolExpTest {
     protected final static BoolExpGrammar g = new BoolExpGrammar();
@@ -24,7 +19,7 @@ public class BoolExpTest {
 
         BoolExp red = ((BoolExp) node).reduce();
 
-        red.order();
+        red = red.order();
 
         System.out.println(red.getContentString());
     }

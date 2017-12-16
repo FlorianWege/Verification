@@ -9,6 +9,7 @@ import core.structures.TNode;
 import core.structures.Terminal;
 import util.StringUtil;
 
+import javax.annotation.Nonnull;
 import java.io.Serializable;
 import java.util.*;
 import java.util.function.Function;
@@ -17,11 +18,13 @@ import java.util.function.UnaryOperator;
 public class SyntaxNode extends TNode<SyntaxNode> implements Serializable {
 	private final List<SyntaxNode> _children = new ArrayList<>();
 	
-	@Override
+	@Nonnull
+    @Override
 	public List<SyntaxNode> getChildren() {
 		return _children;
 	}
 
+	@Nonnull
 	@Override
 	public String getTreeText() {
 		return this instanceof SyntaxNodeTerminal ? this.toString() : _symbol.toString();

@@ -26,7 +26,7 @@ public class ConseqCheckTableViewTest extends Application {
 
         ConseqCheckTableView tableView = new ConseqCheckTableView(new ConseqCheckTableView.Callback() {
             @Override
-            public void result(BoolExp boolExp) {
+            public void result(@Nonnull BoolExp boolExp) {
                 if (boolExp.equals(new BoolLit(true))) {
                     System.out.println("yes");
                 } else {
