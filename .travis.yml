@@ -1,3 +1,6 @@
+before_install:
+  cd Verification
+
 language: java
 jdk:
   - oraclejdk8
