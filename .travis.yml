@@ -1,11 +1,9 @@
-before_install:
-  cd Verification
-
 language: java
 jdk:
   - oraclejdk8
   
 before_install:
+  - cd Verification
   - chmod +x gradlew
 
 cache:
