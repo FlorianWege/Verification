@@ -46,6 +46,12 @@ public abstract class Exp extends SemanticNode {
         return ret;
     }
 
+    @CheckReturnValue
+    @Nonnull
+    public final Exp reduce() {
+        return reduce(null);
+    }
+
     public static class Reducer implements Serializable {
         public enum Law {
             START,
@@ -99,6 +105,7 @@ public abstract class Exp extends SemanticNode {
         }
     }
 
+    @Nonnull
     public final Reducer reduceEx() {
         Reducer ret = new Reducer(this);
 

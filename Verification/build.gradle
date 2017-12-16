@@ -35,7 +35,7 @@ dependencies {
     compile files('libs/BigMath.jar')
 
     // Use JUnit test framework
-    testImplementation 'junit:junit:4.12'
+    api 'junit:junit:4.12'
 }
 
 allprojects {

@@ -4,7 +4,6 @@ import core.Lexer;
 import core.Parser;
 import core.structures.semantics.SemanticNode;
 import grammars.BoolExpGrammar;
-import org.junit.Assert;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
@@ -35,6 +34,12 @@ public abstract class BoolExp extends SemanticNode {
 		reducer.addEntry(this, Reducer.Law.UNKNOWN);
 
 		return ret;
+	}
+
+	@CheckReturnValue
+	@Nonnull
+	public final BoolExp reduce() {
+		return reduce(null);
 	}
 
 	public static class Reducer implements Serializable {
@@ -399,7 +404,7 @@ public abstract class BoolExp extends SemanticNode {
 				ret = newAnd;
 			}
 		}
-		Assert.assertTrue(ret.toString().length() < 30);
+//		Assert.assertTrue(ret.toString().length() < 30);
 
 		if (!ret.equals(this)) {
 			ret.getChildren().replaceAll(new UnaryOperator<SemanticNode>() {
