@@ -2,6 +2,8 @@ package latex;
 
 import util.StringUtil;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -12,7 +14,7 @@ public class LatexStream {
 
     private int _nestDepth = 0;
 
-    public void println(String s) {
+    public void println(@Nullable String s) {
         _stream.println(StringUtil.repeat("\t", _nestDepth) + s);
     }
 
@@ -28,11 +30,13 @@ public class LatexStream {
         _nestDepth--;
     }
 
-    public LatexStream(PrintStream stream) {
+    public LatexStream(@Nonnull PrintStream stream) {
         _stream = stream;
     }
 
-    public LatexStream(File file) throws FileNotFoundException {
+    public LatexStream(@Nonnull File file) throws FileNotFoundException {
+        assert(file.getParentFile().mkdirs() || file.getParentFile().exists());
+
         _stream = new PrintStream(new FileOutputStream(file));
     }
 }
