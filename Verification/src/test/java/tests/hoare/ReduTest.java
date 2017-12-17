@@ -44,7 +44,7 @@ public class ReduTest {
 
         Assert.assertEquals(exp2, BoolExp.fromString("x=1").reduce());
 
-        BoolExp exp3 = BoolExp.fromString("x<2|x<2").reduceEx().getRet();
+        BoolExp exp3 = BoolExp.fromString("x<2|x<2").reduce();
 
         Assert.assertEquals(exp3, BoolExp.fromString("x<2").reduce());
     }
