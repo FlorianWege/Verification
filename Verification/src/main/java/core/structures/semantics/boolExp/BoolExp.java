@@ -50,7 +50,7 @@ public abstract class BoolExp extends SemanticNode {
 			UNWRAP
 		}
 
-		private class Entry {
+		private class Entry implements Serializable {
 			private BoolExp _boolExp;
 			private Law _law;
 

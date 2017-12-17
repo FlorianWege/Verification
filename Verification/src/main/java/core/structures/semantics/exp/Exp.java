@@ -60,7 +60,7 @@ public abstract class Exp extends SemanticNode {
             UNKNOWN
         }
 
-        private class Entry {
+        private class Entry implements Serializable {
             private Exp _exp;
             private Exp.Reducer.Law _law;
 

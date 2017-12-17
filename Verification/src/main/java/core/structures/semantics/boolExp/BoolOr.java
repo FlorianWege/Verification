@@ -82,17 +82,7 @@ public class BoolOr extends BoolList {
         for (BoolExp part : copy.getBoolExps()) {
             if (part instanceof BoolAnd) containsAnd = true;
         }
-        System.out.println("orA");
-        if (containsAnd) {
-            System.out.println("orA1");
-            /*BoolAnd cnf = copy.makeCNF();
-            System.out.println("orA2");
-            BoolExp cnfReduced = cnf.reduce();
-            System.out.println("orA3");
-            copy = cnfReduced.makeDNF();
-            System.out.println("orA4");*/
-        }
-        System.out.println("orB");
+
         //reduce parts and unwrap nested
         BoolOr tmpOr = new BoolOr();
 
