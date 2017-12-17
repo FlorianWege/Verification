@@ -7,12 +7,14 @@ import core.structures.semantics.boolExp.BoolImpl;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import javax.annotation.Nonnull;
+
 public class SampleProgramsImplTest {
-    private void checkImpl(BoolExp source, BoolExp target) throws Lexer.LexerException, Parser.ParserException {
+    private void checkImpl(@Nonnull BoolExp source, @Nonnull BoolExp target) throws Lexer.LexerException, Parser.ParserException {
         Assert.assertEquals(new BoolImpl(source, target).reduce(), BoolExp.fromString("true").reduce());
     }
 
-    private void checkImpl(String sourceS, String targetS) throws Lexer.LexerException, Parser.ParserException {
+    private void checkImpl(@Nonnull String sourceS, @Nonnull String targetS) throws Lexer.LexerException, Parser.ParserException {
         checkImpl(BoolExp.fromString(sourceS), BoolExp.fromString(targetS));
     }
 

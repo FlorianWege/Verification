@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class LoopInvTest {
-    private void checkPre(BoolExp inv, BoolExp loopExp, Prog loopBody) throws Lexer.LexerException, Hoare.HoareException, Parser.ParserException, IOException {
+    private void checkPre(@Nonnull BoolExp inv, @Nonnull BoolExp loopExp, @Nonnull Prog loopBody) throws Lexer.LexerException, Hoare.HoareException, Parser.ParserException, IOException {
         Hoare hoare = new Hoare(new Hoare.ActionInterface() {
             @Override
             public void beginNode(@Nonnull SemanticNode node, @Nonnull HoareCond postCond) {
@@ -125,7 +125,7 @@ public class LoopInvTest {
         });
     }
 
-    private void checkPost(BoolExp inv, BoolExp loopExp, BoolExp post) {
+    private void checkPost(@Nonnull BoolExp inv, @Nonnull BoolExp loopExp, @Nonnull BoolExp post) {
         BoolExp source = new BoolAnd(inv, new BoolNeg(loopExp));
         BoolExp target = post;
 

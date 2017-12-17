@@ -9,10 +9,12 @@ import grammars.BoolExpGrammar;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import javax.annotation.Nonnull;
+
 public class ImplTest {
     private Grammar g = new BoolExpGrammar();
 
-    private BoolExp checkInclusion(BoolExp left, BoolExp right) {
+    private BoolExp checkInclusion(@Nonnull BoolExp left, @Nonnull BoolExp right) {
         BoolAnd leftAnd = new BoolAnd(left);
         BoolAnd rightAnd = new BoolAnd(right);
 
@@ -31,7 +33,7 @@ public class ImplTest {
         return new BoolImpl(leftAnd, newRight);
     }
 
-    private void checkTrue(BoolImpl impl) {
+    private void checkTrue(@Nonnull BoolImpl impl) {
         BoolExp source = impl.getSource();
         BoolExp target = impl.getTarget();
 
@@ -99,11 +101,11 @@ public class ImplTest {
         Assert.assertTrue(finalBoolExp.equals(new BoolLit(true)));
     }
 
-    private void checkTrue(BoolExp left, BoolExp right) {
+    private void checkTrue(@Nonnull BoolExp left, @Nonnull BoolExp right) {
         checkTrue(new BoolImpl(left, right));
     }
 
-    private void checkTrue(String leftS, String rightS) throws Lexer.LexerException, Parser.ParserException {
+    private void checkTrue(@Nonnull String leftS, @Nonnull String rightS) throws Lexer.LexerException, Parser.ParserException {
         BoolExp left = (BoolExp) SemanticNode.fromString(leftS, g);
         BoolExp right = (BoolExp) SemanticNode.fromString(rightS, g);
 
