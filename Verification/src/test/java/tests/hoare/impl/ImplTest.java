@@ -6,7 +6,7 @@ import core.Parser;
 import core.structures.semantics.SemanticNode;
 import core.structures.semantics.boolExp.*;
 import grammars.BoolExpGrammar;
-import org.junit.Assert;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 public class ImplTest {

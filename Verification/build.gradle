@@ -20,6 +20,7 @@ repositories {
 }
 
 dependencies {
+    // javax annotations
     compile group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.0'
 
     // This dependency is exported to consumers, that is to say found on their compile classpath.
@@ -29,14 +30,16 @@ dependencies {
     implementation 'com.google.guava:guava:21.0'
 
 	compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.6.10'
-	
-	compile 'org.testng:testng:' + '6.+'
-
     compile files('libs/BigMath.jar')
 
-    // Use JUnit test framework
-    api 'junit:junit:4.12'
+    testCompile 'org.testng:testng:6.1.1'
 }
+
+test {
+    // enable TestNG support (default is JUnit)
+    useTestNG()
+}
+
 
 allprojects {
     apply plugin: 'idea'
