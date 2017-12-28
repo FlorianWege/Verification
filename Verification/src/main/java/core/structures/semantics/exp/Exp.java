@@ -143,6 +143,51 @@ public abstract class Exp extends SemanticNode {
         return comp_spec(b);
     }
 
+    @Nonnull
+    public Exp getMuCoeff() {
+        if (this instanceof Prod) {
+            //overwritten
+        }
+        if (this instanceof Sum) {
+            Sum ret = new Sum();
+
+            for (Exp exp : ((Sum) this).getExps()) {
+                ret.addExp(exp.getMuCoeff());
+            }
+
+            return ret.reduce();
+        }
+        if (this instanceof ExpMu) {
+            return new ExpLit(1);
+        }
+
+        return new ExpLit(0);
+    }
+
+    @Nonnull
+    public Exp cutMuCoeff() {
+        System.out.println("cut " + this);
+        if (this instanceof Prod) {
+            if (!getMuCoeff().equals(new ExpLit(0))) return new ExpLit(0);
+        }
+        if (this instanceof Sum) {
+            Sum ret = new Sum();
+
+            for (Exp exp : ((Sum) this).getExps()) {
+                if (exp.getMuCoeff().equals(new ExpLit(0))) {
+                    ret.addExp(exp);
+                }
+            }
+
+            return ret.reduce();
+        }
+        if (this instanceof ExpMu) {
+            return new ExpLit(0);
+        }
+
+        return (Exp) copy();
+    }
+
     public String parenthesize(String s) {
         return _grammar.TERMINAL_PAREN_OPEN.getPrimRule() + s + _grammar.TERMINAL_PAREN_CLOSE.getPrimRule();
     }

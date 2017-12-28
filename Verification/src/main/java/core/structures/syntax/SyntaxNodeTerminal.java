@@ -1,12 +1,14 @@
 package core.structures.syntax;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import core.Symbol;
 import core.Token;
 import core.structures.Terminal;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class SyntaxNodeTerminal extends SyntaxNode {
 	private final Token _token;
@@ -36,7 +38,7 @@ public class SyntaxNodeTerminal extends SyntaxNode {
 	}
 
 	@Override
-	public void replace(Terminal terminal, String text) {
+	public void replace(@Nonnull Terminal terminal, @Nonnull String text) {
 		if (_token != null && _token.getTerminal().equals(terminal)) _token.replaceText(text);
 	}
 
@@ -45,13 +47,13 @@ public class SyntaxNodeTerminal extends SyntaxNode {
 		return new SyntaxNodeTerminal((_token == null) ? null : _token.copy());
 	}
 
-	public SyntaxNodeTerminal(Terminal terminal) {
+	public SyntaxNodeTerminal(@Nonnull Terminal terminal) {
 		super(terminal, null);
 
 		_token = null;
 	}
 
-	public SyntaxNodeTerminal(Token token) {
+	public SyntaxNodeTerminal(@Nullable Token token) {
 		super((token != null) ? token.getTerminal() : null, null);
 
 		_token = token;

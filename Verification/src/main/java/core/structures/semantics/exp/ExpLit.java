@@ -129,7 +129,7 @@ public class ExpLit extends ExpElem {
         return mult(new ExpLit(other._denom, other._num));
     }
 
-    private BigDecimal pow(BigDecimal base, BigDecimal exp) {
+    private BigDecimal pow(@Nonnull BigDecimal base, @Nonnull BigDecimal exp) {
         return BigDecimalMath.pow(base, exp);
     }
 

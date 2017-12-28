@@ -34,7 +34,9 @@ public class BoolNeg extends BoolExp {
     @Nonnull
     @Override
     public SemanticNode replace(@Nonnull IOUtil.Func<SemanticNode, SemanticNode> replaceFunc) {
-        return replaceFunc.apply(new BoolNeg((BoolExp) replaceFunc.apply(getChild())));
+        BoolExp boolExp = new BoolNeg((BoolExp) _boolExp.replace(replaceFunc));
+
+        return replaceFunc.apply(boolExp);
     }
 
     @Nonnull

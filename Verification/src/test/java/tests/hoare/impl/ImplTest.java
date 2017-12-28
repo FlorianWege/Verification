@@ -1,8 +1,6 @@
 package tests.hoare.impl;
 
-import core.Grammar;
-import core.Lexer;
-import core.Parser;
+import core.*;
 import core.structures.semantics.SemanticNode;
 import core.structures.semantics.boolExp.*;
 import grammars.BoolExpGrammar;
@@ -10,6 +8,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import javax.annotation.Nonnull;
+import java.io.IOException;
 
 public class ImplTest {
     private Grammar g = new BoolExpGrammar();
@@ -33,7 +32,22 @@ public class ImplTest {
         return new BoolImpl(leftAnd, newRight);
     }
 
-    private void checkTrue(@Nonnull BoolImpl impl) {
+    private void checkTrue(@Nonnull BoolImpl impl) throws Lexer.LexerException, Hoare.HoareException, Parser.ParserException, IOException {
+        TheoremSolver solver = new TheoremSolver(impl, new TheoremSolver.Callback() {
+            @Override
+            public void accept() throws Lexer.LexerException, Hoare.HoareException, Parser.ParserException, IOException {
+            }
+
+            @Override
+            public void reject(@Nonnull BoolExp reducedBoolExp) throws Lexer.LexerException, Hoare.HoareException, Parser.ParserException, IOException {
+                Assert.fail("rejected: " + reducedBoolExp.toString());
+            }
+        });
+
+        solver.exec();
+    }
+
+    private void checkTrue2(@Nonnull BoolImpl impl) {
         BoolExp source = impl.getSource();
         BoolExp target = impl.getTarget();
 
@@ -101,11 +115,11 @@ public class ImplTest {
         Assert.assertTrue(finalBoolExp.equals(new BoolLit(true)));
     }
 
-    private void checkTrue(@Nonnull BoolExp left, @Nonnull BoolExp right) {
+    private void checkTrue(@Nonnull BoolExp left, @Nonnull BoolExp right) throws Lexer.LexerException, Hoare.HoareException, Parser.ParserException, IOException {
         checkTrue(new BoolImpl(left, right));
     }
 
-    private void checkTrue(@Nonnull String leftS, @Nonnull String rightS) throws Lexer.LexerException, Parser.ParserException {
+    private void checkTrue(@Nonnull String leftS, @Nonnull String rightS) throws Lexer.LexerException, Parser.ParserException, IOException, Hoare.HoareException {
         BoolExp left = (BoolExp) SemanticNode.fromString(leftS, g);
         BoolExp right = (BoolExp) SemanticNode.fromString(rightS, g);
 
@@ -113,30 +127,35 @@ public class ImplTest {
     }
 
     @Test()
-    public void a() throws Lexer.LexerException, Parser.ParserException {
+    public void a() throws Lexer.LexerException, Parser.ParserException, IOException, Hoare.HoareException {
         checkTrue("erg=2^(y-x)&x=0", "erg=2^y&x=0");
     }
 
     @Test()
-    public void b() throws Lexer.LexerException, Parser.ParserException {
+    public void b() throws Lexer.LexerException, Parser.ParserException, IOException, Hoare.HoareException {
         checkTrue("x=y&y=0", "x=0");
     }
 
     @Test()
-    public void c() throws Lexer.LexerException, Parser.ParserException {
+    public void c() throws Lexer.LexerException, Parser.ParserException, IOException, Hoare.HoareException {
         checkTrue("x<0&y=1", "x+y<1");
     }
 
     @Test()
-    public void d() throws Lexer.LexerException, Parser.ParserException {
+    public void d() throws Lexer.LexerException, Parser.ParserException, IOException, Hoare.HoareException {
         checkTrue("a=b-c", "1=2^(a-b+c)");
     }
 
     @Test()
-    public void e() throws Lexer.LexerException, Parser.ParserException {
+    public void e() throws Lexer.LexerException, Parser.ParserException, IOException, Hoare.HoareException {
         //checkTrue("A=1|B=2", "C=3|D=4");
         checkTrue("x=3|x=0-3", "x=3|x=0-3");
         //checkTrue("x^2=9", "x=3|x=0-3");
+    }
+
+    @Test()
+    public void alt() throws Lexer.LexerException, Parser.ParserException, IOException, Hoare.HoareException {
+        checkTrue("f=k!", "f=k!∧3>2");
     }
 
     /*@Test()

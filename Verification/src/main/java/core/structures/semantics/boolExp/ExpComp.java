@@ -92,6 +92,34 @@ public class ExpComp extends BoolElem {
     }
 
     @Nonnull
+    public ExpComp revertMu() {
+        if (_expCompOp.getType().equals(ExpCompOp.Type.EQUAL)) {
+            Exp leftExp = (Exp) _leftExp.copy();
+            Exp rightExp = (Exp) _rightExp.copy();
+
+            Exp leftMuCoeff = leftExp.getMuCoeff();
+            Exp rightMuCoeff = rightExp.getMuCoeff();
+
+            if (leftMuCoeff instanceof ExpLit && rightMuCoeff instanceof ExpLit) {
+                int comp = ((ExpLit) leftMuCoeff).getVal().compareTo(((ExpLit) rightMuCoeff).getVal());
+                ExpCompOp.Type opType = ExpCompOp.Type.EQUAL;
+
+                if (comp < 0) opType = ExpCompOp.Type.GREATER;
+                else if (comp > 0) opType = ExpCompOp.Type.LESS;
+
+                Exp leftExpCut = leftExp.cutMuCoeff();
+                Exp rightExpCut = rightExp.cutMuCoeff();
+
+                ExpComp ret = new ExpComp(leftExpCut, new ExpCompOp(opType), rightExpCut);
+
+                return ret;
+            }
+        }
+
+        return (ExpComp) copy();
+    }
+
+    @Nonnull
     @Override
     public BoolExp reduce_spec(@Nonnull Reducer reducer) {
         Exp leftExp = _leftExp.reduce(new Exp.Reducer(_leftExp));
@@ -230,27 +258,43 @@ public class ExpComp extends BoolElem {
         }
 
         //both sides are literals, evaluate
-        if (leftExp instanceof ExpLit && rightExp instanceof ExpLit) {
-            BigDecimal leftVal = ((ExpLit) leftExp).getVal();
-            BigDecimal rightVal = ((ExpLit) rightExp).getVal();
+        {
+            ExpComp expCompTested = revertMu();
 
-            if (expCompOp.getType().equals(ExpCompOp.Type.EQUAL)) {
-                if (leftVal.compareTo(rightVal) == 0) return new BoolLit(true); else return new BoolLit(false);
-            }
-            if (expCompOp.getType().equals(ExpCompOp.Type.UNEQUAL)) {
-                if (leftVal.compareTo(rightVal) != 0) return new BoolLit(true); else return new BoolLit(false);
-            }
-            if (expCompOp.getType().equals(ExpCompOp.Type.LESS)) {
-                if (leftVal.compareTo(rightVal) < 0) return new BoolLit(true); else return new BoolLit(false);
-            }
-            if (expCompOp.getType().equals(ExpCompOp.Type.GREATER)) {
-                if (leftVal.compareTo(rightVal) > 0) return new BoolLit(true); else return new BoolLit(false);
-            }
-            if (expCompOp.getType().equals(ExpCompOp.Type.EQUAL_LESS)) {
-                if (leftVal.compareTo(rightVal) <= 0) return new BoolLit(true); else return new BoolLit(false);
-            }
-            if (expCompOp.getType().equals(ExpCompOp.Type.EQUAL_GREATER)) {
-                if (leftVal.compareTo(rightVal) >= 0) return new BoolLit(true); else return new BoolLit(false);
+            Exp leftExpTested = expCompTested.getLeftExp().reduce();
+            ExpCompOp compOpTested = expCompTested.getExpOp();
+            Exp rightExpTested = expCompTested.getRightExp().reduce();
+
+            if (leftExpTested instanceof ExpLit && rightExpTested instanceof ExpLit) {
+                BigDecimal leftVal = ((ExpLit) leftExpTested).getVal();
+                BigDecimal rightVal = ((ExpLit) rightExpTested).getVal();
+
+                ExpCompOp.Type compOpType = compOpTested.getType();
+
+                if (compOpType.equals(ExpCompOp.Type.EQUAL)) {
+                    if (leftVal.compareTo(rightVal) == 0) return new BoolLit(true);
+                    else return new BoolLit(false);
+                }
+                if (compOpType.equals(ExpCompOp.Type.UNEQUAL)) {
+                    if (leftVal.compareTo(rightVal) != 0) return new BoolLit(true);
+                    else return new BoolLit(false);
+                }
+                if (compOpType.equals(ExpCompOp.Type.LESS)) {
+                    if (leftVal.compareTo(rightVal) < 0) return new BoolLit(true);
+                    else return new BoolLit(false);
+                }
+                if (compOpType.equals(ExpCompOp.Type.GREATER)) {
+                    if (leftVal.compareTo(rightVal) > 0) return new BoolLit(true);
+                    else return new BoolLit(false);
+                }
+                if (compOpType.equals(ExpCompOp.Type.EQUAL_LESS)) {
+                    if (leftVal.compareTo(rightVal) <= 0) return new BoolLit(true);
+                    else return new BoolLit(false);
+                }
+                if (compOpType.equals(ExpCompOp.Type.EQUAL_GREATER)) {
+                    if (leftVal.compareTo(rightVal) >= 0) return new BoolLit(true);
+                    else return new BoolLit(false);
+                }
             }
         }
 

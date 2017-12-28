@@ -10,6 +10,7 @@ import core.structures.Terminal;
 import util.StringUtil;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.*;
 import java.util.function.Function;
@@ -30,7 +31,7 @@ public class SyntaxNode extends TNode<SyntaxNode> implements Serializable {
 		return this instanceof SyntaxNodeTerminal ? this.toString() : _symbol.toString();
 	}
 
-	public SyntaxNode findChildRec(SymbolKey symbolKey, int index, boolean breath) {
+	public SyntaxNode findChildRec(@Nonnull SymbolKey symbolKey, int index, boolean breath) {
 		if (index < 0) return null;
 
 		if (breath) {
@@ -68,23 +69,23 @@ public class SyntaxNode extends TNode<SyntaxNode> implements Serializable {
 		return null;
 	}
 
-	public SyntaxNode findChildRec(Symbol symbol, int index, boolean breath) {
+	public SyntaxNode findChildRec(@Nonnull Symbol symbol, int index, boolean breath) {
 		return findChildRec(symbol.getKey(), index, breath);
 	}
 	
-	public SyntaxNode findChildRec(SymbolKey symbolKey, boolean breath) {
+	public SyntaxNode findChildRec(@Nonnull SymbolKey symbolKey, boolean breath) {
 		return findChildRec(symbolKey, 1, breath);
 	}
 	
-	public SyntaxNode findChildRec(Symbol symbol, boolean breath) {
+	public SyntaxNode findChildRec(@Nonnull Symbol symbol, boolean breath) {
 		return findChildRec(symbol, 0, breath);
 	}
 
-	public SyntaxNode findChildRec(Symbol symbol) {
+	public SyntaxNode findChildRec(@Nonnull Symbol symbol) {
 		return findChildRec(symbol, 0, true);
 	}
 
-	public SyntaxNode findChild(Symbol symbol, int count) {
+	public SyntaxNode findChild(@Nonnull Symbol symbol, int count) {
 		for (SyntaxNode child : getChildren()) {
 			if (child.getSymbol().equals(symbol)) {
 				count--;
@@ -95,7 +96,7 @@ public class SyntaxNode extends TNode<SyntaxNode> implements Serializable {
 		return null;
 	}
 
-	public SyntaxNode findChild(Symbol symbol) {
+	public SyntaxNode findChild(@Nonnull Symbol symbol) {
 		return findChild(symbol, 0);
 	}
 
@@ -113,10 +114,14 @@ public class SyntaxNode extends TNode<SyntaxNode> implements Serializable {
 	
 	@Override
 	public String toString() {
+		if (_symbol == null) return null;
+
 		return _symbol.toString();
 	}
 
 	public String toStringVert() {
+		if (_symbol == null) return null;
+
 		return _symbol.toString();
 	}
 	
@@ -139,7 +144,7 @@ public class SyntaxNode extends TNode<SyntaxNode> implements Serializable {
 		return tokenize(true);
 	}
 
-	public String synthesize(boolean includeWrappingSeps, boolean flatten, Function<Token, String> tokenMapper) {
+	public String synthesize(boolean includeWrappingSeps, boolean flatten, @Nullable Function<Token, String> tokenMapper) {
 		List<Token> tokens = tokenize(includeWrappingSeps);
 
 		if (!tokens.isEmpty()) {
@@ -165,7 +170,7 @@ public class SyntaxNode extends TNode<SyntaxNode> implements Serializable {
 
 				sb.append((tokenMapper != null) ? tokenMapper.apply(token) : token.getText());
 
-				lastX = tokenX + token.getText().length();
+				lastX = tokenX + ((token.getText() != null) ? token.getText().length() : 0);
 				lastY = tokenY;
 			}
 
@@ -193,13 +198,13 @@ public class SyntaxNode extends TNode<SyntaxNode> implements Serializable {
 		return ret;
 	}
 
-	public void replace(Terminal terminal, String text) {
+	public void replace(@Nonnull Terminal terminal, @Nonnull String text) {
 		for (SyntaxNode child : _children) {
 			child.replace(terminal, text);
 		}
 	}
 
-	public void replace(Terminal terminal, String var, SyntaxNode exp) {
+	public void replace(@Nonnull Terminal terminal, @Nonnull String var, @Nonnull SyntaxNode exp) {
 		for (SyntaxNode child : _children) {
 			child.replace(terminal, var, exp);
 		}
@@ -210,7 +215,7 @@ public class SyntaxNode extends TNode<SyntaxNode> implements Serializable {
 				if (child instanceof SyntaxNodeTerminal) {
 					Token token = ((SyntaxNodeTerminal) child).getToken();
 
-					if ((token != null) && token.getTerminal().equals(terminal) && token.getText().equals(var)) {
+					if ((token != null) && token.getTerminal().equals(terminal) && token.getText() != null && token.getText().equals(var)) {
 						return exp.copy();
 					}
 				}
@@ -220,11 +225,11 @@ public class SyntaxNode extends TNode<SyntaxNode> implements Serializable {
 		});
 	}
 	
-	public void addChild(SyntaxNode child) {
+	public void addChild(@Nonnull SyntaxNode child) {
 		_children.add(child);
 	}
 	
-	public SyntaxNode(Symbol symbol, ParserRule subRule) {
+	public SyntaxNode(@Nullable Symbol symbol, @Nullable ParserRule subRule) {
 		_symbol = symbol;
 		_subRule = subRule;
 	}

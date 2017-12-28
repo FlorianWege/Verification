@@ -65,7 +65,7 @@ public class BoolOr extends BoolList {
             ret.addBoolExp((BoolExp) boolExp.replace(replaceFunc));
         }
 
-        return replaceFunc.apply(this);
+        return replaceFunc.apply(ret);
     }
 
     @Nonnull

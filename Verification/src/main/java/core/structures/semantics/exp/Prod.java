@@ -110,6 +110,31 @@ public class Prod extends Exp {
         return ret;
     }
 
+    @Override
+    @Nonnull
+    public Exp getMuCoeff() {
+        Prod coeff = new Prod();
+
+        boolean found = false;
+
+        for (Exp part : getExps()) {
+            if (part.equals(new ExpMu())) {
+                if (found) coeff.addExp(part);
+
+                found = true;
+            } else {
+                coeff.addExp(part);
+            }
+        }
+
+        if (!found) return new ExpLit(0);
+
+        if (coeff.getExps().isEmpty()) return new ExpLit(1);
+        if (coeff.getExps().size() == 1) return coeff.getExps().get(0);
+
+        return coeff;
+    }
+
     @Nonnull
     public Exp getCoeff(@Nonnull Set<Id> ids) {
         Prod coeff = new Prod();

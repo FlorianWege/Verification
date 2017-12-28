@@ -1,14 +1,13 @@
 package tests.hoare.impl;
 
 import core.Hoare;
+import core.HoareExecuter;
 import core.Lexer;
 import core.Parser;
 import core.structures.semantics.SemanticNode;
 import core.structures.semantics.boolExp.*;
-import core.structures.semantics.prog.Assign;
 import core.structures.semantics.prog.HoareCond;
 import core.structures.semantics.prog.Prog;
-import core.structures.semantics.prog.Skip;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -19,89 +18,7 @@ import java.util.List;
 
 public class LoopInvTest {
     private void checkPre(@Nonnull BoolExp inv, @Nonnull BoolExp loopExp, @Nonnull Prog loopBody) throws Lexer.LexerException, Hoare.HoareException, Parser.ParserException, IOException {
-        Hoare hoare = new Hoare(new Hoare.ActionInterface() {
-            @Override
-            public void beginNode(@Nonnull SemanticNode node, @Nonnull HoareCond postCond) {
-
-            }
-
-            @Override
-            public void endNode(@Nonnull SemanticNode node, @Nonnull HoareCond preCond) {
-
-            }
-
-            @Override
-            public void reqSkipDialog(@Nonnull Skip skip, @Nonnull HoareCond preCond, @Nonnull HoareCond postCond, @Nonnull Hoare.Skip_callback callback) throws IOException, Hoare.HoareException, Lexer.LexerException, Parser.ParserException, SemanticNode.CopyException {
-                callback.result();
-            }
-
-            @Override
-            public void reqAssignDialog(@Nonnull Assign assign, @Nonnull HoareCond preCond, @Nonnull HoareCond postCond, @Nonnull Hoare.Assign_callback callback) throws IOException, Hoare.HoareException, Lexer.LexerException, Parser.ParserException, SemanticNode.CopyException {
-                System.out.println(assign.getVar() + "->" + assign.getExp());
-
-                callback.result();
-            }
-
-            @Override
-            public void reqCompNextDialog(@Nonnull Hoare.wlp_comp comp, @Nonnull Hoare.CompNext_callback callback) throws IOException, Hoare.HoareException, Lexer.LexerException, Parser.ParserException, SemanticNode.CopyException {
-                callback.result();
-            }
-
-            @Override
-            public void reqCompMergeDialog(@Nonnull Hoare.wlp_comp comp, @Nonnull Hoare.CompMerge_callback callback) throws IOException, Hoare.HoareException, Lexer.LexerException, Parser.ParserException, SemanticNode.CopyException {
-                callback.result();
-            }
-
-            @Override
-            public void reqAltFirstDialog(@Nonnull Hoare.wlp_alt alt, @Nonnull Hoare.AltThen_callback callback) throws IOException, Hoare.HoareException, Lexer.LexerException, Parser.ParserException, SemanticNode.CopyException {
-                callback.result();
-            }
-
-            @Override
-            public void reqAltElseDialog(@Nonnull Hoare.wlp_alt alt, @Nonnull Hoare.AltElse_callback callback) throws IOException, Hoare.HoareException, Lexer.LexerException, Parser.ParserException, SemanticNode.CopyException {
-                callback.result();
-            }
-
-            @Override
-            public void reqAltMergeDialog(@Nonnull Hoare.wlp_alt alt, @Nonnull Hoare.AltMerge_callback callback) throws IOException, Hoare.HoareException, Lexer.LexerException, Parser.ParserException, SemanticNode.CopyException {
-                callback.result();
-            }
-
-            @Override
-            public void reqLoopAskInvDialog(@Nonnull Hoare.wlp_loop loop, @Nonnull Hoare.LoopAskInv_callback callback) throws IOException {
-
-            }
-
-            @Override
-            public void reqLoopCheckPostCondDialog(@Nonnull Hoare.wlp_loop loop, @Nonnull Hoare.LoopCheckPostCond_callback callback) throws IOException {
-
-            }
-
-            @Override
-            public void reqLoopGetBodyCondDialog(@Nonnull Hoare.wlp_loop loop, @Nonnull Hoare.LoopGetBodyCond_callback callback) throws IOException, Lexer.LexerException, Hoare.HoareException, Parser.ParserException, SemanticNode.CopyException {
-
-            }
-
-            @Override
-            public void reqLoopCheckBodyCondDialog(@Nonnull Hoare.wlp_loop loop, @Nonnull Hoare.LoopCheckBodyCond_callback callback) throws IOException {
-
-            }
-
-            @Override
-            public void reqLoopAcceptInvCondDialog(@Nonnull Hoare.wlp_loop loop, @Nonnull Hoare.LoopAcceptInv_callback callback) throws IOException, Lexer.LexerException, Hoare.HoareException, Parser.ParserException, SemanticNode.CopyException {
-
-            }
-
-            @Override
-            public void reqConseqCheckPreDialog(@Nonnull SemanticNode node, @Nonnull HoareCond origPreCond, @Nonnull HoareCond newPreCond, @Nonnull Hoare.ConseqCheck_callback callback) throws IOException, Lexer.LexerException, Parser.ParserException, Hoare.HoareException {
-
-            }
-
-            @Override
-            public void reqConseqCheckPostDialog(@Nonnull SemanticNode node, @Nonnull HoareCond origPostCond, @Nonnull HoareCond newPostCond, @Nonnull Hoare.ConseqCheck_callback callback) throws IOException, Hoare.HoareException, Parser.ParserException, Lexer.LexerException {
-
-            }
-        });
+        Hoare hoare = new Hoare(new HoareExecuter.StdActionInterface());
 
         hoare.wlp(loopBody, new HoareCond(inv), new Hoare.wlp_callback() {
             @Override

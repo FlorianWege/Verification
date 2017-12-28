@@ -11,12 +11,13 @@ import core.structures.semantics.prog.*;
 import util.IOUtil;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.IOException;
 
 public class Hoare {
 	private ActionInterface _actionHandler;
 
-	public Hoare(ActionInterface actionHandler) {
+	public Hoare(@Nonnull ActionInterface actionHandler) {
 		_actionHandler = actionHandler;
 	}
 
@@ -35,10 +36,10 @@ public class Hoare {
 		void reqAltElseDialog(@Nonnull wlp_alt alt, @Nonnull AltElse_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException;
 		void reqAltMergeDialog(@Nonnull wlp_alt alt, @Nonnull AltMerge_callback callback) throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException;
 
-		void reqLoopAskInvDialog(@Nonnull wlp_loop loop, @Nonnull LoopAskInv_callback callback) throws IOException;
-		void reqLoopCheckPostCondDialog(@Nonnull wlp_loop loop, @Nonnull LoopCheckPostCond_callback callback) throws IOException;
+		void reqLoopAskInvDialog(@Nonnull wlp_loop loop, @Nonnull LoopAskInv_callback callback) throws IOException, HoareException, ParserException, LexerException;
+		void reqLoopCheckPostCondDialog(@Nonnull wlp_loop loop, @Nonnull LoopCheckPostCond_callback callback) throws IOException, HoareException, ParserException, LexerException;
 		void reqLoopGetBodyCondDialog(@Nonnull wlp_loop loop, @Nonnull LoopGetBodyCond_callback callback) throws IOException, LexerException, HoareException, ParserException, SemanticNode.CopyException;
-		void reqLoopCheckBodyCondDialog(@Nonnull wlp_loop loop, @Nonnull LoopCheckBodyCond_callback callback) throws IOException;
+		void reqLoopCheckBodyCondDialog(@Nonnull wlp_loop loop, @Nonnull LoopCheckBodyCond_callback callback) throws IOException, HoareException, ParserException, LexerException;
 		void reqLoopAcceptInvCondDialog(@Nonnull wlp_loop loop, @Nonnull LoopAcceptInv_callback callback) throws IOException, LexerException, HoareException, ParserException, SemanticNode.CopyException;
 
 		void reqConseqCheckPreDialog(@Nonnull SemanticNode node, @Nonnull HoareCond origPreCond, @Nonnull HoareCond newPreCond, @Nonnull ConseqCheck_callback callback) throws IOException, LexerException, ParserException, HoareException;
@@ -71,7 +72,7 @@ public class Hoare {
 	}
 
 	public interface LoopAskInv_callback {
-		void result(@Nonnull HoareCond postInvariant) throws HoareException, LexerException, IOException, ParserException;
+		void result(@Nullable HoareCond postInvariant) throws HoareException, LexerException, IOException, ParserException;
 	}
 	public interface LoopCheckPostCond_callback {
 		void result() throws HoareException, LexerException, IOException, ParserException, SemanticNode.CopyException;
@@ -113,7 +114,7 @@ public class Hoare {
 
 		preCond = (HoareCond) preCond.replace(new IOUtil.Func<SemanticNode, SemanticNode>() {
 			@Override
-			public SemanticNode apply(SemanticNode child) {
+			public SemanticNode apply(@Nonnull SemanticNode child) {
 				if (child instanceof Id) {
 					if (((Id) child).getName().equals(varNode.getName())) {
 						return expNode;
@@ -125,7 +126,7 @@ public class Hoare {
 		});
 
 		HoareCond finalPreCond = preCond;
-
+		System.out.println("SET VAR " + finalPreCond);
 		_actionHandler.reqAssignDialog(assignNode, preCond, postCond, new Assign_callback() {
 			@Override
 			public void result() throws IOException, HoareException, LexerException, ParserException, SemanticNode.CopyException {
@@ -318,7 +319,7 @@ public class Hoare {
 			});
 		}
 
-		private void exec_tryInvariant_checkBodyCond() throws IOException {
+		private void exec_tryInvariant_checkBodyCond() throws IOException, HoareException, ParserException, LexerException {
 			_actionHandler.reqLoopCheckBodyCondDialog(this, new LoopCheckBodyCond_callback() {
 				@Override
 				public void result() throws HoareException, LexerException, IOException, ParserException, SemanticNode.CopyException {
@@ -366,10 +367,10 @@ public class Hoare {
 			});
 		}
 
-		private void exec_askInvariant() throws IOException {
+		private void exec_askInvariant() throws IOException, HoareException, ParserException, LexerException {
 			_actionHandler.reqLoopAskInvDialog(this, new LoopAskInv_callback() {
 				@Override
-				public void result(@Nonnull HoareCond postInvariant) throws HoareException, IOException, LexerException, ParserException {
+				public void result(@Nullable HoareCond postInvariant) throws HoareException, IOException, LexerException, ParserException {
 					_postInvariant = postInvariant;
 
 					exec_tryInvariant();
@@ -377,7 +378,7 @@ public class Hoare {
 			});
 		}
 
-		public void exec() throws IOException {
+		public void exec() throws IOException, HoareException, ParserException, LexerException {
 			exec_askInvariant();
 		}
 
@@ -388,7 +389,7 @@ public class Hoare {
 		}
 	}
 
-	public void wlp_loop(@Nonnull While node, @Nonnull HoareCond postCond, @Nonnull wlp_callback callback) throws HoareException, IOException {
+	public void wlp_loop(@Nonnull While node, @Nonnull HoareCond postCond, @Nonnull wlp_callback callback) throws HoareException, IOException, LexerException, ParserException {
 		new wlp_loop(node, postCond, callback).exec();
 	}
 
